@@ -1,6 +1,10 @@
 name: Build Display v1.7.2 (CI Mirror)
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "ci-v1.7.2-*"
 
 permissions:
   contents: read
