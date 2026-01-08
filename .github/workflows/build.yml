@@ -61,9 +61,9 @@ jobs:
       - name: Build display
         run: |
           pio run -e display
-          mv .pio/build/display/firmware.bin out/display-firmware.bin
-          mv .pio/build/display/partitions.bin out/display-partitions.bin
-          mv .pio/build/display/bootloader.bin out/display-bootloader.bin
+          cp .pio/build/display/firmware.bin out/display-firmware.bin
+          cp .pio/build/display/partitions.bin out/display-partitions.bin
+          cp .pio/build/display/bootloader.bin out/display-bootloader.bin
           cp ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin .pio/build/display/boot_app0.bin
           cp .pio/build/display/boot_app0.bin out/display-boot_app0.bin
       - name: Build headless
