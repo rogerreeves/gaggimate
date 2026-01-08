@@ -32,6 +32,19 @@ jobs:
           node-version: 22
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
+      - name: Log tool versions
+        run: |
+          python --version
+          node --version
+          npm --version
+          pio --version
+          pio pkg list
+      - name: Log build config
+        run: |
+          echo "----- platformio.ini -----"
+          cat platformio.ini
+          echo "----- .nvmrc -----"
+          cat .nvmrc || true
       - name: Add version
         run: |
           mkdir -p out
@@ -51,6 +64,8 @@ jobs:
           mv .pio/build/display/firmware.bin out/display-firmware.bin
           mv .pio/build/display/partitions.bin out/display-partitions.bin
           mv .pio/build/display/bootloader.bin out/display-bootloader.bin
+          cp ~/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin .pio/build/display/boot_app0.bin
+          cp .pio/build/display/boot_app0.bin out/display-boot_app0.bin
       - name: Build headless
         run: |
           pio run -e display-headless
@@ -62,11 +77,37 @@ jobs:
           pio run -t buildfs -e display
           cp .pio/build/display/spiffs.bin out/display-filesystem.bin
           cp .pio/build/display/spiffs.bin out/display-headless-filesystem.bin
+      - name: Log resolved lib versions
+        run: |
+          python - <<'PY'
+import json
+from pathlib import Path
+base = Path(".pio/libdeps/display")
+entries = []
+if base.exists():
+    for path in base.rglob("library.json"):
+        data = json.loads(path.read_text())
+        name = data.get("name")
+        version = data.get("version")
+        entries.append((name, version, str(path)))
+for name, version, path in sorted(entries):
+    print(f"{name}=={version} ({path})")
+PY
       - name: Archive Firmware Files
         uses: actions/upload-artifact@v4
         with:
           name: gaggimate-firmware
           path: "out/*"
+      - name: Archive display artifacts (v1.7.2 CI)
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaggimate-display-v1.7.2-ci
+          path: |
+            .pio/build/display/bootloader.bin
+            .pio/build/display/partitions.bin
+            .pio/build/display/boot_app0.bin
+            .pio/build/display/firmware.bin
+            .pio/build/display/spiffs.bin
   release:
     needs: build
     runs-on: ubuntu-latest
