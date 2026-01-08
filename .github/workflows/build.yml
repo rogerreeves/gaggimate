@@ -19,7 +19,7 @@ jobs:
       - name: Checkout release tag
         run: |
           git remote add upstream https://github.com/jniebuhr/gaggimate.git || true
-          git fetch --tags upstream
+          git fetch upstream tag v1.7.2
           git checkout v1.7.2
           git submodule update --init --recursive
       - uses: actions/cache@v4
