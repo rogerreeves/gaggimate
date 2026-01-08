@@ -80,19 +80,19 @@ jobs:
       - name: Log resolved lib versions
         run: |
           python - <<'PY'
-import json
-from pathlib import Path
-base = Path(".pio/libdeps/display")
-entries = []
-if base.exists():
-    for path in base.rglob("library.json"):
-        data = json.loads(path.read_text())
-        name = data.get("name")
-        version = data.get("version")
-        entries.append((name, version, str(path)))
-for name, version, path in sorted(entries):
-    print(f"{name}=={version} ({path})")
-PY
+          import json
+          from pathlib import Path
+          base = Path(".pio/libdeps/display")
+          entries = []
+          if base.exists():
+              for path in base.rglob("library.json"):
+                  data = json.loads(path.read_text())
+                  name = data.get("name")
+                  version = data.get("version")
+                  entries.append((name, version, str(path)))
+          for name, version, path in sorted(entries):
+              print(f"{name}=={version} ({path})")
+          PY
       - name: Archive Firmware Files
         uses: actions/upload-artifact@v4
         with:
