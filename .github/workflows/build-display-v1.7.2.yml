@@ -1,0 +1,104 @@
+name: Build Display v1.7.2 (CI Mirror)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-display:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          submodules: 'recursive'
+
+      - name: Checkout tag v1.7.2
+        run: git checkout v1.7.2
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Log tool versions
+        run: |
+          python --version
+          node --version
+          npm --version
+          pio --version
+          pio pkg list
+
+      - name: Log build config
+        run: |
+          echo "----- platformio.ini -----"
+          cat platformio.ini
+          echo "----- .nvmrc -----"
+          cat .nvmrc || true
+
+      - name: Build Web (SPIFFS assets)
+        run: ./scripts/build_spiffs.sh
+
+      - name: Build display firmware
+        run: pio run -e display
+
+      - name: Build display filesystem
+        run: pio run -t buildfs -e display
+
+      - name: Collect boot_app0.bin
+        run: |
+          BOOT_APP0="$(python - <<'PY'
+import sys
+from pathlib import Path
+root = Path.home() / ".platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin"
+print(root)
+PY
+)"
+          cp "$BOOT_APP0" .pio/build/display/boot_app0.bin
+
+      - name: Log resolved lib versions
+        run: |
+          python - <<'PY'
+import json
+from pathlib import Path
+base = Path(".pio/libdeps/display")
+entries = []
+if base.exists():
+    for path in base.rglob("library.json"):
+        data = json.loads(path.read_text())
+        name = data.get("name")
+        version = data.get("version")
+        entries.append((name, version, str(path)))
+for name, version, path in sorted(entries):
+    print(f"{name}=={version} ({path})")
+PY
+
+      - name: Upload display artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gaggimate-display-v1.7.2-ci
+          path: |
+            .pio/build/display/bootloader.bin
+            .pio/build/display/partitions.bin
+            .pio/build/display/boot_app0.bin
+            .pio/build/display/firmware.bin
+            .pio/build/display/spiffs.bin
