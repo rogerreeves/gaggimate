@@ -135,30 +135,30 @@ jobs:
       - name: Collect boot_app0.bin
         run: |
           BOOT_APP0="$(python - <<'PY'
-import sys
-from pathlib import Path
-root = Path.home() / ".platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin"
-print(root)
-PY
-)"
+          import sys
+          from pathlib import Path
+          root = Path.home() / ".platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin"
+          print(root)
+          PY
+          )"
           cp "$BOOT_APP0" .pio/build/display/boot_app0.bin
 
       - name: Log resolved lib versions
         run: |
           python - <<'PY'
-import json
-from pathlib import Path
-base = Path(".pio/libdeps/display")
-entries = []
-if base.exists():
-    for path in base.rglob("library.json"):
-        data = json.loads(path.read_text())
-        name = data.get("name")
-        version = data.get("version")
-        entries.append((name, version, str(path)))
-for name, version, path in sorted(entries):
-    print(f"{name}=={version} ({path})")
-PY
+          import json
+          from pathlib import Path
+          base = Path(".pio/libdeps/display")
+          entries = []
+          if base.exists():
+              for path in base.rglob("library.json"):
+                  data = json.loads(path.read_text())
+                  name = data.get("name")
+                  version = data.get("version")
+                  entries.append((name, version, str(path)))
+          for name, version, path in sorted(entries):
+              print(f"{name}=={version} ({path})")
+          PY
 
       - name: Upload display artifacts
         uses: actions/upload-artifact@v4
