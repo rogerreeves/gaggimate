@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-display:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -43,7 +43,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version-file: .nvmrc
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
@@ -53,7 +53,9 @@ jobs:
           node --version
           npm --version
           pio --version
+          pio system info
           pio pkg list
+          pio lib list | egrep "AsyncTCP|ESPAsyncWebServer|ArduinoJson|NimBLE-Arduino" || true
 
       - name: Log build config
         run: |
@@ -61,106 +63,21 @@ jobs:
           cat platformio.ini
           echo "----- .nvmrc -----"
           cat .nvmrc || true
-      - name: Create CI PlatformIO config (pinned deps, no auto version)
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          text = Path("platformio.ini").read_text()
-          def replace_block(text, section, key, new_lines):
-              lines = text.splitlines()
-              out = []
-              in_section = False
-              replaced = False
-              i = 0
-              while i < len(lines):
-                  line = lines[i]
-                  if line.startswith("[") and line.endswith("]"):
-                      in_section = (line == section)
-                  if in_section and line.strip().startswith(key + " ="):
-                      out.append(line.split("=", 1)[0].rstrip() + " =")
-                      for nl in new_lines:
-                          out.append("    " + nl)
-                      replaced = True
-                      i += 1
-                      # Skip existing indented block
-                      while i < len(lines) and (lines[i].startswith(" ") or lines[i].startswith("\t")):
-                          i += 1
-                      continue
-                  if in_section and line.strip().startswith("extra_scripts"):
-                      # Override extra_scripts to disable auto_firmware_version.py
-                      out.append("extra_scripts =")
-                      i += 1
-                      while i < len(lines) and (lines[i].startswith(" ") or lines[i].startswith("\t")):
-                          i += 1
-                      continue
-                  out.append(line)
-                  i += 1
-              if not replaced:
-                  raise SystemExit(f"Failed to replace {key} in {section}")
-              return "\n".join(out) + "\n"
-          def replace_key(text, section, key, new_lines):
-              lines = text.splitlines()
-              out = []
-              in_section = False
-              replaced = False
-              i = 0
-              while i < len(lines):
-                  line = lines[i]
-                  if line.startswith("[") and line.endswith("]"):
-                      in_section = (line == section)
-                  if in_section and line.strip().startswith(key):
-                      out.append(key + " =")
-                      for nl in new_lines:
-                          out.append("    " + nl)
-                      replaced = True
-                      i += 1
-                      while i < len(lines) and (lines[i].startswith(" ") or lines[i].startswith("\t")):
-                          i += 1
-                      continue
-                  out.append(line)
-                  i += 1
-              if not replaced:
-                  raise SystemExit(f"Failed to replace {key} in {section}")
-              return "\n".join(out) + "\n"
-          pinned_libs = [
-              "FS",
-              "SPIFFS",
-              "Wire",
-              "SPI",
-              "ble_ota_dfu",
-              "h2zero/NimBLE-Arduino@^1.4.0",
-              "ESP32Async/AsyncTCP@3.4.9",
-              "ESP32Async/ESPAsyncWebServer@3.9.2",
-              "bblanchon/ArduinoJson@^7.2.1",
-              "256dpi/MQTT@^2.5.2",
-              "https://github.com/gaggimate/esp-arduino-ble-scales.git#8f3cba9",
-              "homespan/HomeSpan@1.9.1",
-          ]
-          text = replace_block(text, "[display_common]", "lib_deps_default", pinned_libs)
-          # Disable auto_firmware_version.py so version.h stays fixed
-          text = replace_key(text, "[env:display]", "extra_scripts", [])
-          Path("platformio.ci.ini").write_text(text)
-          PY
-
-      - name: Write fixed version.h
-        run: |
-          cat > src/version.h <<'EOF'
-          #pragma once
-          #ifndef GIT_VERSION_H
-          #define GIT_VERSION_H
-          #define BUILD_GIT_VERSION "v1.7.2"
-          #define BUILD_TIMESTAMP "2025-12-12T09:43:38Z"
-          #endif
-          EOF
 
       - name: Build Web (SPIFFS assets)
         run: ./scripts/build_spiffs.sh
 
+      - name: Build controller firmware
+        run: pio run -e controller
+
       - name: Build display firmware
-        run: pio run -c platformio.ci.ini -e display
+        run: pio run -e display
+
+      - name: Build display-headless firmware
+        run: pio run -e display-headless
 
       - name: Build display filesystem
-        run: pio run -c platformio.ci.ini -t buildfs -e display
+        run: pio run -t buildfs -e display
 
       - name: Collect boot_app0.bin
         run: |
