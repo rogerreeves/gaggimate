@@ -42,6 +42,10 @@ The display allows you to control the espresso machine and see live temperature 
 The docs were moved to [https://gaggimate.eu/](https://gaggimate.eu/). You can find all sourcing and assembly information there.
 Additional documentation for the WebSocket API can be found in [docs/websocket-api.yaml](docs/websocket-api.yaml).
 
+## Build Notes
+
+- CI pinning for v1.7.2 display reproducibility: `esp-arduino-ble-scales` @ `8f3cba9`, `MAX31855` @ `0.6.1`.
+
 
 ## License
 
