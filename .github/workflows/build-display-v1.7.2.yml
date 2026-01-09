@@ -3,6 +3,8 @@ name: Build Display v1.7.2 (CI Mirror)
 on:
   workflow_dispatch: {}
   push:
+    branches:
+      - master
     tags:
       - "ci-v1.7.2-*"
 
