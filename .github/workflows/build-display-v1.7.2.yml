@@ -30,6 +30,17 @@ jobs:
           git tag -d nightly || true
           git fetch upstream --tags --force
           git checkout v1.7.2
+
+      - name: Verify clean tag checkout
+        run: |
+          git describe --tags --dirty --always
+          git rev-parse HEAD
+          git status --porcelain
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "ERROR: working tree is dirty"
+            exit 1
+          fi
+
       - name: Freeze build timestamp (CI)
         run: |
           python - <<'PY'
@@ -76,6 +87,29 @@ jobs:
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
 
+      - name: Clear PlatformIO caches
+        run: |
+          rm -rf ~/.platformio/.cache ~/.platformio/lib ~/.platformio/packages
+
+      - name: Create CI PlatformIO config (pin display deps)
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          src = Path("platformio.ini").read_text().splitlines()
+          out = []
+          in_display_common = False
+          for line in src:
+              if line.startswith("[") and line.endswith("]"):
+                  in_display_common = (line == "[display_common]")
+              if in_display_common:
+                  if "ESP32Async/AsyncTCP" in line:
+                      line = "    ESP32Async/AsyncTCP@3.4.9"
+                  if "ESP32Async/ESPAsyncWebServer" in line:
+                      line = "    ESP32Async/ESPAsyncWebServer@3.9.2"
+              out.append(line)
+          Path("platformio.ci.ini").write_text("\n".join(out) + "\n")
+          PY
+
       - name: Log tool versions
         run: |
           python --version
@@ -100,13 +134,13 @@ jobs:
         run: pio run -e controller
 
       - name: Build display firmware
-        run: pio run -e display
+        run: pio run -c platformio.ci.ini -e display
 
       - name: Build display-headless firmware
-        run: pio run -e display-headless
+        run: pio run -c platformio.ci.ini -e display-headless
 
       - name: Build display filesystem
-        run: pio run -t buildfs -e display
+        run: pio run -c platformio.ci.ini -t buildfs -e display
 
       - name: Collect boot_app0.bin
         run: |
@@ -135,6 +169,11 @@ jobs:
           for name, version, path in sorted(entries):
               print(f"{name}=={version} ({path})")
           PY
+
+      - name: Log resolved deps (display)
+        run: |
+          pio pkg list -c platformio.ci.ini -e display
+          pio lib list -c platformio.ci.ini -e display | egrep "AsyncTCP|ESPAsyncWebServer" || true
 
       - name: Log display artifact hashes
         run: |
