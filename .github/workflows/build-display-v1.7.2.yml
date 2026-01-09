@@ -98,15 +98,30 @@ jobs:
           src = Path("platformio.ini").read_text().splitlines()
           out = []
           in_display_common = False
+          in_display_common_libdeps = False
+          max31855_seen = False
           for line in src:
               if line.startswith("[") and line.endswith("]"):
+                  if in_display_common_libdeps and not max31855_seen:
+                      out.append("    robtillaart/MAX31855@0.6.1")
+                      max31855_seen = True
                   in_display_common = (line == "[display_common]")
+                  in_display_common_libdeps = False
               if in_display_common:
+                  if line.strip().startswith("lib_deps_default"):
+                      in_display_common_libdeps = True
                   if "ESP32Async/AsyncTCP" in line:
                       line = "    ESP32Async/AsyncTCP@3.4.9"
                   if "ESP32Async/ESPAsyncWebServer" in line:
                       line = "    ESP32Async/ESPAsyncWebServer@3.9.2"
+                  if "esp-arduino-ble-scales" in line:
+                      line = "    https://github.com/gaggimate/esp-arduino-ble-scales.git#8f3cba9"
+                  if "MAX31855" in line:
+                      line = "    robtillaart/MAX31855@0.6.1"
+                      max31855_seen = True
               out.append(line)
+          if in_display_common_libdeps and not max31855_seen:
+              out.append("    robtillaart/MAX31855@0.6.1")
           Path("platformio.ci.ini").write_text("\n".join(out) + "\n")
           PY
 
