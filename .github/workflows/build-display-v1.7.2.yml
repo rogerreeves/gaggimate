@@ -172,8 +172,8 @@ jobs:
 
       - name: Log resolved deps (display)
         run: |
-          pio pkg list -c platformio.ci.ini -e display
-          pio lib list -c platformio.ci.ini -e display | egrep "AsyncTCP|ESPAsyncWebServer" || true
+          pio pkg list
+          pio lib list | egrep "AsyncTCP|ESPAsyncWebServer|ArduinoJson|NimBLE-Arduino" || true
 
       - name: Log display artifact hashes
         run: |
