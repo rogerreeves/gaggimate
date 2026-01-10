@@ -15,6 +15,15 @@
 #include <scales/varia.h>
 #include <scales/weighmybru.h>
 
+namespace {
+template <typename T>
+auto scaleBeep(const T* scale, uint8_t level) -> decltype(scale->beep(level), bool()) {
+    return scale->beep(level);
+}
+
+inline bool scaleBeep(...) { return false; }
+}  // namespace
+
 void on_ble_measurement(float value) {
     if (&BLEScales != nullptr) {
         BLEScales.onMeasurement(value);
@@ -217,7 +226,7 @@ void BLEScalePlugin::tare() const { onProcessStart(); }
 
 bool BLEScalePlugin::beep(uint8_t level) const {
     if (scale != nullptr && scale->isConnected()) {
-        return scale->beep(level);
+        return scaleBeep(scale, level);
     }
     return false;
 }
