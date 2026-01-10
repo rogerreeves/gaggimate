@@ -226,7 +226,7 @@ void BLEScalePlugin::tare() const { onProcessStart(); }
 
 bool BLEScalePlugin::beep(uint8_t level) const {
     if (scale != nullptr && scale->isConnected()) {
-        return scaleBeep(scale, level);
+        return scaleBeep(scale.get(), level);
     }
     return false;
 }
