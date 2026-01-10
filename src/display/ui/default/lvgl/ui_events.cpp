@@ -58,11 +58,29 @@ void onLoadStarted(lv_event_t *e) { controller.onScreenReady(); }
 
 void onStandby(lv_event_t *e) { controller.activateStandby(); }
 
-void onGrindToggle(lv_event_t *e) { controller.isGrindActive() ? controller.deactivateGrind() : controller.activateGrind(); }
+void onGrindToggle(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->onDoseMeasurePrimaryAction();
+    return;
+  }
+  controller.isGrindActive() ? controller.deactivateGrind() : controller.activateGrind();
+}
 
-void onGrindTimeLower(lv_event_t *e) { controller.lowerGrindTarget(); }
+void onGrindTimeLower(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->adjustDoseMeasureTarget(-0.5f);
+    return;
+  }
+  controller.lowerGrindTarget();
+}
 
-void onGrindTimeRaise(lv_event_t *e) { controller.raiseGrindTarget(); }
+void onGrindTimeRaise(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->adjustDoseMeasureTarget(0.5f);
+    return;
+  }
+  controller.raiseGrindTarget();
+}
 
 void onMenuClick(lv_event_t *e) {
     controller.deactivate();

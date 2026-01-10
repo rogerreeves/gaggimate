@@ -13,6 +13,13 @@ Settings::Settings() {
     targetVolume = preferences.getInt("tv", 36);
     targetGrindVolume = preferences.getDouble("tgv", 18.0);
     targetGrindDuration = preferences.getInt("tgd", 25000);
+    doseMeasureEnabled = preferences.getBool("dm_en", true);
+    doseTrayWeight = preferences.getDouble("dm_tw", 0.0);
+    doseAvgBeanWeight = preferences.getDouble("dm_bw", 0.1);
+    doseTarget = preferences.getDouble("dm_tg", 18.5);
+    doseCupEnabled = preferences.getBool("dm_ce", false);
+    doseCupEmptyWeight = preferences.getDouble("dm_cw", 0.0);
+    doseBeepEnabled = preferences.getBool("dm_bp", false);
     brewDelay = preferences.getDouble("del_br", 1000.0);
     grindDelay = preferences.getDouble("del_gd", 1000.0);
     delayAdjust = preferences.getBool("del_ad", true);
@@ -172,6 +179,41 @@ void Settings::setTargetGrindVolume(double target_grind_volume) {
 
 void Settings::setTargetGrindDuration(const int target_duration) {
     targetGrindDuration = target_duration;
+    save();
+}
+
+void Settings::setDoseMeasureEnabled(bool enabled) {
+    doseMeasureEnabled = enabled;
+    save();
+}
+
+void Settings::setDoseMeasureTrayWeight(double tray_weight) {
+    doseTrayWeight = std::max(0.0, tray_weight);
+    save();
+}
+
+void Settings::setDoseMeasureAvgBeanWeight(double avg_bean_weight) {
+    doseAvgBeanWeight = std::max(0.0, avg_bean_weight);
+    save();
+}
+
+void Settings::setDoseMeasureTarget(double target_weight) {
+    doseTarget = std::max(0.0, target_weight);
+    save();
+}
+
+void Settings::setDoseMeasureCupEnabled(bool enabled) {
+    doseCupEnabled = enabled;
+    save();
+}
+
+void Settings::setDoseMeasureCupEmptyWeight(double empty_weight) {
+    doseCupEmptyWeight = std::max(0.0, empty_weight);
+    save();
+}
+
+void Settings::setDoseMeasureBeepEnabled(bool enabled) {
+    doseBeepEnabled = enabled;
     save();
 }
 
@@ -475,6 +517,13 @@ void Settings::doSave() {
     preferences.putInt("tv", targetVolume);
     preferences.putDouble("tgv", targetGrindVolume);
     preferences.putInt("tgd", targetGrindDuration);
+    preferences.putBool("dm_en", doseMeasureEnabled);
+    preferences.putDouble("dm_tw", doseTrayWeight);
+    preferences.putDouble("dm_bw", doseAvgBeanWeight);
+    preferences.putDouble("dm_tg", doseTarget);
+    preferences.putBool("dm_ce", doseCupEnabled);
+    preferences.putDouble("dm_cw", doseCupEmptyWeight);
+    preferences.putBool("dm_bp", doseBeepEnabled);
     preferences.putDouble("del_br", brewDelay);
     preferences.putDouble("del_gd", grindDelay);
     preferences.putBool("del_ad", delayAdjust);

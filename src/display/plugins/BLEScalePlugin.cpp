@@ -215,6 +215,13 @@ void BLEScalePlugin::onProcessStart() const {
 
 void BLEScalePlugin::tare() const { onProcessStart(); }
 
+bool BLEScalePlugin::beep(uint8_t level) const {
+    if (scale != nullptr && scale->isConnected()) {
+        return scale->beep(level);
+    }
+    return false;
+}
+
 void BLEScalePlugin::establishConnection() {
     if (uuid.empty()) {
         ESP_LOGE("BLEScalePlugin", "Cannot establish connection with empty UUID");

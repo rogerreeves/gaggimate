@@ -44,6 +44,13 @@ export function Settings() {
             ? fetchedSettings.standbyDisplayEnabled
             : fetchedSettings.standbyBrightness > 0,
         dashboardLayout: fetchedSettings.dashboardLayout || DASHBOARD_LAYOUTS.ORDER_FIRST,
+        doseMeasureEnabled: fetchedSettings.doseMeasureEnabled ?? false,
+        doseMeasureTrayWeight: fetchedSettings.doseMeasureTrayWeight ?? 0,
+        doseMeasureAvgBeanWeight: fetchedSettings.doseMeasureAvgBeanWeight ?? 0.1,
+        doseMeasureTarget: fetchedSettings.doseMeasureTarget ?? 18.5,
+        doseMeasureCupEnabled: fetchedSettings.doseMeasureCupEnabled ?? false,
+        doseMeasureCupEmptyWeight: fetchedSettings.doseMeasureCupEmptyWeight ?? 0,
+        doseMeasureBeepEnabled: fetchedSettings.doseMeasureBeepEnabled ?? false,
       };
 
       // Extract Kf from PID string and separate them
@@ -112,6 +119,15 @@ export function Settings() {
       }
       if (key === 'smartGrindToggle') {
         value = !formData.smartGrindToggle;
+      }
+      if (key === 'doseMeasureEnabled') {
+        value = !formData.doseMeasureEnabled;
+      }
+      if (key === 'doseMeasureCupEnabled') {
+        value = !formData.doseMeasureCupEnabled;
+      }
+      if (key === 'doseMeasureBeepEnabled') {
+        value = !formData.doseMeasureBeepEnabled;
       }
       if (key === 'homeAssistant') {
         value = !formData.homeAssistant;
@@ -709,6 +725,127 @@ export function Settings() {
                 </option>
               </select>
             </div>
+          </Card>
+
+          <Card sm={10} lg={5} title='Single Dose Measure'>
+            <div className='form-control'>
+              <label className='label cursor-pointer'>
+                <span className='label-text'>Switch Grind to Dose Measure</span>
+                <input
+                  id='doseMeasureEnabled'
+                  name='doseMeasureEnabled'
+                  value='doseMeasureEnabled'
+                  type='checkbox'
+                  className='toggle toggle-primary'
+                  checked={!!formData.doseMeasureEnabled}
+                  onChange={onChange('doseMeasureEnabled')}
+                />
+              </label>
+            </div>
+
+            {formData.doseMeasureEnabled && (
+              <>
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureTrayWeight' className='mb-2 block text-sm font-medium'>
+                    Dose Tray Weight (g)
+                  </label>
+                  <input
+                    id='doseMeasureTrayWeight'
+                    name='doseMeasureTrayWeight'
+                    type='number'
+                    inputMode='decimal'
+                    className='input input-bordered w-full'
+                    step='0.1'
+                    min='0'
+                    value={formData.doseMeasureTrayWeight}
+                    onChange={onChange('doseMeasureTrayWeight')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureAvgBeanWeight' className='mb-2 block text-sm font-medium'>
+                    Average Bean Weight (g)
+                  </label>
+                  <input
+                    id='doseMeasureAvgBeanWeight'
+                    name='doseMeasureAvgBeanWeight'
+                    type='number'
+                    inputMode='decimal'
+                    className='input input-bordered w-full'
+                    step='0.1'
+                    min='0'
+                    value={formData.doseMeasureAvgBeanWeight}
+                    onChange={onChange('doseMeasureAvgBeanWeight')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureTarget' className='mb-2 block text-sm font-medium'>
+                    Dose (g)
+                  </label>
+                  <input
+                    id='doseMeasureTarget'
+                    name='doseMeasureTarget'
+                    type='number'
+                    inputMode='decimal'
+                    className='input input-bordered w-full'
+                    step='0.5'
+                    min='0'
+                    value={formData.doseMeasureTarget}
+                    onChange={onChange('doseMeasureTarget')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label className='label cursor-pointer'>
+                    <span className='label-text'>Grounds Dose Cup</span>
+                    <input
+                      id='doseMeasureCupEnabled'
+                      name='doseMeasureCupEnabled'
+                      value='doseMeasureCupEnabled'
+                      type='checkbox'
+                      className='toggle toggle-primary'
+                      checked={!!formData.doseMeasureCupEnabled}
+                      onChange={onChange('doseMeasureCupEnabled')}
+                    />
+                  </label>
+                </div>
+
+                {formData.doseMeasureCupEnabled && (
+                  <div className='form-control'>
+                    <label htmlFor='doseMeasureCupEmptyWeight' className='mb-2 block text-sm font-medium'>
+                      Grounds Dose Cup Empty Weight (g)
+                    </label>
+                    <input
+                      id='doseMeasureCupEmptyWeight'
+                      name='doseMeasureCupEmptyWeight'
+                      type='number'
+                      inputMode='decimal'
+                      className='input input-bordered w-full'
+                      step='0.1'
+                      min='0'
+                      value={formData.doseMeasureCupEmptyWeight}
+                      onChange={onChange('doseMeasureCupEmptyWeight')}
+                    />
+                  </div>
+                )}
+
+                <div className='form-control'>
+                  <label className='label cursor-pointer'>
+                    <span className='label-text'>Beep at value</span>
+                    <input
+                      id='doseMeasureBeepEnabled'
+                      name='doseMeasureBeepEnabled'
+                      value='doseMeasureBeepEnabled'
+                      type='checkbox'
+                      className='toggle toggle-primary'
+                      checked={!!formData.doseMeasureBeepEnabled}
+                      onChange={onChange('doseMeasureBeepEnabled')}
+                    />
+                  </label>
+                </div>
+              </>
+            )}
           </Card>
 
           <Card sm={10} lg={5} title='Display settings'>

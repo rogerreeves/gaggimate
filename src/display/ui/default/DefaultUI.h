@@ -20,6 +20,7 @@ constexpr int TEMP_HISTORY_LENGTH = 20 * 1000 / TEMP_HISTORY_INTERVAL;
 int16_t calculate_angle(int set_temp, int range, int offset);
 
 enum class BrewScreenState { Brew, Settings };
+enum class DoseMeasurePhase { Idle, Beans, BeansCorrect, GroundsWait, GroundsMeasure, GroundsPrompt };
 
 class DefaultUI {
   public:
@@ -34,6 +35,8 @@ class DefaultUI {
     void changeScreen(lv_obj_t **screen, void (*target_init)(void));
 
     void changeBrewScreenMode(BrewScreenState state);
+    void onDoseMeasurePrimaryAction();
+    void adjustDoseMeasureTarget(double delta);
     void onProfileSwitch();
     void onNextProfile();
     void onPreviousProfile();
@@ -57,6 +60,8 @@ class DefaultUI {
 
     void updateStandbyScreen();
     void updateStatusScreen() const;
+    void updateDoseMeasureState();
+    void switchToBrewFromDoseMeasure();
 
     void adjustDials(lv_obj_t *dials);
     void adjustTempTarget(lv_obj_t *dials);
@@ -93,6 +98,20 @@ class DefaultUI {
     int active = false;
     int smartGrindActive = false;
     int grindAvailable = false;
+    int doseMeasureEnabled = false;
+    DoseMeasurePhase doseMeasurePhase = DoseMeasurePhase::Idle;
+    String doseMeasureLabel = "";
+    double doseMeasureTarget = 18.5;
+    double doseMeasureTrayWeight = 0.0;
+    double doseMeasureAvgBeanWeight = 0.1;
+    double doseMeasureCupEmptyWeight = 0.0;
+    int doseMeasureCupEnabled = false;
+    int doseMeasureBeepEnabled = false;
+    double doseMeasureLastWeight = 0.0;
+    int doseMeasureBeepedNear = false;
+    int doseMeasureBeepedExact = false;
+    int doseMeasureBeepedGroundsNear = false;
+    int doseMeasureBeepedGroundsExact = false;
 
     // Seasonal flags
     int christmasMode = false;

@@ -38,6 +38,7 @@ class BLEScalePlugin : public Plugin {
 
     std::vector<DiscoveredDevice> getDiscoveredScales() const;
     void tare() const;
+    bool beep(uint8_t level = 3) const;
 
   private:
     void update();

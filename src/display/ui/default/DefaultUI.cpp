@@ -10,6 +10,7 @@
 #include <display/drivers/LilyGoDriver.h>
 #include <display/drivers/WaveshareDriver.h>
 #include <display/drivers/common/LV_Helper.h>
+#include <display/plugins/BLEScalePlugin.h>
 #include <display/ui/default/lvgl/ui_theme_manager.h>
 #include <display/ui/default/lvgl/ui_themes.h>
 #include <display/ui/utils/effects.h>
@@ -232,6 +233,7 @@ void DefaultUI::loop() {
         active = controller->isActive();
         smartGrindActive = settings.isSmartGrindActive();
         grindAvailable = smartGrindActive || settings.getAltRelayFunction() == ALT_RELAY_GRIND;
+        doseMeasureEnabled = settings.isDoseMeasureEnabled();
         applyTheme();
         if (controller->isErrorState()) {
             changeScreen(&ui_InitScreen, &ui_InitScreen_screen_init);
@@ -243,6 +245,7 @@ void DefaultUI::loop() {
             updateStandbyScreen();
         if (lv_scr_act() == ui_StatusScreen)
             updateStatusScreen();
+        updateDoseMeasureState();
         effect_mgr.evaluate_all();
     }
 
@@ -267,6 +270,37 @@ void DefaultUI::changeScreen(lv_obj_t **screen, void (*target_init)()) {
 
 void DefaultUI::changeBrewScreenMode(BrewScreenState state) {
     brewScreenState = state;
+    rerender = true;
+}
+
+void DefaultUI::onDoseMeasurePrimaryAction() {
+    if (!doseMeasureEnabled)
+        return;
+
+    if (doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
+        switchToBrewFromDoseMeasure();
+        return;
+    }
+
+    if (doseMeasurePhase != DoseMeasurePhase::Idle)
+        return;
+
+    BLEScales.tare();
+    doseMeasurePhase = DoseMeasurePhase::Beans;
+    doseMeasureBeepedNear = false;
+    doseMeasureBeepedExact = false;
+    doseMeasureBeepedGroundsNear = false;
+    doseMeasureBeepedGroundsExact = false;
+    doseMeasureLabel = "Add Beans";
+    rerender = true;
+}
+
+void DefaultUI::adjustDoseMeasureTarget(double delta) {
+    if (!doseMeasureEnabled)
+        return;
+    Settings &settings = controller->getSettings();
+    const double newTarget = std::max(0.0, settings.getDoseMeasureTarget() + delta);
+    settings.setDoseMeasureTarget(newTarget);
     rerender = true;
 }
 
@@ -320,6 +354,7 @@ void DefaultUI::setupState() {
     active = controller->isActive();
     smartGrindActive = settings.isSmartGrindActive();
     grindAvailable = smartGrindActive || settings.getAltRelayFunction() == ALT_RELAY_GRIND;
+    doseMeasureEnabled = settings.isDoseMeasureEnabled();
     mode = controller->getMode();
     currentTemp = static_cast<int>(controller->getCurrentTemp());
     targetTemp = static_cast<int>(controller->getTargetTemp());
@@ -490,16 +525,37 @@ void DefaultUI::setupReactive() {
                           &targetDuration, &targetVolume, &volumetricMode);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
-                              if (volumetricMode) {
+                              if (doseMeasureEnabled) {
+                                  lv_obj_set_width(ui_GrindScreen_targetDuration, 200);
+                                  lv_label_set_long_mode(ui_GrindScreen_targetDuration, LV_LABEL_LONG_WRAP);
+                                  lv_label_set_text(ui_GrindScreen_targetDuration, doseMeasureLabel.c_str());
+                              } else if (volumetricMode) {
+                                  lv_obj_set_width(ui_GrindScreen_targetDuration, 90);
+                                  lv_label_set_long_mode(ui_GrindScreen_targetDuration, LV_LABEL_LONG_CLIP);
                                   lv_label_set_text_fmt(ui_GrindScreen_targetDuration, "%.1fg", grindVolume);
                               } else {
                                   const double secondsDouble = grindDuration / 1000.0;
                                   const auto minutes = static_cast<int>(secondsDouble / 60.0);
                                   const auto seconds = static_cast<int>(secondsDouble) % 60;
+                                  lv_obj_set_width(ui_GrindScreen_targetDuration, 90);
+                                  lv_label_set_long_mode(ui_GrindScreen_targetDuration, LV_LABEL_LONG_CLIP);
                                   lv_label_set_text_fmt(ui_GrindScreen_targetDuration, "%2d:%02d", minutes, seconds);
                               }
                           },
-                          &grindDuration, &grindVolume, &volumetricMode);
+                          &grindDuration, &grindVolume, &volumetricMode, &doseMeasureEnabled, &doseMeasureLabel);
+    effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
+                          [=]() {
+                              if (doseMeasureEnabled) {
+                                  const bool isGroundsPhase =
+                                      doseMeasurePhase == DoseMeasurePhase::GroundsWait ||
+                                      doseMeasurePhase == DoseMeasurePhase::GroundsMeasure ||
+                                      doseMeasurePhase == DoseMeasurePhase::GroundsPrompt;
+                                  lv_label_set_text(ui_GrindScreen_mainLabel7, isGroundsPhase ? "Grounds Dose" : "Bean Dose");
+                              } else {
+                                  lv_label_set_text(ui_GrindScreen_mainLabel7, "Grind");
+                              }
+                          },
+                          &doseMeasureEnabled, &doseMeasurePhase);
     effect_mgr.use_effect(
         [=] { return currentScreen == ui_BrewScreen; },
         [=]() {
@@ -517,7 +573,11 @@ void DefaultUI::setupReactive() {
     effect_mgr.use_effect(
         [=] { return currentScreen == ui_GrindScreen; },
         [=]() {
-            lv_img_set_src(ui_GrindScreen_targetSymbol, volumetricMode ? &ui_img_1424216268 : &ui_img_360122106);
+            if (doseMeasureEnabled) {
+                lv_img_set_src(ui_GrindScreen_targetSymbol, &ui_img_1424216268);
+            } else {
+                lv_img_set_src(ui_GrindScreen_targetSymbol, volumetricMode ? &ui_img_1424216268 : &ui_img_360122106);
+            }
             ui_object_set_themeable_style_property(ui_GrindScreen_weightLabel, LV_PART_MAIN | LV_STATE_DEFAULT,
                                                    LV_STYLE_TEXT_COLOR,
                                                    volumetricMode ? _ui_theme_color_Dark : _ui_theme_color_NiceWhite);
@@ -527,10 +587,16 @@ void DefaultUI::setupReactive() {
             ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
                                                    volumetricMode ? _ui_theme_color_NiceWhite : _ui_theme_color_Dark);
         },
-        &volumetricMode);
+        &volumetricMode, &doseMeasureEnabled);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
-                          [=]() { _ui_flag_modify(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN, volumetricAvailable); },
-                          &volumetricAvailable);
+                          [=]() {
+                              if (doseMeasureEnabled) {
+                                  _ui_flag_modify(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+                              } else {
+                                  _ui_flag_modify(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN, volumetricAvailable);
+                              }
+                          },
+                          &volumetricAvailable, &doseMeasureEnabled);
     effect_mgr.use_effect([=] { return currentScreen == ui_SimpleProcessScreen; },
                           [=]() {
                               if (mode == MODE_STEAM) {
@@ -607,13 +673,14 @@ void DefaultUI::setupReactive() {
                           &bluetoothWeight, &volumetricAvailable, &bluetoothScales);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
-                              if (volumetricAvailable && bluetoothScales) {
+                              if ((doseMeasureEnabled && bluetoothScales) ||
+                                  (!doseMeasureEnabled && volumetricAvailable && bluetoothScales)) {
                                   lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", bluetoothWeight);
                               } else {
                                   lv_label_set_text(ui_GrindScreen_weightLabel, "-");
                               }
                           },
-                          &bluetoothWeight, &volumetricAvailable, &bluetoothScales);
+                          &bluetoothWeight, &volumetricAvailable, &bluetoothScales, &doseMeasureEnabled);
     effect_mgr.use_effect(
         [=] { return currentScreen == ui_BrewScreen; },
         [=]() {
@@ -684,6 +751,169 @@ void DefaultUI::updateStandbyScreen() {
                                                      : lv_obj_add_flag(ui_StandbyScreen_bluetoothIcon, LV_OBJ_FLAG_HIDDEN);
     !apActive &&WiFi.status() == WL_CONNECTED ? lv_obj_clear_flag(ui_StandbyScreen_wifiIcon, LV_OBJ_FLAG_HIDDEN)
                                               : lv_obj_add_flag(ui_StandbyScreen_wifiIcon, LV_OBJ_FLAG_HIDDEN);
+}
+
+void DefaultUI::switchToBrewFromDoseMeasure() {
+    controller->deactivate();
+    controller->setMode(MODE_BREW);
+    changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
+}
+
+void DefaultUI::updateDoseMeasureState() {
+    if (!doseMeasureEnabled) {
+        doseMeasurePhase = DoseMeasurePhase::Idle;
+        return;
+    }
+
+    if (currentScreen != ui_GrindScreen) {
+        doseMeasurePhase = DoseMeasurePhase::Idle;
+        doseMeasureBeepedNear = false;
+        doseMeasureBeepedExact = false;
+        doseMeasureBeepedGroundsNear = false;
+        doseMeasureBeepedGroundsExact = false;
+        return;
+    }
+
+    const Settings &settings = controller->getSettings();
+    doseMeasureTarget = settings.getDoseMeasureTarget();
+    doseMeasureTrayWeight = settings.getDoseMeasureTrayWeight();
+    doseMeasureAvgBeanWeight = settings.getDoseMeasureAvgBeanWeight();
+    doseMeasureCupEmptyWeight = settings.getDoseMeasureCupEmptyWeight();
+    doseMeasureCupEnabled = settings.isDoseMeasureCupEnabled();
+    doseMeasureBeepEnabled = settings.isDoseMeasureBeepEnabled();
+
+    const bool showControls = doseMeasurePhase == DoseMeasurePhase::Idle;
+    _ui_flag_modify(ui_GrindScreen_upDurationButton, LV_OBJ_FLAG_HIDDEN,
+                    showControls ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+    _ui_flag_modify(ui_GrindScreen_downDurationButton, LV_OBJ_FLAG_HIDDEN,
+                    showControls ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+    _ui_flag_modify(ui_GrindScreen_targetSymbol, LV_OBJ_FLAG_HIDDEN,
+                    showControls ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+
+    if (doseMeasurePhase == DoseMeasurePhase::Idle) {
+        doseMeasureLabel = String(doseMeasureTarget, 1) + "g";
+        return;
+    }
+
+    double effectiveWeight = bluetoothWeight;
+    if (doseMeasurePhase == DoseMeasurePhase::GroundsWait || doseMeasurePhase == DoseMeasurePhase::GroundsMeasure ||
+        doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
+        effectiveWeight -= doseMeasureCupEmptyWeight;
+    } else {
+        effectiveWeight -= doseMeasureTrayWeight;
+    }
+    if (effectiveWeight < 0.0)
+        effectiveWeight = 0.0;
+
+    const double roundedWeight = round(effectiveWeight * 10.0) / 10.0;
+    const double roundedTarget = round(doseMeasureTarget * 10.0) / 10.0;
+
+    if (doseMeasurePhase == DoseMeasurePhase::Beans) {
+        const double diff = roundedTarget - roundedWeight;
+        const double absDiff = fabs(diff);
+
+        if (absDiff <= 0.1) {
+            if (doseMeasureBeepEnabled && !doseMeasureBeepedNear) {
+                BLEScales.beep(3);
+                doseMeasureBeepedNear = true;
+            }
+            if (roundedWeight == roundedTarget) {
+                if (doseMeasureBeepEnabled && !doseMeasureBeepedExact) {
+                    BLEScales.beep(5);
+                    BLEScales.beep(5);
+                    doseMeasureBeepedExact = true;
+                }
+                doseMeasureLabel = "Correct Dose";
+                if (doseMeasureCupEnabled) {
+                    doseMeasurePhase = DoseMeasurePhase::BeansCorrect;
+                    doseMeasureLastWeight = roundedWeight;
+                }
+                return;
+            }
+        } else {
+            doseMeasureBeepedNear = false;
+            doseMeasureBeepedExact = false;
+        }
+
+        if (doseMeasureAvgBeanWeight > 0.0) {
+            const int beanDiff = static_cast<int>(round(diff / doseMeasureAvgBeanWeight));
+            if (abs(beanDiff) <= 20 && beanDiff != 0) {
+                doseMeasureLabel = String(beanDiff > 0 ? "Add " : "Remove ") + String(abs(beanDiff)) + " Beans";
+                return;
+            }
+        }
+        doseMeasureLabel = diff >= 0 ? "Add Beans" : "Remove Beans";
+        return;
+    }
+
+    if (doseMeasurePhase == DoseMeasurePhase::BeansCorrect) {
+        if (doseMeasureCupEnabled && fabs(roundedWeight - doseMeasureLastWeight) > 0.2) {
+            BLEScales.tare();
+            doseMeasurePhase = DoseMeasurePhase::GroundsWait;
+            doseMeasureLabel = "Place Grounds";
+            doseMeasureLastWeight = 0.0;
+            doseMeasureBeepedGroundsNear = false;
+            doseMeasureBeepedGroundsExact = false;
+            return;
+        }
+        doseMeasureLabel = "Correct Dose";
+        return;
+    }
+
+    if (doseMeasurePhase == DoseMeasurePhase::GroundsWait) {
+        doseMeasureLabel = "Place Grounds";
+        if (effectiveWeight > 0.05) {
+            doseMeasurePhase = DoseMeasurePhase::GroundsMeasure;
+        }
+        return;
+    }
+
+    if (doseMeasurePhase == DoseMeasurePhase::GroundsMeasure) {
+        const double diff = roundedWeight - roundedTarget;
+        const double absDiff = fabs(diff);
+
+        if (absDiff <= 0.1) {
+            if (doseMeasureBeepEnabled && !doseMeasureBeepedGroundsNear) {
+                BLEScales.beep(3);
+                doseMeasureBeepedGroundsNear = true;
+            }
+            if (roundedWeight == roundedTarget) {
+                if (doseMeasureBeepEnabled && !doseMeasureBeepedGroundsExact) {
+                    BLEScales.beep(5);
+                    BLEScales.beep(5);
+                    doseMeasureBeepedGroundsExact = true;
+                }
+            }
+            doseMeasureLabel = "Correct";
+        } else {
+            doseMeasureBeepedGroundsNear = false;
+            doseMeasureBeepedGroundsExact = false;
+            const String sign = diff >= 0 ? "+" : "-";
+            doseMeasureLabel = sign + String(absDiff, 1) + "g";
+        }
+
+        if (roundedWeight <= 0.1) {
+            if (absDiff <= 0.1) {
+                switchToBrewFromDoseMeasure();
+                return;
+            }
+            if (absDiff <= 0.3) {
+                doseMeasurePhase = DoseMeasurePhase::GroundsPrompt;
+                doseMeasureLabel = "Brew?";
+                return;
+            }
+            doseMeasurePhase = DoseMeasurePhase::GroundsWait;
+            doseMeasureLabel = "Place Grounds";
+        }
+        return;
+    }
+
+    if (doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
+        doseMeasureLabel = "Brew?";
+        if (effectiveWeight > 0.05) {
+            doseMeasurePhase = DoseMeasurePhase::GroundsMeasure;
+        }
+    }
 }
 
 void DefaultUI::updateStatusScreen() const {
