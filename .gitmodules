@@ -1,0 +1,4 @@
+[submodule "lib/esp-arduino-ble-scales"]
+	path = lib/esp-arduino-ble-scales
+	url = https://github.com/rogerreeves/esp-arduino-ble-scales.git
+	branch = beep-backport
