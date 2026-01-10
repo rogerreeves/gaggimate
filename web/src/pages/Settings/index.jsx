@@ -798,7 +798,7 @@ export function Settings() {
 
                 <div className='form-control'>
                   <label className='label cursor-pointer'>
-                    <span className='label-text'>Grounds Dose Cup</span>
+                    <span className='label-text'>Weigh Grounds</span>
                     <input
                       id='doseMeasureCupEnabled'
                       name='doseMeasureCupEnabled'
@@ -814,7 +814,7 @@ export function Settings() {
                 {formData.doseMeasureCupEnabled && (
                   <div className='form-control'>
                     <label htmlFor='doseMeasureCupEmptyWeight' className='mb-2 block text-sm font-medium'>
-                      Grounds Dose Cup Empty Weight (g)
+                      Weigh Grounds Empty Weight (g)
                     </label>
                     <input
                       id='doseMeasureCupEmptyWeight'

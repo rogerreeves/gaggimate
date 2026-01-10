@@ -108,7 +108,7 @@ jobs:
                   if "ESP32Async/ESPAsyncWebServer" in line:
                       line = "    ESP32Async/ESPAsyncWebServer@3.9.2"
                   if "esp-arduino-ble-scales" in line:
-                      line = "    https://github.com/gaggimate/esp-arduino-ble-scales.git#8f3cba9"
+                      line = "    file://lib/esp-arduino-ble-scales"
                   if "MAX31855" in line:
                       line = "    robtillaart/MAX31855@0.6.1"
                       max31855_seen = True

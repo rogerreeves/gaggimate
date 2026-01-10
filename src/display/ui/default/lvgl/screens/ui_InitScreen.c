@@ -31,6 +31,7 @@ void ui_InitScreen_screen_init(void) {
     lv_img_set_src(ui_InitScreen_Image2, &ui_img_logo_png);
     lv_obj_set_width(ui_InitScreen_Image2, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_InitScreen_Image2, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_y(ui_InitScreen_Image2, -20);
     lv_obj_set_align(ui_InitScreen_Image2, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_InitScreen_Image2, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_InitScreen_Image2, LV_OBJ_FLAG_SCROLLABLE); /// Flags
