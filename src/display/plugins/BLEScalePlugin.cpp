@@ -17,7 +17,7 @@
 
 namespace {
 template <typename T>
-auto scaleBeep(const T* scale, uint8_t level) -> decltype(scale->beep(level), bool()) {
+auto scaleBeep(const T& scale, uint8_t level) -> decltype(scale->beep(level), bool()) {
     return scale->beep(level);
 }
 
