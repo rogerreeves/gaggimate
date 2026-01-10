@@ -24,16 +24,9 @@ jobs:
           fetch-depth: 0
           submodules: 'false'
 
-      - name: Checkout tag v1.7.2
+      - name: Verify clean branch checkout
         run: |
-          git remote add upstream https://github.com/jniebuhr/gaggimate.git || true
-          git tag -d nightly || true
-          git fetch upstream --tags --force
-          git checkout v1.7.2
-
-      - name: Verify clean tag checkout
-        run: |
-          git describe --tags --dirty --always
+          git rev-parse --abbrev-ref HEAD
           git rev-parse HEAD
           git status --porcelain
           if [ -n "$(git status --porcelain)" ]; then
