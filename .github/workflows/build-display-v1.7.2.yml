@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - master
+      - custom-build
     tags:
       - "ci-v1.7.2-*"
 
@@ -72,7 +72,11 @@ jobs:
           path: |
             ~/.cache/pip
             ~/.platformio/.cache
-          key: ${{ runner.os }}-pio
+            ~/.platformio/lib
+            ~/.platformio/packages
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini', 'platformio.ci.ini') }}
+          restore-keys: |
+            ${{ runner.os }}-pio-
 
       - uses: actions/setup-python@v5
         with:
@@ -86,10 +90,6 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: web/package-lock.json
-
-      - name: Clear PlatformIO caches
-        run: |
-          rm -rf ~/.platformio/.cache ~/.platformio/lib ~/.platformio/packages
 
       - name: Create CI PlatformIO config (pin display deps)
         run: |
