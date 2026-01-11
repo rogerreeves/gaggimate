@@ -20,6 +20,7 @@ extern void ui_event_GrindScreen_ImgButton2(lv_event_t *e);
 extern lv_obj_t *ui_GrindScreen_ImgButton2;
 extern lv_obj_t *ui_GrindScreen_contentPanel7;
 extern lv_obj_t *ui_GrindScreen_mainLabel7;
+extern lv_obj_t *ui_GrindScreen_proceedLabel;
 extern void ui_event_GrindScreen_startButton(lv_event_t *e);
 extern lv_obj_t *ui_GrindScreen_startButton;
 extern lv_obj_t *ui_GrindScreen_targetContainer;

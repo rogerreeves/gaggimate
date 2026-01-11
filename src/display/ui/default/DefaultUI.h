@@ -108,12 +108,18 @@ class DefaultUI {
     int doseMeasureCupEnabled = false;
     int doseMeasureBeepEnabled = false;
     double doseMeasureLastWeight = 0.0;
+    double doseMeasureDisplayWeight = 0.0;
     int doseMeasureBeepedNear = false;
     int doseMeasureBeepedExact = false;
     int doseMeasureBeepedGroundsNear = false;
     int doseMeasureBeepedGroundsExact = false;
     int doseMeasureProceedAvailable = false;
     int doseMeasureGroundsCorrect = false;
+    int doseMeasureBeansCorrect = false;
+    int doseMeasureBeepedProceed = false;
+    int doseMeasurePendingAdvance = false;
+    int doseMeasurePendingAdvanceToGrounds = false;
+    unsigned long doseMeasurePendingZeroSince = 0;
 
     // Seasonal flags
     int christmasMode = false;

@@ -16,6 +16,7 @@ lv_obj_t *ui_GrindScreen_dials = NULL;
 lv_obj_t *ui_GrindScreen_ImgButton2 = NULL;
 lv_obj_t *ui_GrindScreen_contentPanel7 = NULL;
 lv_obj_t *ui_GrindScreen_mainLabel7 = NULL;
+lv_obj_t *ui_GrindScreen_proceedLabel = NULL;
 lv_obj_t *ui_GrindScreen_startButton = NULL;
 lv_obj_t *ui_GrindScreen_targetContainer = NULL;
 lv_obj_t *ui_GrindScreen_targetDuration = NULL;
@@ -134,6 +135,21 @@ void ui_GrindScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_GrindScreen_mainLabel7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
                                            _ui_theme_alpha_NiceWhite);
     lv_obj_set_style_text_font(ui_GrindScreen_mainLabel7, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_GrindScreen_proceedLabel = lv_label_create(ui_GrindScreen_contentPanel7);
+    lv_obj_set_width(ui_GrindScreen_proceedLabel, 200);
+    lv_obj_set_height(ui_GrindScreen_proceedLabel, 24);
+    lv_obj_set_x(ui_GrindScreen_proceedLabel, 0);
+    lv_obj_set_y(ui_GrindScreen_proceedLabel, 83);
+    lv_obj_set_align(ui_GrindScreen_proceedLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_GrindScreen_proceedLabel, "");
+    ui_object_set_themeable_style_property(ui_GrindScreen_proceedLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_proceedLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_text_align(ui_GrindScreen_proceedLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_GrindScreen_proceedLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN);
 
     ui_GrindScreen_startButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
     lv_imgbtn_set_src(ui_GrindScreen_startButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_445946954, NULL);
@@ -280,6 +296,7 @@ void ui_GrindScreen_screen_destroy(void) {
     ui_GrindScreen_ImgButton2 = NULL;
     ui_GrindScreen_contentPanel7 = NULL;
     ui_GrindScreen_mainLabel7 = NULL;
+    ui_GrindScreen_proceedLabel = NULL;
     ui_GrindScreen_startButton = NULL;
     ui_GrindScreen_targetContainer = NULL;
     ui_GrindScreen_targetDuration = NULL;

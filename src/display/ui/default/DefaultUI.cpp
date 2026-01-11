@@ -278,17 +278,16 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
         return;
 
     if (doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
-        switchToBrewFromDoseMeasure();
+        doseMeasurePendingAdvance = true;
+        doseMeasurePendingAdvanceToGrounds = false;
+        doseMeasurePendingZeroSince = 0;
         return;
     }
 
     if (doseMeasurePhase == DoseMeasurePhase::Beans && doseMeasureProceedAvailable) {
-        BLEScales.tare();
-        doseMeasurePhase = DoseMeasurePhase::GroundsWait;
-        doseMeasureLabel = "Place Grounds";
-        doseMeasureProceedAvailable = false;
-        doseMeasureGroundsCorrect = false;
-        rerender = true;
+        doseMeasurePendingAdvance = true;
+        doseMeasurePendingAdvanceToGrounds = true;
+        doseMeasurePendingZeroSince = 0;
         return;
     }
 
@@ -303,6 +302,11 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
     doseMeasureBeepedGroundsExact = false;
     doseMeasureProceedAvailable = false;
     doseMeasureGroundsCorrect = false;
+    doseMeasureBeansCorrect = false;
+    doseMeasureBeepedProceed = false;
+    doseMeasurePendingAdvance = false;
+    doseMeasurePendingAdvanceToGrounds = false;
+    doseMeasurePendingZeroSince = 0;
     doseMeasureLabel = "Add Beans";
     rerender = true;
 }
@@ -546,7 +550,7 @@ void DefaultUI::setupReactive() {
                                                                  LV_PART_MAIN | LV_STATE_DEFAULT);
                                       lv_label_set_long_mode(ui_GrindScreen_targetDuration, LV_LABEL_LONG_CLIP);
                                   } else {
-                                      lv_obj_set_width(ui_GrindScreen_targetDuration, 240);
+                                      lv_obj_set_width(ui_GrindScreen_targetDuration, 280);
                                       lv_obj_set_height(ui_GrindScreen_targetDuration, 48);
                                       lv_obj_set_x(ui_GrindScreen_targetDuration, 0);
                                       lv_obj_set_style_text_font(ui_GrindScreen_targetDuration, &lv_font_montserrat_36,
@@ -661,6 +665,16 @@ void DefaultUI::setupReactive() {
                                               showStart ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
                           },
                           &doseMeasureEnabled, &doseMeasurePhase, &doseMeasureProceedAvailable);
+    effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
+                          [=]() {
+                              if (doseMeasureProceedAvailable) {
+                                  lv_label_set_text(ui_GrindScreen_proceedLabel, "Proceed");
+                                  _ui_flag_modify(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+                              } else {
+                                  _ui_flag_modify(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+                              }
+                          },
+                          &doseMeasureProceedAvailable);
     effect_mgr.use_effect([=] { return currentScreen == ui_BrewScreen; },
                           [=] { lv_label_set_text(ui_BrewScreen_profileName, selectedProfile.label.c_str()); },
                           &selectedProfileId);
@@ -721,7 +735,8 @@ void DefaultUI::setupReactive() {
                           [=]() {
                               if ((doseMeasureEnabled && bluetoothScales) ||
                                   (!doseMeasureEnabled && volumetricAvailable && bluetoothScales)) {
-                                  lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", bluetoothWeight);
+                                  const double displayWeight = doseMeasureEnabled ? doseMeasureDisplayWeight : bluetoothWeight;
+                                  lv_label_set_text_fmt(ui_GrindScreen_weightLabel, "%.1fg", displayWeight);
                               } else {
                                   lv_label_set_text(ui_GrindScreen_weightLabel, "-");
                               }
@@ -819,6 +834,11 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureBeepedGroundsExact = false;
         doseMeasureProceedAvailable = false;
         doseMeasureGroundsCorrect = false;
+        doseMeasureBeansCorrect = false;
+        doseMeasureBeepedProceed = false;
+        doseMeasurePendingAdvance = false;
+        doseMeasurePendingAdvanceToGrounds = false;
+        doseMeasurePendingZeroSince = 0;
         return;
     }
 
@@ -858,6 +878,34 @@ void DefaultUI::updateDoseMeasureState() {
 
     const double roundedWeight = round(effectiveWeight * 10.0) / 10.0;
     const double roundedTarget = round(doseMeasureTarget * 10.0) / 10.0;
+    doseMeasureDisplayWeight = effectiveWeight;
+
+    if (doseMeasurePendingAdvance) {
+        if (effectiveWeight <= 0.0) {
+            if (doseMeasurePendingZeroSince == 0) {
+                doseMeasurePendingZeroSince = millis();
+            } else if (millis() - doseMeasurePendingZeroSince >= 1000) {
+                if (doseMeasurePendingAdvanceToGrounds) {
+                    BLEScales.tare();
+                    doseMeasurePhase = DoseMeasurePhase::GroundsWait;
+                    doseMeasureLabel = "Place Grounds";
+                    doseMeasureBeepedGroundsNear = false;
+                    doseMeasureBeepedGroundsExact = false;
+                    doseMeasureGroundsCorrect = false;
+                } else {
+                    switchToBrewFromDoseMeasure();
+                }
+                doseMeasureProceedAvailable = false;
+                doseMeasurePendingAdvance = false;
+                doseMeasurePendingAdvanceToGrounds = false;
+                doseMeasurePendingZeroSince = 0;
+                rerender = true;
+                return;
+            }
+        } else {
+            doseMeasurePendingZeroSince = 0;
+        }
+    }
 
     if (doseMeasurePhase == DoseMeasurePhase::Beans) {
         const double diff = roundedTarget - roundedWeight;
@@ -875,15 +923,16 @@ void DefaultUI::updateDoseMeasureState() {
 
         if (absDiff <= 0.1) {
             if (doseMeasureBeepEnabled && !doseMeasureBeepedNear) {
-                BLEScales.beep(1);
+                BLEScales.beep(3);
                 doseMeasureBeepedNear = true;
             }
             if (roundedWeight == roundedTarget) {
                 if (doseMeasureBeepEnabled && !doseMeasureBeepedExact) {
-                    BLEScales.beep(2);
+                    BLEScales.beep(5);
                     doseMeasureBeepedExact = true;
                 }
-                doseMeasureLabel = "Correct Dose";
+                doseMeasureLabel = "Correct";
+                doseMeasureBeansCorrect = true;
                 if (doseMeasureCupEnabled) {
                     doseMeasurePhase = DoseMeasurePhase::BeansCorrect;
                     doseMeasureLastWeight = roundedWeight;
@@ -893,12 +942,17 @@ void DefaultUI::updateDoseMeasureState() {
         } else {
             doseMeasureBeepedNear = false;
             doseMeasureBeepedExact = false;
+            if (roundedWeight > 0.1) {
+                doseMeasureBeansCorrect = false;
+            }
         }
 
         doseMeasureProceedAvailable = proceedAvailable;
-        if (proceedAvailable) {
-            doseMeasureLabel = "Proceed";
-            return;
+        if (proceedAvailable && doseMeasureBeepEnabled && !doseMeasureBeepedProceed) {
+            BLEScales.beep(3);
+            doseMeasureBeepedProceed = true;
+        } else if (!proceedAvailable) {
+            doseMeasureBeepedProceed = false;
         }
 
         if (doseMeasureAvgBeanWeight > 0.0) {
@@ -909,21 +963,24 @@ void DefaultUI::updateDoseMeasureState() {
             }
         }
         doseMeasureLabel = diff >= 0 ? "Add Beans" : "Remove Beans";
+
+        if (doseMeasureBeansCorrect && effectiveWeight <= 0.0) {
+            doseMeasurePendingAdvance = true;
+            doseMeasurePendingAdvanceToGrounds = true;
+            doseMeasurePendingZeroSince = 0;
+            return;
+        }
         return;
     }
 
     if (doseMeasurePhase == DoseMeasurePhase::BeansCorrect) {
-        if (doseMeasureCupEnabled && fabs(roundedWeight - doseMeasureLastWeight) > 0.2) {
-            BLEScales.tare();
-            doseMeasurePhase = DoseMeasurePhase::GroundsWait;
-            doseMeasureLabel = "Place Grounds";
-            doseMeasureLastWeight = 0.0;
-            doseMeasureBeepedGroundsNear = false;
-            doseMeasureBeepedGroundsExact = false;
-            doseMeasureGroundsCorrect = false;
+        if (doseMeasureCupEnabled && effectiveWeight <= 0.0) {
+            doseMeasurePendingAdvance = true;
+            doseMeasurePendingAdvanceToGrounds = true;
+            doseMeasurePendingZeroSince = 0;
             return;
         }
-        doseMeasureLabel = "Correct Dose";
+        doseMeasureLabel = "Correct";
         return;
     }
 
@@ -942,12 +999,12 @@ void DefaultUI::updateDoseMeasureState() {
 
         if (absDiff <= 0.1) {
             if (doseMeasureBeepEnabled && !doseMeasureBeepedGroundsNear) {
-                BLEScales.beep(1);
+                BLEScales.beep(3);
                 doseMeasureBeepedGroundsNear = true;
             }
             if (roundedWeight == roundedTarget) {
                 if (doseMeasureBeepEnabled && !doseMeasureBeepedGroundsExact) {
-                    BLEScales.beep(2);
+                    BLEScales.beep(5);
                     doseMeasureBeepedGroundsExact = true;
                 }
             }
@@ -965,7 +1022,9 @@ void DefaultUI::updateDoseMeasureState() {
 
         if (roundedWeight <= 0.1) {
             if (doseMeasureGroundsCorrect) {
-                switchToBrewFromDoseMeasure();
+                doseMeasurePendingAdvance = true;
+                doseMeasurePendingAdvanceToGrounds = false;
+                doseMeasurePendingZeroSince = 0;
                 return;
             }
             if (absDiff <= 0.3) {
@@ -984,6 +1043,7 @@ void DefaultUI::updateDoseMeasureState() {
         if (effectiveWeight > 0.05) {
             doseMeasurePhase = DoseMeasurePhase::GroundsMeasure;
         }
+        return;
     }
 }
 
