@@ -113,6 +113,7 @@ class DefaultUI {
     int doseMeasureBeepedGroundsNear = false;
     int doseMeasureBeepedGroundsExact = false;
     int doseMeasureProceedAvailable = false;
+    int doseMeasureGroundsCorrect = false;
 
     // Seasonal flags
     int christmasMode = false;
