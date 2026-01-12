@@ -70,6 +70,8 @@ class Settings {
     bool isDoseMeasureCupEnabled() const { return doseCupEnabled; }
     double getDoseMeasureCupEmptyWeight() const { return doseCupEmptyWeight; }
     bool isDoseMeasureBeepEnabled() const { return doseBeepEnabled; }
+    double getDoseMeasureNearBand() const { return doseNearBand; }
+    int getDoseMeasureProceedBeanCount() const { return doseProceedBeanCount; }
     int getStartupMode() const { return startupMode; }
     int getStandbyTimeout() const { return standbyTimeout; }
     int getInfuseBloomTime() const { return infuseBloomTime; }
@@ -140,6 +142,8 @@ class Settings {
     void setDoseMeasureCupEnabled(bool enabled);
     void setDoseMeasureCupEmptyWeight(double empty_weight);
     void setDoseMeasureBeepEnabled(bool enabled);
+    void setDoseMeasureNearBand(double near_band);
+    void setDoseMeasureProceedBeanCount(int bean_count);
     void setStartupMode(int startup_mode);
     void setStandbyTimeout(int standby_timeout);
     void setInfuseBloomTime(int infuse_bloom_time);
@@ -216,6 +220,8 @@ class Settings {
     bool doseCupEnabled = false;
     double doseCupEmptyWeight = 0.0;
     bool doseBeepEnabled = false;
+    double doseNearBand = 0.3;
+    int doseProceedBeanCount = 3;
     double brewDelay = 1000.0;
     double grindDelay = 1000.0;
     bool delayAdjust = true;

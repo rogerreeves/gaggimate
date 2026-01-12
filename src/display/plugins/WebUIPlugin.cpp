@@ -475,6 +475,10 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             if (request->hasArg("doseMeasureCupEmptyWeight"))
                 settings->setDoseMeasureCupEmptyWeight(request->arg("doseMeasureCupEmptyWeight").toDouble());
             settings->setDoseMeasureBeepEnabled(request->hasArg("doseMeasureBeepEnabled"));
+            if (request->hasArg("doseMeasureNearBand"))
+                settings->setDoseMeasureNearBand(request->arg("doseMeasureNearBand").toDouble());
+            if (request->hasArg("doseMeasureProceedBeanCount"))
+                settings->setDoseMeasureProceedBeanCount(request->arg("doseMeasureProceedBeanCount").toInt());
             settings->setHomeAssistant(request->hasArg("homeAssistant"));
             if (request->hasArg("haUser"))
                 settings->setHomeAssistantUser(request->arg("haUser"));
@@ -608,6 +612,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["doseMeasureCupEnabled"] = settings.isDoseMeasureCupEnabled();
     doc["doseMeasureCupEmptyWeight"] = settings.getDoseMeasureCupEmptyWeight();
     doc["doseMeasureBeepEnabled"] = settings.isDoseMeasureBeepEnabled();
+    doc["doseMeasureNearBand"] = settings.getDoseMeasureNearBand();
+    doc["doseMeasureProceedBeanCount"] = settings.getDoseMeasureProceedBeanCount();
     doc["momentaryButtons"] = settings.isMomentaryButtons();
     doc["brewDelay"] = settings.getBrewDelay();
     doc["grindDelay"] = settings.getGrindDelay();

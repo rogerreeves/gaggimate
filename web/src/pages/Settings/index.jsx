@@ -51,6 +51,8 @@ export function Settings() {
         doseMeasureCupEnabled: fetchedSettings.doseMeasureCupEnabled ?? false,
         doseMeasureCupEmptyWeight: fetchedSettings.doseMeasureCupEmptyWeight ?? 0,
         doseMeasureBeepEnabled: fetchedSettings.doseMeasureBeepEnabled ?? false,
+        doseMeasureNearBand: fetchedSettings.doseMeasureNearBand ?? 0.3,
+        doseMeasureProceedBeanCount: fetchedSettings.doseMeasureProceedBeanCount ?? 3,
       };
 
       // Extract Kf from PID string and separate them
@@ -776,6 +778,40 @@ export function Settings() {
                     min='0'
                     value={formData.doseMeasureAvgBeanWeight}
                     onChange={onChange('doseMeasureAvgBeanWeight')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureNearBand' className='mb-2 block text-sm font-medium'>
+                    Near Band (g)
+                  </label>
+                  <input
+                    id='doseMeasureNearBand'
+                    name='doseMeasureNearBand'
+                    type='number'
+                    inputMode='decimal'
+                    className='input input-bordered w-full'
+                    step='0.1'
+                    min='0'
+                    value={formData.doseMeasureNearBand}
+                    onChange={onChange('doseMeasureNearBand')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureProceedBeanCount' className='mb-2 block text-sm font-medium'>
+                    Count Beans to Target From
+                  </label>
+                  <input
+                    id='doseMeasureProceedBeanCount'
+                    name='doseMeasureProceedBeanCount'
+                    type='number'
+                    inputMode='numeric'
+                    className='input input-bordered w-full'
+                    step='1'
+                    min='0'
+                    value={formData.doseMeasureProceedBeanCount}
+                    onChange={onChange('doseMeasureProceedBeanCount')}
                   />
                 </div>
 

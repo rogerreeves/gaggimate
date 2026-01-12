@@ -20,7 +20,15 @@ constexpr int TEMP_HISTORY_LENGTH = 20 * 1000 / TEMP_HISTORY_INTERVAL;
 int16_t calculate_angle(int set_temp, int range, int offset);
 
 enum class BrewScreenState { Brew, Settings };
-enum class DoseMeasurePhase { Idle, Beans, BeansCorrect, GroundsWait, GroundsMeasure, GroundsPrompt };
+enum class DoseMeasurePhase {
+    Idle,
+    BeansMeasure,
+    GrindBeansWaitRemove,
+    PreGroundsAutoTare,
+    GroundsWaitPlace,
+    GroundsMeasure,
+    GroundsPrompt
+};
 
 class DefaultUI {
   public:
@@ -62,6 +70,8 @@ class DefaultUI {
     void updateStatusScreen() const;
     void updateDoseMeasureState();
     void switchToBrewFromDoseMeasure();
+    void beginDoseMeasureBrewTransition(bool showGrindNotice);
+    void enqueueDoseMeasureBeep(int count);
 
     void adjustDials(lv_obj_t *dials);
     void adjustTempTarget(lv_obj_t *dials);
@@ -109,17 +119,33 @@ class DefaultUI {
     int doseMeasureBeepEnabled = false;
     double doseMeasureLastWeight = 0.0;
     double doseMeasureDisplayWeight = 0.0;
+    double doseMeasureNearBand = 0.3;
+    int doseMeasureProceedBeanCount = 3;
     int doseMeasureBeepedNear = false;
     int doseMeasureBeepedExact = false;
     int doseMeasureBeepedGroundsNear = false;
     int doseMeasureBeepedGroundsExact = false;
     int doseMeasureProceedAvailable = false;
+    int doseMeasureShowPlay = false;
     int doseMeasureGroundsCorrect = false;
     int doseMeasureBeansCorrect = false;
     int doseMeasureBeepedProceed = false;
-    int doseMeasurePendingAdvance = false;
-    int doseMeasurePendingAdvanceToGrounds = false;
-    unsigned long doseMeasurePendingZeroSince = 0;
+    int doseMeasureBrewTransitionActive = false;
+    unsigned long doseMeasureBrewTransitionSince = 0;
+    int doseMeasureBrewTransitionShowGrindNotice = false;
+    unsigned long doseMeasureBeansExactSince = 0;
+    unsigned long doseMeasureGroundsExactSince = 0;
+    unsigned long doseMeasureRemovedSince = 0;
+    int doseMeasureRemovedConfirmed = false;
+    unsigned long doseMeasureEmptySince = 0;
+    int doseMeasureEmptyConfirmed = false;
+    unsigned long doseMeasurePresentSince = 0;
+    int doseMeasurePresentConfirmed = false;
+    unsigned long doseMeasureAutoTareStart = 0;
+    unsigned long doseMeasureLastWeightLog = 0;
+    DoseMeasurePhase doseMeasureLastPhase = DoseMeasurePhase::Idle;
+    int doseMeasureBeepQueue = 0;
+    unsigned long doseMeasureBeepNextAt = 0;
 
     // Seasonal flags
     int christmasMode = false;
