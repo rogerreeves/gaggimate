@@ -25,6 +25,7 @@ constexpr double BEANS_EXACT_TOL_G = 0.1;
 constexpr double GROUNDS_EXACT_TOL_G = 0.1;
 constexpr double GROUNDS_PROCEED_TOL_G = 1.0;
 constexpr double REMOVED_THRESHOLD_G = 1.0;
+constexpr double REMOVED_NEGATIVE_G = 1.0;
 constexpr double EMPTY_THRESHOLD_G = 0.2;
 constexpr double PRESENT_THRESHOLD_G = 1.0;
 constexpr unsigned long REMOVED_DEBOUNCE_MS = 300;
@@ -1110,7 +1111,22 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureLastWeightLog = now;
     }
 
-    const bool removedNow = rawWeight < REMOVED_THRESHOLD_G;
+    const bool removalActive =
+        doseMeasurePhase == DoseMeasurePhase::BeansMeasure || doseMeasurePhase == DoseMeasurePhase::GrindBeansWaitRemove ||
+        doseMeasurePhase == DoseMeasurePhase::PreGroundsAutoTare ||
+        doseMeasurePhase == DoseMeasurePhase::GroundsMeasure || doseMeasurePhase == DoseMeasurePhase::GroundsPrompt;
+    double removalThreshold = REMOVED_THRESHOLD_G;
+    if (doseMeasurePhase == DoseMeasurePhase::BeansMeasure ||
+        doseMeasurePhase == DoseMeasurePhase::GrindBeansWaitRemove ||
+        doseMeasurePhase == DoseMeasurePhase::PreGroundsAutoTare) {
+        removalThreshold = -REMOVED_NEGATIVE_G;
+    } else if (doseMeasurePhase == DoseMeasurePhase::GroundsMeasure ||
+               doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
+        if (doseMeasureCupEmptyWeight > 0.0) {
+            removalThreshold = doseMeasureCupEmptyWeight - REMOVED_NEGATIVE_G;
+        }
+    }
+    const bool removedNow = removalActive && rawWeight < removalThreshold;
     if (removedNow) {
         if (doseMeasureRemovedSince == 0) {
             doseMeasureRemovedSince = now;
@@ -1122,7 +1138,8 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureRemovedConfirmed = false;
     }
     const bool removedStable = doseMeasureRemovedSince != 0 && (now - doseMeasureRemovedSince >= REMOVED_DEBOUNCE_MS);
-    if (removedStable && !doseMeasureRemovedConfirmed) {
+    const bool removedJustConfirmed = removedStable && !doseMeasureRemovedConfirmed;
+    if (removedJustConfirmed) {
         ESP_LOGI("DoseMeasure", "removal confirmed raw=%.2f", rawWeight);
         doseMeasureRemovedConfirmed = true;
     }
@@ -1265,7 +1282,7 @@ void DefaultUI::updateDoseMeasureState() {
                     beginDoseMeasureBrewTransition(true);
                 }
             }
-        } else if (removedStable && !doseMeasureBeansExactAchieved && !beansProceedAvailable) {
+        } else if (removedJustConfirmed && !doseMeasureBeansExactAchieved && !beansProceedAvailable) {
             enqueueDoseMeasureBeep(3, 120);
         }
         return;
@@ -1373,7 +1390,7 @@ void DefaultUI::updateDoseMeasureState() {
             return;
         }
 
-        if (removedStable && !doseMeasureGroundsExactAchieved) {
+        if (removedJustConfirmed && !doseMeasureGroundsExactAchieved) {
             if (groundsProceedAvailable) {
                 if (doseMeasureDosesRemaining > 1) {
                     doseMeasureDosesRemaining -= 1;

@@ -32,6 +32,7 @@ export function Settings() {
   });
 
   const formRef = useRef();
+  const importInputRef = useRef(null);
 
   useEffect(() => {
     if (fetchedSettings) {
@@ -261,6 +262,7 @@ export function Settings() {
       reader.onload = async e => {
         const data = JSON.parse(e.target.result);
         setFormData(data);
+        evt.target.value = '';
       };
       reader.readAsText(file);
     }
@@ -286,19 +288,27 @@ export function Settings() {
         >
           <FontAwesomeIcon icon={faFileExport} />
         </button>
-        <label
-          htmlFor='settingsImport'
+        <button
+          type='button'
+          onClick={() => importInputRef.current?.click()}
           className='btn btn-ghost btn-sm cursor-pointer'
           title='Import Settings'
         >
           <FontAwesomeIcon icon={faFileImport} />
-        </label>
+        </button>
         <input
+          ref={importInputRef}
           onChange={onUpload}
-          className='hidden'
           id='settingsImport'
           type='file'
           accept='.json,application/json'
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            width: '1px',
+            height: '1px',
+            opacity: 0,
+          }}
         />
       </div>
       <form key='settings' ref={formRef} method='post' action='/api/settings' onSubmit={onSubmit}>
