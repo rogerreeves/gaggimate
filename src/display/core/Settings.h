@@ -72,6 +72,7 @@ class Settings {
     bool isDoseMeasureBeepEnabled() const { return doseBeepEnabled; }
     double getDoseMeasureNearBand() const { return doseNearBand; }
     int getDoseMeasureProceedBeanCount() const { return doseProceedBeanCount; }
+    int getDoseMeasureDefaultDoseCount() const { return doseDefaultDoseCount; }
     int getStartupMode() const { return startupMode; }
     int getStandbyTimeout() const { return standbyTimeout; }
     int getInfuseBloomTime() const { return infuseBloomTime; }
@@ -144,6 +145,7 @@ class Settings {
     void setDoseMeasureBeepEnabled(bool enabled);
     void setDoseMeasureNearBand(double near_band);
     void setDoseMeasureProceedBeanCount(int bean_count);
+    void setDoseMeasureDefaultDoseCount(int dose_count);
     void setStartupMode(int startup_mode);
     void setStandbyTimeout(int standby_timeout);
     void setInfuseBloomTime(int infuse_bloom_time);
@@ -222,6 +224,7 @@ class Settings {
     bool doseBeepEnabled = false;
     double doseNearBand = 0.3;
     int doseProceedBeanCount = 3;
+    int doseDefaultDoseCount = 1;
     double brewDelay = 1000.0;
     double grindDelay = 1000.0;
     bool delayAdjust = true;

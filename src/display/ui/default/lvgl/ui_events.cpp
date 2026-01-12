@@ -82,6 +82,24 @@ void onGrindTimeRaise(lv_event_t *e) {
   controller.raiseGrindTarget();
 }
 
+void onGrindDoseCountRaise(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->adjustDoseMeasureDoseCount(1);
+  }
+}
+
+void onGrindDoseCountLower(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->adjustDoseMeasureDoseCount(-1);
+  }
+}
+
+void onGrindReset(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->resetDoseMeasureFlow();
+  }
+}
+
 void onMenuClick(lv_event_t *e) {
     controller.deactivate();
     controller.setMode(MODE_BREW);
@@ -156,6 +174,9 @@ void onGrindScreenLoad(lv_event_t *e) {
     lv_obj_set_ext_click_area(ui_GrindScreen_upDurationButton, 40);
     lv_obj_set_ext_click_area(ui_GrindScreen_downDurationButton, 40);
     lv_obj_set_ext_click_area(ui_GrindScreen_startButton, 25);
+    lv_obj_set_ext_click_area(ui_GrindScreen_refreshButton, 25);
+    lv_obj_set_ext_click_area(ui_GrindScreen_doseCountUp, 40);
+    lv_obj_set_ext_click_area(ui_GrindScreen_doseCountDown, 40);
     lv_obj_set_ext_click_area(ui_GrindScreen_ImgButton2, 20);
 }
 

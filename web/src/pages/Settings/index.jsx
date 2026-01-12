@@ -53,6 +53,7 @@ export function Settings() {
         doseMeasureBeepEnabled: fetchedSettings.doseMeasureBeepEnabled ?? false,
         doseMeasureNearBand: fetchedSettings.doseMeasureNearBand ?? 0.3,
         doseMeasureProceedBeanCount: fetchedSettings.doseMeasureProceedBeanCount ?? 3,
+        doseMeasureDefaultDoseCount: fetchedSettings.doseMeasureDefaultDoseCount ?? 1,
       };
 
       // Extract Kf from PID string and separate them
@@ -812,6 +813,24 @@ export function Settings() {
                     min='0'
                     value={formData.doseMeasureProceedBeanCount}
                     onChange={onChange('doseMeasureProceedBeanCount')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureDefaultDoseCount' className='mb-2 block text-sm font-medium'>
+                    Default Dose Count
+                  </label>
+                  <input
+                    id='doseMeasureDefaultDoseCount'
+                    name='doseMeasureDefaultDoseCount'
+                    type='number'
+                    inputMode='numeric'
+                    className='input input-bordered w-full'
+                    step='1'
+                    min='1'
+                    max='5'
+                    value={formData.doseMeasureDefaultDoseCount}
+                    onChange={onChange('doseMeasureDefaultDoseCount')}
                   />
                 </div>
 

@@ -45,6 +45,8 @@ class DefaultUI {
     void changeBrewScreenMode(BrewScreenState state);
     void onDoseMeasurePrimaryAction();
     void adjustDoseMeasureTarget(double delta);
+    void adjustDoseMeasureDoseCount(int delta);
+    void resetDoseMeasureFlow(bool preserveRemaining = false);
     void onProfileSwitch();
     void onNextProfile();
     void onPreviousProfile();
@@ -71,7 +73,7 @@ class DefaultUI {
     void updateDoseMeasureState();
     void switchToBrewFromDoseMeasure();
     void beginDoseMeasureBrewTransition(bool showGrindNotice);
-    void enqueueDoseMeasureBeep(int count);
+    void enqueueDoseMeasureBeep(int count, unsigned long spacingMs = 0);
 
     void adjustDials(lv_obj_t *dials);
     void adjustTempTarget(lv_obj_t *dials);
@@ -121,6 +123,10 @@ class DefaultUI {
     double doseMeasureDisplayWeight = 0.0;
     double doseMeasureNearBand = 0.3;
     int doseMeasureProceedBeanCount = 3;
+    int doseMeasureDoseCount = 1;
+    int doseMeasureDoseCountDirty = false;
+    int doseMeasureDosesRemaining = 0;
+    int doseMeasureShowStartBrewActions = false;
     int doseMeasureBeepedNear = false;
     int doseMeasureBeepedExact = false;
     int doseMeasureBeepedGroundsNear = false;
@@ -129,6 +135,8 @@ class DefaultUI {
     int doseMeasureShowPlay = false;
     int doseMeasureGroundsCorrect = false;
     int doseMeasureBeansCorrect = false;
+    int doseMeasureBeansExactAchieved = false;
+    int doseMeasureGroundsExactAchieved = false;
     int doseMeasureBeepedProceed = false;
     int doseMeasureBrewTransitionActive = false;
     unsigned long doseMeasureBrewTransitionSince = 0;
@@ -146,6 +154,7 @@ class DefaultUI {
     DoseMeasurePhase doseMeasureLastPhase = DoseMeasurePhase::Idle;
     int doseMeasureBeepQueue = 0;
     unsigned long doseMeasureBeepNextAt = 0;
+    unsigned long doseMeasureBeepSpacingMs = 0;
 
     // Seasonal flags
     int christmasMode = false;

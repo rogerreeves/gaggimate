@@ -22,6 +22,7 @@ Settings::Settings() {
     doseBeepEnabled = preferences.getBool("dm_bp", false);
     doseNearBand = preferences.getDouble("dm_nb", 0.3);
     doseProceedBeanCount = preferences.getInt("dm_pc", 3);
+    doseDefaultDoseCount = preferences.getInt("dm_dc", 1);
     brewDelay = preferences.getDouble("del_br", 1000.0);
     grindDelay = preferences.getDouble("del_gd", 1000.0);
     delayAdjust = preferences.getBool("del_ad", true);
@@ -226,6 +227,11 @@ void Settings::setDoseMeasureNearBand(double near_band) {
 
 void Settings::setDoseMeasureProceedBeanCount(int bean_count) {
     doseProceedBeanCount = std::clamp(bean_count, 0, 50);
+    save();
+}
+
+void Settings::setDoseMeasureDefaultDoseCount(int dose_count) {
+    doseDefaultDoseCount = std::clamp(dose_count, 1, 5);
     save();
 }
 
@@ -538,6 +544,7 @@ void Settings::doSave() {
     preferences.putBool("dm_bp", doseBeepEnabled);
     preferences.putDouble("dm_nb", doseNearBand);
     preferences.putInt("dm_pc", doseProceedBeanCount);
+    preferences.putInt("dm_dc", doseDefaultDoseCount);
     preferences.putDouble("del_br", brewDelay);
     preferences.putDouble("del_gd", grindDelay);
     preferences.putBool("del_ad", delayAdjust);
