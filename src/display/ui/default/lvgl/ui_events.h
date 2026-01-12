@@ -47,6 +47,9 @@ void onGrindScreenLoad(lv_event_t *e);
 void onGrindToggle(lv_event_t *e);
 void onGrindTimeRaise(lv_event_t *e);
 void onGrindTimeLower(lv_event_t *e);
+void onGrindDoseCountRaise(lv_event_t *e);
+void onGrindDoseCountLower(lv_event_t *e);
+void onGrindReset(lv_event_t *e);
 
 #ifdef __cplusplus
 } /*extern "C"*/
