@@ -264,8 +264,15 @@ void DefaultUI::loop() {
         currentScreen = lv_scr_act();
         if (lv_scr_act() == ui_StandbyScreen)
             updateStandbyScreen();
-        if (lv_scr_act() == ui_StatusScreen)
-            updateStatusScreen();
+    if (lv_scr_act() == ui_StatusScreen) {
+        updateStatusScreen();
+        if (statusSteamPromptReturnToBrew) {
+            statusSteamPromptReturnToBrew = false;
+            controller->deactivate();
+            controller->setMode(MODE_BREW);
+            changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
+        }
+    }
         updateDoseMeasureState();
         effect_mgr.evaluate_all();
     }
@@ -987,6 +994,12 @@ void DefaultUI::switchToBrewFromDoseMeasure() {
     changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
 }
 
+void DefaultUI::onSteamPromptAction() {
+    controller->deactivate();
+    controller->setMode(MODE_STEAM);
+    changeScreen(&ui_SimpleProcessScreen, &ui_SimpleProcessScreen_screen_init);
+}
+
 void DefaultUI::enqueueDoseMeasureBeep(int count, unsigned long spacingMs) {
     if (!doseMeasureBeepEnabled || count <= 0) {
         return;
@@ -1515,6 +1528,12 @@ void DefaultUI::updateStatusScreen() const {
     }
 
     const auto phase = brewProcess->currentPhase;
+    const bool brewFinished = !process->isActive();
+    statusSteamPromptActive = brewFinished;
+    if (!brewFinished) {
+        statusSteamPromptSince = 0;
+        statusSteamPromptReturnToBrew = false;
+    }
 
     unsigned long now = millis();
     if (!process->isActive()) {
@@ -1525,7 +1544,26 @@ void DefaultUI::updateStatusScreen() const {
     }
 
     lv_label_set_text(ui_StatusScreen_stepLabel, phase.phase == PhaseType::PHASE_TYPE_BREW ? "BREW" : "INFUSION");
-    lv_label_set_text(ui_StatusScreen_phaseLabel, brewProcess && brewProcess->isActive() ? phase.name.c_str() : "Finished");
+    if (brewFinished) {
+        if (statusSteamPromptSince == 0) {
+            statusSteamPromptSince = now;
+        } else if (!statusSteamPromptReturnToBrew && now - statusSteamPromptSince >= 5000) {
+            statusSteamPromptReturnToBrew = true;
+        }
+        lv_label_set_text(ui_StatusScreen_phaseLabel, "Steam?");
+    } else {
+        lv_label_set_text(ui_StatusScreen_phaseLabel, phase.name.c_str());
+    }
+
+    _ui_flag_modify(ui_StatusScreen_stepLabel, LV_OBJ_FLAG_HIDDEN,
+                    brewFinished ? _UI_MODIFY_FLAG_ADD : _UI_MODIFY_FLAG_REMOVE);
+    _ui_flag_modify(ui_StatusScreen_currentDuration, LV_OBJ_FLAG_HIDDEN,
+                    brewFinished ? _UI_MODIFY_FLAG_ADD : _UI_MODIFY_FLAG_REMOVE);
+    _ui_flag_modify(ui_StatusScreen_barContainer, LV_OBJ_FLAG_HIDDEN,
+                    brewFinished ? _UI_MODIFY_FLAG_ADD : _UI_MODIFY_FLAG_REMOVE);
+    _ui_flag_modify(ui_StatusScreen_labelContainer, LV_OBJ_FLAG_HIDDEN,
+                    brewFinished ? _UI_MODIFY_FLAG_ADD : _UI_MODIFY_FLAG_REMOVE);
+    _ui_flag_modify(ui_StatusScreen_brewVolume, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
 
     // Add bounds check for processStarted timestamp
     if (brewProcess && brewProcess->processStarted > 0 && now >= brewProcess->processStarted) {
@@ -1581,19 +1619,11 @@ void DefaultUI::updateStatusScreen() const {
     }
 
     // Brew finished adjustments
-    if (process->isActive()) {
-        lv_obj_add_flag(ui_StatusScreen_brewVolume, LV_OBJ_FLAG_HIDDEN);
-    } else {
-        // Re-validate brewProcess pointer before accessing members
-        if (brewProcess && brewProcess->target == ProcessTarget::VOLUMETRIC) {
-            lv_obj_clear_flag(ui_StatusScreen_brewVolume, LV_OBJ_FLAG_HIDDEN);
-        }
-        lv_obj_add_flag(ui_StatusScreen_barContainer, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_StatusScreen_labelContainer, LV_OBJ_FLAG_HIDDEN);
-        if (brewProcess) {
-            lv_label_set_text_fmt(ui_StatusScreen_brewVolume, "%.1lfg", brewProcess->currentVolume);
-        }
+    if (brewFinished) {
         lv_imgbtn_set_src(ui_StatusScreen_pauseButton, LV_IMGBTN_STATE_RELEASED, nullptr, &ui_img_631115820, nullptr);
+    } else {
+        lv_obj_add_flag(ui_StatusScreen_brewVolume, LV_OBJ_FLAG_HIDDEN);
+        lv_imgbtn_set_src(ui_StatusScreen_pauseButton, LV_IMGBTN_STATE_RELEASED, nullptr, &ui_img_1456692430, nullptr);
     }
 }
 

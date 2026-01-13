@@ -47,6 +47,8 @@ class DefaultUI {
     void adjustDoseMeasureTarget(double delta);
     void adjustDoseMeasureDoseCount(int delta);
     void resetDoseMeasureFlow(bool preserveRemaining = false);
+    bool isSteamPromptActive() const { return statusSteamPromptActive; }
+    void onSteamPromptAction();
     void onProfileSwitch();
     void onNextProfile();
     void onPreviousProfile();
@@ -173,6 +175,9 @@ class DefaultUI {
     int heatingFlash = 0;
     double bluetoothWeight = 0.0;
     BrewScreenState brewScreenState = BrewScreenState::Brew;
+    mutable bool statusSteamPromptActive = false;
+    mutable unsigned long statusSteamPromptSince = 0;
+    mutable bool statusSteamPromptReturnToBrew = false;
 
     int currentProfileIdx;
     String currentProfileId = "";

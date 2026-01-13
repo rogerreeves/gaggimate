@@ -30,6 +30,14 @@ void onSteamTempLower(lv_event_t *e) { controller.lowerTemp(); }
 
 void onSteamTempRaise(lv_event_t *e) { controller.raiseTemp(); }
 
+void onStatusScreenPause(lv_event_t *e) {
+    if (controller.getUI()->isSteamPromptActive()) {
+        controller.getUI()->onSteamPromptAction();
+        return;
+    }
+    onBrewCancel(e);
+}
+
 void onBrewScreen(lv_event_t *e) {
     controller.getUI()->changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
     controller.deactivate();

@@ -42,6 +42,7 @@ void onSimpleProcessToggle(lv_event_t *e);
 void onSteamTempLower(lv_event_t *e);
 void onSteamTempRaise(lv_event_t *e);
 void onStatusScreenLoad(lv_event_t *e);
+void onStatusScreenPause(lv_event_t *e);
 void onBrewCancel(lv_event_t *e);
 void onGrindScreenLoad(lv_event_t *e);
 void onGrindToggle(lv_event_t *e);
