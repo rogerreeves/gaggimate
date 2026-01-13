@@ -121,15 +121,13 @@ class DefaultUI {
     int doseMeasureBeepEnabled = false;
     double doseMeasureLastWeight = 0.0;
     double doseMeasureDisplayWeight = 0.0;
-    double doseMeasureNearBand = 0.3;
     int doseMeasureProceedBeanCount = 3;
+    int doseMeasureBeanCountLimit = 20;
     int doseMeasureDoseCount = 1;
     int doseMeasureDoseCountDirty = false;
     int doseMeasureDosesRemaining = 0;
     int doseMeasureShowStartBrewActions = false;
-    int doseMeasureBeepedNear = false;
     int doseMeasureBeepedExact = false;
-    int doseMeasureBeepedGroundsNear = false;
     int doseMeasureBeepedGroundsExact = false;
     int doseMeasureProceedAvailable = false;
     int doseMeasureShowPlay = false;

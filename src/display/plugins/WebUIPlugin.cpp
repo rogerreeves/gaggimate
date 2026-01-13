@@ -475,10 +475,10 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             if (request->hasArg("doseMeasureCupEmptyWeight"))
                 settings->setDoseMeasureCupEmptyWeight(request->arg("doseMeasureCupEmptyWeight").toDouble());
             settings->setDoseMeasureBeepEnabled(request->hasArg("doseMeasureBeepEnabled"));
-            if (request->hasArg("doseMeasureNearBand"))
-                settings->setDoseMeasureNearBand(request->arg("doseMeasureNearBand").toDouble());
             if (request->hasArg("doseMeasureProceedBeanCount"))
                 settings->setDoseMeasureProceedBeanCount(request->arg("doseMeasureProceedBeanCount").toInt());
+            if (request->hasArg("doseMeasureBeanCountLimit"))
+                settings->setDoseMeasureBeanCountLimit(request->arg("doseMeasureBeanCountLimit").toInt());
             if (request->hasArg("doseMeasureDefaultDoseCount"))
                 settings->setDoseMeasureDefaultDoseCount(request->arg("doseMeasureDefaultDoseCount").toInt());
             settings->setHomeAssistant(request->hasArg("homeAssistant"));
@@ -509,6 +509,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setStandbyBrightness(request->arg("standbyBrightness").toInt());
             if (request->hasArg("standbyBrightnessTimeout"))
                 settings->setStandbyBrightnessTimeout(request->arg("standbyBrightnessTimeout").toInt() * 1000);
+            if (request->hasArg("standbyLandingScreen"))
+                settings->setStandbyLandingScreen(request->arg("standbyLandingScreen"));
             if (request->hasArg("steamPumpPercentage"))
                 settings->setSteamPumpPercentage(request->arg("steamPumpPercentage").toFloat());
             if (request->hasArg("steamPumpCutoff"))
@@ -614,8 +616,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["doseMeasureCupEnabled"] = settings.isDoseMeasureCupEnabled();
     doc["doseMeasureCupEmptyWeight"] = settings.getDoseMeasureCupEmptyWeight();
     doc["doseMeasureBeepEnabled"] = settings.isDoseMeasureBeepEnabled();
-    doc["doseMeasureNearBand"] = settings.getDoseMeasureNearBand();
     doc["doseMeasureProceedBeanCount"] = settings.getDoseMeasureProceedBeanCount();
+    doc["doseMeasureBeanCountLimit"] = settings.getDoseMeasureBeanCountLimit();
     doc["doseMeasureDefaultDoseCount"] = settings.getDoseMeasureDefaultDoseCount();
     doc["momentaryButtons"] = settings.isMomentaryButtons();
     doc["brewDelay"] = settings.getBrewDelay();
@@ -627,6 +629,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["mainBrightness"] = settings.getMainBrightness();
     doc["standbyBrightness"] = settings.getStandbyBrightness();
     doc["standbyBrightnessTimeout"] = settings.getStandbyBrightnessTimeout() / 1000;
+    doc["standbyLandingScreen"] = settings.getStandbyLandingScreen();
     doc["steamPumpPercentage"] = settings.getSteamPumpPercentage();
     doc["steamPumpCutoff"] = settings.getSteamPumpCutoff();
     doc["themeMode"] = settings.getThemeMode();

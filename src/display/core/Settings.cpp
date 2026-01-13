@@ -20,8 +20,8 @@ Settings::Settings() {
     doseCupEnabled = preferences.getBool("dm_ce", false);
     doseCupEmptyWeight = preferences.getDouble("dm_cw", 0.0);
     doseBeepEnabled = preferences.getBool("dm_bp", false);
-    doseNearBand = preferences.getDouble("dm_nb", 0.3);
     doseProceedBeanCount = preferences.getInt("dm_pc", 3);
+    doseBeanCountLimit = preferences.getInt("dm_bcl", 20);
     doseDefaultDoseCount = preferences.getInt("dm_dc", 1);
     brewDelay = preferences.getDouble("del_br", 1000.0);
     grindDelay = preferences.getDouble("del_gd", 1000.0);
@@ -34,7 +34,7 @@ Settings::Settings() {
     wifiPassword = preferences.getString("wp", "");
     mdnsName = preferences.getString("mn", DEFAULT_MDNS_NAME);
     homekit = preferences.getBool("hk", false);
-    volumetricTarget = preferences.getBool("vt", false);
+    volumetricTarget = preferences.getBool("vt", true);
     otaChannel = preferences.getString("oc", DEFAULT_OTA_CHANNEL);
     infusePumpTime = preferences.getInt("ipt", 0);
     infuseBloomTime = preferences.getInt("ibt", 0);
@@ -109,6 +109,7 @@ Settings::Settings() {
     mainBrightness = preferences.getInt("main_b", 16);
     standbyBrightness = preferences.getInt("standby_b", 8);
     standbyBrightnessTimeout = preferences.getInt("standby_bt", 60000);
+    standbyLandingScreen = preferences.getString("standby_ls", "menu");
     wifiApTimeout = preferences.getInt("wifi_apt", DEFAULT_WIFI_AP_TIMEOUT_MS);
     themeMode = preferences.getInt("theme", 0);
 
@@ -220,13 +221,14 @@ void Settings::setDoseMeasureBeepEnabled(bool enabled) {
     save();
 }
 
-void Settings::setDoseMeasureNearBand(double near_band) {
-    doseNearBand = std::clamp(near_band, 0.0, 5.0);
-    save();
-}
 
 void Settings::setDoseMeasureProceedBeanCount(int bean_count) {
     doseProceedBeanCount = std::clamp(bean_count, 0, 50);
+    save();
+}
+
+void Settings::setDoseMeasureBeanCountLimit(int bean_count) {
+    doseBeanCountLimit = std::clamp(bean_count, 0, 50);
     save();
 }
 
@@ -448,6 +450,11 @@ void Settings::setStandbyBrightnessTimeout(int standby_brightness_timeout) {
     save();
 }
 
+void Settings::setStandbyLandingScreen(const String &screen) {
+    standbyLandingScreen = screen;
+    save();
+}
+
 void Settings::setWifiApTimeout(int timeout) {
     wifiApTimeout = timeout;
     save();
@@ -542,8 +549,8 @@ void Settings::doSave() {
     preferences.putBool("dm_ce", doseCupEnabled);
     preferences.putDouble("dm_cw", doseCupEmptyWeight);
     preferences.putBool("dm_bp", doseBeepEnabled);
-    preferences.putDouble("dm_nb", doseNearBand);
     preferences.putInt("dm_pc", doseProceedBeanCount);
+    preferences.putInt("dm_bcl", doseBeanCountLimit);
     preferences.putInt("dm_dc", doseDefaultDoseCount);
     preferences.putDouble("del_br", brewDelay);
     preferences.putDouble("del_gd", grindDelay);
@@ -606,6 +613,7 @@ void Settings::doSave() {
     preferences.putInt("main_b", mainBrightness);
     preferences.putInt("standby_b", standbyBrightness);
     preferences.putInt("standby_bt", standbyBrightnessTimeout);
+    preferences.putString("standby_ls", standbyLandingScreen);
     preferences.putInt("wifi_apt", wifiApTimeout);
     preferences.putInt("theme", themeMode);
 

@@ -207,12 +207,21 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_set_style_transform_zoom(ui_GrindScreen_refreshButton, 512, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_flag(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN);
 
-    ui_GrindScreen_doseCountIcon = lv_img_create(ui_GrindScreen_contentPanel7);
+    ui_GrindScreen_doseCountRow = lv_obj_create(ui_GrindScreen_contentPanel7);
+    lv_obj_remove_style_all(ui_GrindScreen_doseCountRow);
+    lv_obj_set_width(ui_GrindScreen_doseCountRow, 300);
+    lv_obj_set_height(ui_GrindScreen_doseCountRow, 50);
+    lv_obj_set_x(ui_GrindScreen_doseCountRow, 0);
+    lv_obj_set_y(ui_GrindScreen_doseCountRow, 45);
+    lv_obj_set_align(ui_GrindScreen_doseCountRow, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_GrindScreen_doseCountRow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
+
+    ui_GrindScreen_doseCountIcon = lv_img_create(ui_GrindScreen_doseCountRow);
     lv_img_set_src(ui_GrindScreen_doseCountIcon, &ui_img_979979123);
     lv_obj_set_width(ui_GrindScreen_doseCountIcon, 40);
     lv_obj_set_height(ui_GrindScreen_doseCountIcon, 40);
-    lv_obj_set_x(ui_GrindScreen_doseCountIcon, 0);
-    lv_obj_set_y(ui_GrindScreen_doseCountIcon, 10);
+    lv_obj_set_x(ui_GrindScreen_doseCountIcon, -120);
+    lv_obj_set_y(ui_GrindScreen_doseCountIcon, 0);
     lv_obj_set_align(ui_GrindScreen_doseCountIcon, LV_ALIGN_CENTER);
     lv_img_set_zoom(ui_GrindScreen_doseCountIcon, 128);
     ui_object_set_themeable_style_property(ui_GrindScreen_doseCountIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
@@ -220,19 +229,10 @@ void ui_GrindScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_GrindScreen_doseCountIcon, LV_PART_MAIN | LV_STATE_DEFAULT,
                                            LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
 
-    ui_GrindScreen_doseCountRow = lv_obj_create(ui_GrindScreen_contentPanel7);
-    lv_obj_remove_style_all(ui_GrindScreen_doseCountRow);
-    lv_obj_set_width(ui_GrindScreen_doseCountRow, 160);
-    lv_obj_set_height(ui_GrindScreen_doseCountRow, 40);
-    lv_obj_set_x(ui_GrindScreen_doseCountRow, 0);
-    lv_obj_set_y(ui_GrindScreen_doseCountRow, 55);
-    lv_obj_set_align(ui_GrindScreen_doseCountRow, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_GrindScreen_doseCountRow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
-
     ui_GrindScreen_doseCountLabel = lv_label_create(ui_GrindScreen_doseCountRow);
-    lv_obj_set_width(ui_GrindScreen_doseCountLabel, 50);
-    lv_obj_set_height(ui_GrindScreen_doseCountLabel, 24);
-    lv_obj_set_x(ui_GrindScreen_doseCountLabel, 0);
+    lv_obj_set_width(ui_GrindScreen_doseCountLabel, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_GrindScreen_doseCountLabel, 30);
+    lv_obj_set_x(ui_GrindScreen_doseCountLabel, 30);
     lv_obj_set_y(ui_GrindScreen_doseCountLabel, 0);
     lv_obj_set_align(ui_GrindScreen_doseCountLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_GrindScreen_doseCountLabel, "1x");
@@ -247,7 +247,7 @@ void ui_GrindScreen_screen_init(void) {
     lv_imgbtn_set_src(ui_GrindScreen_doseCountUp, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_390988422, NULL);
     lv_obj_set_width(ui_GrindScreen_doseCountUp, 40);
     lv_obj_set_height(ui_GrindScreen_doseCountUp, 40);
-    lv_obj_set_x(ui_GrindScreen_doseCountUp, 60);
+    lv_obj_set_x(ui_GrindScreen_doseCountUp, 120);
     lv_obj_set_y(ui_GrindScreen_doseCountUp, 0);
     lv_obj_set_align(ui_GrindScreen_doseCountUp, LV_ALIGN_CENTER);
     ui_object_set_themeable_style_property(ui_GrindScreen_doseCountUp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
@@ -271,14 +271,14 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_remove_style_all(ui_GrindScreen_targetContainer);
     lv_obj_set_width(ui_GrindScreen_targetContainer, 300);
     lv_obj_set_height(ui_GrindScreen_targetContainer, 50);
-    lv_obj_set_y(ui_GrindScreen_targetContainer, -20);
+    lv_obj_set_y(ui_GrindScreen_targetContainer, -30);
     lv_obj_set_align(ui_GrindScreen_targetContainer, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_GrindScreen_targetContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_GrindScreen_targetDuration = lv_label_create(ui_GrindScreen_targetContainer);
-    lv_obj_set_width(ui_GrindScreen_targetDuration, 80);
+    lv_obj_set_width(ui_GrindScreen_targetDuration, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_GrindScreen_targetDuration, 30);
-    lv_obj_set_x(ui_GrindScreen_targetDuration, 0);
+    lv_obj_set_x(ui_GrindScreen_targetDuration, 30);
     lv_obj_set_y(ui_GrindScreen_targetDuration, 0);
     lv_obj_set_align(ui_GrindScreen_targetDuration, LV_ALIGN_CENTER);
     lv_label_set_text(ui_GrindScreen_targetDuration, "0:30");
@@ -293,7 +293,7 @@ void ui_GrindScreen_screen_init(void) {
     lv_imgbtn_set_src(ui_GrindScreen_upDurationButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_390988422, NULL);
     lv_obj_set_width(ui_GrindScreen_upDurationButton, 40);
     lv_obj_set_height(ui_GrindScreen_upDurationButton, 40);
-    lv_obj_set_x(ui_GrindScreen_upDurationButton, 60);
+    lv_obj_set_x(ui_GrindScreen_upDurationButton, 120);
     lv_obj_set_y(ui_GrindScreen_upDurationButton, 0);
     lv_obj_set_align(ui_GrindScreen_upDurationButton, LV_ALIGN_CENTER);
     ui_object_set_themeable_style_property(ui_GrindScreen_upDurationButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
@@ -328,6 +328,7 @@ void ui_GrindScreen_screen_init(void) {
                                            _ui_theme_alpha_NiceWhite);
 
     ui_GrindScreen_modeSwitch = lv_obj_create(ui_GrindScreen_contentPanel7);
+    lv_obj_remove_style_all(ui_GrindScreen_modeSwitch);
     lv_obj_set_width(ui_GrindScreen_modeSwitch, 160);
     lv_obj_set_height(ui_GrindScreen_modeSwitch, 50);
     lv_obj_set_x(ui_GrindScreen_modeSwitch, 0);
@@ -336,10 +337,6 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_set_flex_flow(ui_GrindScreen_modeSwitch, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_GrindScreen_modeSwitch, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
-                                           LV_OPA_TRANSP);
-    ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           LV_OPA_TRANSP);
 
     ui_GrindScreen_volumetricButton = lv_img_create(ui_GrindScreen_modeSwitch);
     lv_img_set_src(ui_GrindScreen_volumetricButton, &ui_img_1424216268);

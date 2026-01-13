@@ -70,8 +70,8 @@ class Settings {
     bool isDoseMeasureCupEnabled() const { return doseCupEnabled; }
     double getDoseMeasureCupEmptyWeight() const { return doseCupEmptyWeight; }
     bool isDoseMeasureBeepEnabled() const { return doseBeepEnabled; }
-    double getDoseMeasureNearBand() const { return doseNearBand; }
     int getDoseMeasureProceedBeanCount() const { return doseProceedBeanCount; }
+    int getDoseMeasureBeanCountLimit() const { return doseBeanCountLimit; }
     int getDoseMeasureDefaultDoseCount() const { return doseDefaultDoseCount; }
     int getStartupMode() const { return startupMode; }
     int getStandbyTimeout() const { return standbyTimeout; }
@@ -112,6 +112,7 @@ class Settings {
     int getMainBrightness() const { return mainBrightness; }
     int getStandbyBrightness() const { return standbyBrightness; }
     int getStandbyBrightnessTimeout() const { return standbyBrightnessTimeout; }
+    String getStandbyLandingScreen() const { return standbyLandingScreen; }
     int getWifiApTimeout() const { return wifiApTimeout; }
     float getSteamPumpPercentage() const { return steamPumpPercentage; }
     float getSteamPumpCutoff() const { return steamPumpCutoff; }
@@ -143,8 +144,8 @@ class Settings {
     void setDoseMeasureCupEnabled(bool enabled);
     void setDoseMeasureCupEmptyWeight(double empty_weight);
     void setDoseMeasureBeepEnabled(bool enabled);
-    void setDoseMeasureNearBand(double near_band);
     void setDoseMeasureProceedBeanCount(int bean_count);
+    void setDoseMeasureBeanCountLimit(int bean_count);
     void setDoseMeasureDefaultDoseCount(int dose_count);
     void setStartupMode(int startup_mode);
     void setStandbyTimeout(int standby_timeout);
@@ -187,6 +188,7 @@ class Settings {
     void setMainBrightness(int main_brightness);
     void setStandbyBrightness(int standby_brightness);
     void setStandbyBrightnessTimeout(int standby_brightness_timeout);
+    void setStandbyLandingScreen(const String &screen);
     void setWifiApTimeout(int timeout);
     void setSteamPumpPercentage(float steam_pump_percentage);
     void setSteamPumpCutoff(float steam_pump_cutoff);
@@ -222,8 +224,8 @@ class Settings {
     bool doseCupEnabled = false;
     double doseCupEmptyWeight = 0.0;
     bool doseBeepEnabled = false;
-    double doseNearBand = 0.3;
     int doseProceedBeanCount = 3;
+    int doseBeanCountLimit = 20;
     int doseDefaultDoseCount = 1;
     double brewDelay = 1000.0;
     double grindDelay = 1000.0;
@@ -232,6 +234,7 @@ class Settings {
     bool autowakeupEnabled = false;
     std::vector<AutoWakeupSchedule> autowakeupSchedules;
     int standbyTimeout = DEFAULT_STANDBY_TIMEOUT_MS;
+    String standbyLandingScreen = "menu";
     String pid = DEFAULT_PID;
     String pumpModelCoeffs = DEFAULT_PUMP_MODEL_COEFFS;
     String wifiSsid = "";
@@ -239,7 +242,7 @@ class Settings {
     String mdnsName = DEFAULT_MDNS_NAME;
     String savedScale = "";
     bool homekit = false;
-    bool volumetricTarget = false;
+    bool volumetricTarget = true;
     bool boilerFillActive = false;
     int startupFillTime = 0;
     int steamFillTime = 0;

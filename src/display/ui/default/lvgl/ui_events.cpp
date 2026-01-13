@@ -49,9 +49,28 @@ void onSteamScreen(lv_event_t *e) {
 }
 
 void onWakeup(lv_event_t *e) {
-    controller.getUI()->changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
-    controller.deactivate();
-    controller.setMode(MODE_BREW);
+    const String landing = controller.getSettings().getStandbyLandingScreen();
+    if (landing == "menu") {
+        controller.getUI()->changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
+        controller.deactivate();
+        controller.setMode(MODE_BREW);
+    } else if (landing == "grind") {
+        controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+        controller.deactivate();
+        controller.setMode(MODE_GRIND);
+    } else if (landing == "steam") {
+        controller.getUI()->changeScreen(&ui_SimpleProcessScreen, &ui_SimpleProcessScreen_screen_init);
+        controller.deactivate();
+        controller.setMode(MODE_STEAM);
+    } else if (landing == "water") {
+        controller.getUI()->changeScreen(&ui_SimpleProcessScreen, &ui_SimpleProcessScreen_screen_init);
+        controller.deactivate();
+        controller.setMode(MODE_WATER);
+    } else {
+        controller.getUI()->changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
+        controller.deactivate();
+        controller.setMode(MODE_BREW);
+    }
 }
 
 void onLoadStarted(lv_event_t *e) { controller.onScreenReady(); }

@@ -52,9 +52,10 @@ export function Settings() {
         doseMeasureCupEnabled: fetchedSettings.doseMeasureCupEnabled ?? false,
         doseMeasureCupEmptyWeight: fetchedSettings.doseMeasureCupEmptyWeight ?? 0,
         doseMeasureBeepEnabled: fetchedSettings.doseMeasureBeepEnabled ?? false,
-        doseMeasureNearBand: fetchedSettings.doseMeasureNearBand ?? 0.3,
         doseMeasureProceedBeanCount: fetchedSettings.doseMeasureProceedBeanCount ?? 3,
+        doseMeasureBeanCountLimit: fetchedSettings.doseMeasureBeanCountLimit ?? 20,
         doseMeasureDefaultDoseCount: fetchedSettings.doseMeasureDefaultDoseCount ?? 1,
+        standbyLandingScreen: fetchedSettings.standbyLandingScreen ?? 'menu',
       };
 
       // Extract Kf from PID string and separate them
@@ -288,28 +289,18 @@ export function Settings() {
         >
           <FontAwesomeIcon icon={faFileExport} />
         </button>
-        <button
-          type='button'
-          onClick={() => importInputRef.current?.click()}
-          className='btn btn-ghost btn-sm cursor-pointer'
-          title='Import Settings'
-        >
-          <FontAwesomeIcon icon={faFileImport} />
-        </button>
-        <input
-          ref={importInputRef}
-          onChange={onUpload}
-          id='settingsImport'
-          type='file'
-          accept='.json,application/json'
-          style={{
-            position: 'absolute',
-            left: '-9999px',
-            width: '1px',
-            height: '1px',
-            opacity: 0,
-          }}
-        />
+        <div className='flex items-center gap-2'>
+          <span className='text-xs text-base-content/70'>Import</span>
+          <input
+            ref={importInputRef}
+            onChange={onUpload}
+            id='settingsImport'
+            type='file'
+            accept='.json,application/json'
+            className='input input-bordered input-sm w-44'
+            aria-label='Import settings from JSON'
+          />
+        </div>
       </div>
       <form key='settings' ref={formRef} method='post' action='/api/settings' onSubmit={onSubmit}>
         <div className='grid grid-cols-1 gap-4 lg:grid-cols-10'>
@@ -378,6 +369,35 @@ export function Settings() {
                 value={formData.standbyTimeout}
                 onChange={onChange('standbyTimeout')}
               />
+            </div>
+
+            <div className='divider'>Landing Screen</div>
+            <div className='form-control'>
+              <label htmlFor='standbyLandingScreen' className='mb-2 block text-sm font-medium'>
+                Landing Screen
+              </label>
+              <select
+                id='standbyLandingScreen'
+                name='standbyLandingScreen'
+                className='select select-bordered w-full'
+                onChange={onChange('standbyLandingScreen')}
+              >
+                <option value='menu' selected={formData.standbyLandingScreen === 'menu'}>
+                  Menu
+                </option>
+                <option value='grind' selected={formData.standbyLandingScreen === 'grind'}>
+                  Grind
+                </option>
+                <option value='brew' selected={formData.standbyLandingScreen === 'brew'}>
+                  Brew
+                </option>
+                <option value='steam' selected={formData.standbyLandingScreen === 'steam'}>
+                  Steam
+                </option>
+                <option value='water' selected={formData.standbyLandingScreen === 'water'}>
+                  Hot Water
+                </option>
+              </select>
             </div>
 
             <div className='divider'>Predictive scale delay</div>
@@ -793,25 +813,8 @@ export function Settings() {
                 </div>
 
                 <div className='form-control'>
-                  <label htmlFor='doseMeasureNearBand' className='mb-2 block text-sm font-medium'>
-                    Near Band (g)
-                  </label>
-                  <input
-                    id='doseMeasureNearBand'
-                    name='doseMeasureNearBand'
-                    type='number'
-                    inputMode='decimal'
-                    className='input input-bordered w-full'
-                    step='0.1'
-                    min='0'
-                    value={formData.doseMeasureNearBand}
-                    onChange={onChange('doseMeasureNearBand')}
-                  />
-                </div>
-
-                <div className='form-control'>
                   <label htmlFor='doseMeasureProceedBeanCount' className='mb-2 block text-sm font-medium'>
-                    Count Beans to Target From
+                    Proceed Threshold (Beans)
                   </label>
                   <input
                     id='doseMeasureProceedBeanCount'
@@ -823,6 +826,23 @@ export function Settings() {
                     min='0'
                     value={formData.doseMeasureProceedBeanCount}
                     onChange={onChange('doseMeasureProceedBeanCount')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureBeanCountLimit' className='mb-2 block text-sm font-medium'>
+                    Count Beans to Target
+                  </label>
+                  <input
+                    id='doseMeasureBeanCountLimit'
+                    name='doseMeasureBeanCountLimit'
+                    type='number'
+                    inputMode='numeric'
+                    className='input input-bordered w-full'
+                    step='1'
+                    min='0'
+                    value={formData.doseMeasureBeanCountLimit}
+                    onChange={onChange('doseMeasureBeanCountLimit')}
                   />
                 </div>
 
