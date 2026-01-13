@@ -14,7 +14,6 @@ Settings::Settings() {
     targetGrindVolume = preferences.getDouble("tgv", 18.0);
     targetGrindDuration = preferences.getInt("tgd", 25000);
     doseMeasureEnabled = preferences.getBool("dm_en", true);
-    doseTrayWeight = preferences.getDouble("dm_tw", 0.0);
     doseAvgBeanWeight = preferences.getDouble("dm_bw", 0.1);
     doseTarget = preferences.getDouble("dm_tg", 18.5);
     doseCupEnabled = preferences.getBool("dm_ce", false);
@@ -188,11 +187,6 @@ void Settings::setTargetGrindDuration(const int target_duration) {
 
 void Settings::setDoseMeasureEnabled(bool enabled) {
     doseMeasureEnabled = enabled;
-    save();
-}
-
-void Settings::setDoseMeasureTrayWeight(double tray_weight) {
-    doseTrayWeight = std::max(0.0, tray_weight);
     save();
 }
 
@@ -543,7 +537,6 @@ void Settings::doSave() {
     preferences.putDouble("tgv", targetGrindVolume);
     preferences.putInt("tgd", targetGrindDuration);
     preferences.putBool("dm_en", doseMeasureEnabled);
-    preferences.putDouble("dm_tw", doseTrayWeight);
     preferences.putDouble("dm_bw", doseAvgBeanWeight);
     preferences.putDouble("dm_tg", doseTarget);
     preferences.putBool("dm_ce", doseCupEnabled);

@@ -465,8 +465,6 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             if (request->hasArg("smartGrindMode"))
                 settings->setSmartGrindMode(request->arg("smartGrindMode").toInt());
             settings->setDoseMeasureEnabled(request->hasArg("doseMeasureEnabled"));
-            if (request->hasArg("doseMeasureTrayWeight"))
-                settings->setDoseMeasureTrayWeight(request->arg("doseMeasureTrayWeight").toDouble());
             if (request->hasArg("doseMeasureAvgBeanWeight"))
                 settings->setDoseMeasureAvgBeanWeight(request->arg("doseMeasureAvgBeanWeight").toDouble());
             if (request->hasArg("doseMeasureTarget"))
@@ -610,7 +608,6 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["smartGrindIp"] = settings.getSmartGrindIp();
     doc["smartGrindMode"] = settings.getSmartGrindMode();
     doc["doseMeasureEnabled"] = settings.isDoseMeasureEnabled();
-    doc["doseMeasureTrayWeight"] = settings.getDoseMeasureTrayWeight();
     doc["doseMeasureAvgBeanWeight"] = settings.getDoseMeasureAvgBeanWeight();
     doc["doseMeasureTarget"] = settings.getDoseMeasureTarget();
     doc["doseMeasureCupEnabled"] = settings.isDoseMeasureCupEnabled();

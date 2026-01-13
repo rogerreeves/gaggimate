@@ -61,7 +61,6 @@ void onWakeup(lv_event_t *e) {
     if (landing == "menu") {
         controller.getUI()->changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
         controller.deactivate();
-        controller.setMode(MODE_BREW);
     } else if (landing == "grind") {
         controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
         controller.deactivate();

@@ -76,6 +76,7 @@ class DefaultUI {
     void switchToBrewFromDoseMeasure();
     void beginDoseMeasureBrewTransition(bool showGrindNotice);
     void enqueueDoseMeasureBeep(int count, unsigned long spacingMs = 0);
+    void forceDoseMeasureBeep(int count, unsigned long spacingMs);
 
     void adjustDials(lv_obj_t *dials);
     void adjustTempTarget(lv_obj_t *dials);
@@ -116,7 +117,6 @@ class DefaultUI {
     DoseMeasurePhase doseMeasurePhase = DoseMeasurePhase::Idle;
     String doseMeasureLabel = "";
     double doseMeasureTarget = 18.5;
-    double doseMeasureTrayWeight = 0.0;
     double doseMeasureAvgBeanWeight = 0.1;
     double doseMeasureCupEmptyWeight = 0.0;
     int doseMeasureCupEnabled = false;

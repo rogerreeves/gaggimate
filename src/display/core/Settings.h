@@ -64,7 +64,6 @@ class Settings {
     double getTargetGrindVolume() const { return targetGrindVolume; }
     int getTargetGrindDuration() const { return targetGrindDuration; }
     bool isDoseMeasureEnabled() const { return doseMeasureEnabled; }
-    double getDoseMeasureTrayWeight() const { return doseTrayWeight; }
     double getDoseMeasureAvgBeanWeight() const { return doseAvgBeanWeight; }
     double getDoseMeasureTarget() const { return doseTarget; }
     bool isDoseMeasureCupEnabled() const { return doseCupEnabled; }
@@ -138,7 +137,6 @@ class Settings {
     void setTargetGrindVolume(double target_grind_volume);
     void setTargetGrindDuration(int target_duration);
     void setDoseMeasureEnabled(bool enabled);
-    void setDoseMeasureTrayWeight(double tray_weight);
     void setDoseMeasureAvgBeanWeight(double avg_bean_weight);
     void setDoseMeasureTarget(double target_weight);
     void setDoseMeasureCupEnabled(bool enabled);
@@ -218,12 +216,11 @@ class Settings {
     double targetGrindVolume = 18;
     int targetGrindDuration = 25000;
     bool doseMeasureEnabled = false;
-    double doseTrayWeight = 0.0;
     double doseAvgBeanWeight = 0.1;
     double doseTarget = 18.5;
-    bool doseCupEnabled = false;
+    bool doseCupEnabled = true;
     double doseCupEmptyWeight = 0.0;
-    bool doseBeepEnabled = false;
+    bool doseBeepEnabled = true;
     int doseProceedBeanCount = 3;
     int doseBeanCountLimit = 20;
     int doseDefaultDoseCount = 1;

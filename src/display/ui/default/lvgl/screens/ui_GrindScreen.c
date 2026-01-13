@@ -223,7 +223,6 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_set_x(ui_GrindScreen_doseCountIcon, -120);
     lv_obj_set_y(ui_GrindScreen_doseCountIcon, 0);
     lv_obj_set_align(ui_GrindScreen_doseCountIcon, LV_ALIGN_CENTER);
-    lv_img_set_zoom(ui_GrindScreen_doseCountIcon, 128);
     ui_object_set_themeable_style_property(ui_GrindScreen_doseCountIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
                                            _ui_theme_color_NiceWhite);
     ui_object_set_themeable_style_property(ui_GrindScreen_doseCountIcon, LV_PART_MAIN | LV_STATE_DEFAULT,

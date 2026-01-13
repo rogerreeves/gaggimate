@@ -49,9 +49,9 @@ export function Settings() {
         doseMeasureTrayWeight: fetchedSettings.doseMeasureTrayWeight ?? 0,
         doseMeasureAvgBeanWeight: fetchedSettings.doseMeasureAvgBeanWeight ?? 0.1,
         doseMeasureTarget: fetchedSettings.doseMeasureTarget ?? 18.5,
-        doseMeasureCupEnabled: fetchedSettings.doseMeasureCupEnabled ?? false,
+        doseMeasureCupEnabled: fetchedSettings.doseMeasureCupEnabled ?? true,
         doseMeasureCupEmptyWeight: fetchedSettings.doseMeasureCupEmptyWeight ?? 0,
-        doseMeasureBeepEnabled: fetchedSettings.doseMeasureBeepEnabled ?? false,
+        doseMeasureBeepEnabled: fetchedSettings.doseMeasureBeepEnabled ?? true,
         doseMeasureProceedBeanCount: fetchedSettings.doseMeasureProceedBeanCount ?? 3,
         doseMeasureBeanCountLimit: fetchedSettings.doseMeasureBeanCountLimit ?? 20,
         doseMeasureDefaultDoseCount: fetchedSettings.doseMeasureDefaultDoseCount ?? 1,
@@ -289,18 +289,23 @@ export function Settings() {
         >
           <FontAwesomeIcon icon={faFileExport} />
         </button>
-        <div className='flex items-center gap-2'>
-          <span className='text-xs text-base-content/70'>Import</span>
-          <input
-            ref={importInputRef}
-            onChange={onUpload}
-            id='settingsImport'
-            type='file'
-            accept='.json,application/json'
-            className='input input-bordered input-sm w-44'
-            aria-label='Import settings from JSON'
-          />
-        </div>
+        <label
+          htmlFor='settingsImport'
+          className='btn btn-ghost btn-sm cursor-pointer'
+          title='Import Settings'
+          aria-label='Import settings from JSON'
+        >
+          <FontAwesomeIcon icon={faFileImport} />
+        </label>
+        <input
+          ref={importInputRef}
+          onChange={onUpload}
+          id='settingsImport'
+          type='file'
+          accept='.json,application/json'
+          className='hidden'
+          aria-label='Import settings from JSON'
+        />
       </div>
       <form key='settings' ref={formRef} method='post' action='/api/settings' onSubmit={onSubmit}>
         <div className='grid grid-cols-1 gap-4 lg:grid-cols-10'>
@@ -381,20 +386,21 @@ export function Settings() {
                 name='standbyLandingScreen'
                 className='select select-bordered w-full'
                 onChange={onChange('standbyLandingScreen')}
+                value={formData.standbyLandingScreen}
               >
-                <option value='menu' selected={formData.standbyLandingScreen === 'menu'}>
+                <option value='menu'>
                   Menu
                 </option>
-                <option value='grind' selected={formData.standbyLandingScreen === 'grind'}>
+                <option value='grind'>
                   Grind
                 </option>
-                <option value='brew' selected={formData.standbyLandingScreen === 'brew'}>
+                <option value='brew'>
                   Brew
                 </option>
-                <option value='steam' selected={formData.standbyLandingScreen === 'steam'}>
+                <option value='steam'>
                   Steam
                 </option>
-                <option value='water' selected={formData.standbyLandingScreen === 'water'}>
+                <option value='water'>
                   Hot Water
                 </option>
               </select>
@@ -779,19 +785,37 @@ export function Settings() {
             {formData.doseMeasureEnabled && (
               <>
                 <div className='form-control'>
-                  <label htmlFor='doseMeasureTrayWeight' className='mb-2 block text-sm font-medium'>
-                    Dose Tray Weight (g)
+                  <label htmlFor='doseMeasureTarget' className='mb-2 block text-sm font-medium'>
+                    Dose (g)
                   </label>
                   <input
-                    id='doseMeasureTrayWeight'
-                    name='doseMeasureTrayWeight'
+                    id='doseMeasureTarget'
+                    name='doseMeasureTarget'
                     type='number'
                     inputMode='decimal'
                     className='input input-bordered w-full'
-                    step='0.1'
+                    step='0.5'
                     min='0'
-                    value={formData.doseMeasureTrayWeight}
-                    onChange={onChange('doseMeasureTrayWeight')}
+                    value={formData.doseMeasureTarget}
+                    onChange={onChange('doseMeasureTarget')}
+                  />
+                </div>
+
+                <div className='form-control'>
+                  <label htmlFor='doseMeasureDefaultDoseCount' className='mb-2 block text-sm font-medium'>
+                    Default Dose Count
+                  </label>
+                  <input
+                    id='doseMeasureDefaultDoseCount'
+                    name='doseMeasureDefaultDoseCount'
+                    type='number'
+                    inputMode='numeric'
+                    className='input input-bordered w-full'
+                    step='1'
+                    min='1'
+                    max='5'
+                    value={formData.doseMeasureDefaultDoseCount}
+                    onChange={onChange('doseMeasureDefaultDoseCount')}
                   />
                 </div>
 
@@ -847,41 +871,6 @@ export function Settings() {
                 </div>
 
                 <div className='form-control'>
-                  <label htmlFor='doseMeasureDefaultDoseCount' className='mb-2 block text-sm font-medium'>
-                    Default Dose Count
-                  </label>
-                  <input
-                    id='doseMeasureDefaultDoseCount'
-                    name='doseMeasureDefaultDoseCount'
-                    type='number'
-                    inputMode='numeric'
-                    className='input input-bordered w-full'
-                    step='1'
-                    min='1'
-                    max='5'
-                    value={formData.doseMeasureDefaultDoseCount}
-                    onChange={onChange('doseMeasureDefaultDoseCount')}
-                  />
-                </div>
-
-                <div className='form-control'>
-                  <label htmlFor='doseMeasureTarget' className='mb-2 block text-sm font-medium'>
-                    Dose (g)
-                  </label>
-                  <input
-                    id='doseMeasureTarget'
-                    name='doseMeasureTarget'
-                    type='number'
-                    inputMode='decimal'
-                    className='input input-bordered w-full'
-                    step='0.5'
-                    min='0'
-                    value={formData.doseMeasureTarget}
-                    onChange={onChange('doseMeasureTarget')}
-                  />
-                </div>
-
-                <div className='form-control'>
                   <label className='label cursor-pointer'>
                     <span className='label-text'>Weigh Grounds</span>
                     <input
@@ -917,7 +906,7 @@ export function Settings() {
 
                 <div className='form-control'>
                   <label className='label cursor-pointer'>
-                    <span className='label-text'>Beep at value</span>
+                    <span className='label-text'>Beeps</span>
                     <input
                       id='doseMeasureBeepEnabled'
                       name='doseMeasureBeepEnabled'

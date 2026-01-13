@@ -314,6 +314,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
     }
 
     if (doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
+        forceDoseMeasureBeep(1, 0);
         if (doseMeasureShowStartBrewActions) {
             beginDoseMeasureBrewTransition(false);
         } else if (doseMeasureDosesRemaining > 1) {
@@ -326,6 +327,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
     }
 
     if (doseMeasurePhase == DoseMeasurePhase::BeansMeasure && doseMeasureProceedAvailable) {
+        forceDoseMeasureBeep(1, 0);
         if (doseMeasureCupEnabled) {
             doseMeasurePhase = DoseMeasurePhase::GrindBeansWaitRemove;
             doseMeasureLabel = "Grind Beans";
@@ -350,6 +352,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
     }
 
     if (doseMeasurePhase == DoseMeasurePhase::GroundsMeasure && doseMeasureProceedAvailable) {
+        forceDoseMeasureBeep(1, 0);
         if (doseMeasureShowStartBrewActions) {
             beginDoseMeasureBrewTransition(false);
         } else if (doseMeasureDosesRemaining > 1) {
@@ -810,7 +813,33 @@ void DefaultUI::setupReactive() {
                           &doseMeasureEnabled, &doseMeasureShowPlay, &doseMeasureShowStartBrewActions, &bluetoothScales);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
+                              const bool hideTarget = doseMeasureEnabled && !bluetoothScales;
+                              _ui_flag_modify(ui_GrindScreen_targetContainer, LV_OBJ_FLAG_HIDDEN,
+                                              hideTarget ? _UI_MODIFY_FLAG_ADD : _UI_MODIFY_FLAG_REMOVE);
+                          },
+                          &doseMeasureEnabled, &bluetoothScales);
+    effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
+                          [=]() {
+                              if (doseMeasureEnabled && !bluetoothScales) {
+                                  lv_label_set_text(ui_GrindScreen_proceedLabel, "Connect Scales");
+                                  lv_obj_set_width(ui_GrindScreen_proceedLabel, 280);
+                                  lv_obj_set_height(ui_GrindScreen_proceedLabel, 48);
+                                  lv_obj_set_x(ui_GrindScreen_proceedLabel, 0);
+                                  lv_obj_set_y(ui_GrindScreen_proceedLabel, 0);
+                                  lv_obj_set_style_text_font(ui_GrindScreen_proceedLabel, &lv_font_montserrat_36,
+                                                             LV_PART_MAIN | LV_STATE_DEFAULT);
+                                  _ui_flag_modify(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+                                  return;
+                              }
+
                               if (doseMeasureProceedAvailable) {
+                                  lv_obj_set_width(ui_GrindScreen_proceedLabel, 200);
+                                  lv_obj_set_height(ui_GrindScreen_proceedLabel, 24);
+                                  lv_obj_set_x(ui_GrindScreen_proceedLabel, 0);
+                                  lv_obj_set_y(ui_GrindScreen_proceedLabel, 83);
+                                  lv_obj_set_style_text_font(ui_GrindScreen_proceedLabel, &lv_font_montserrat_24,
+                                                             LV_PART_MAIN | LV_STATE_DEFAULT);
+
                                   const bool isBeansPhase = doseMeasurePhase == DoseMeasurePhase::BeansMeasure;
                                   const bool isGroundsPhase = doseMeasurePhase == DoseMeasurePhase::GroundsMeasure;
                                   if (isBeansPhase) {
@@ -831,7 +860,8 @@ void DefaultUI::setupReactive() {
                                   _ui_flag_modify(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
                               }
                           },
-                          &doseMeasureProceedAvailable, &doseMeasurePhase, &doseMeasureCupEnabled, &doseMeasureDosesRemaining);
+                          &doseMeasureProceedAvailable, &doseMeasurePhase, &doseMeasureCupEnabled, &doseMeasureDosesRemaining,
+                          &doseMeasureEnabled, &bluetoothScales);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
                               const bool showDoseCount =
@@ -1015,6 +1045,16 @@ void DefaultUI::enqueueDoseMeasureBeep(int count, unsigned long spacingMs) {
     }
 }
 
+void DefaultUI::forceDoseMeasureBeep(int count, unsigned long spacingMs) {
+    if (!doseMeasureBeepEnabled || count <= 0) {
+        return;
+    }
+    doseMeasureBeepQueue = 0;
+    doseMeasureBeepNextAt = 0;
+    doseMeasureBeepSpacingMs = spacingMs;
+    enqueueDoseMeasureBeep(count, spacingMs);
+}
+
 void DefaultUI::beginDoseMeasureBrewTransition(bool showGrindNotice) {
     doseMeasureBrewTransitionActive = true;
     doseMeasureBrewTransitionSince = millis();
@@ -1086,7 +1126,6 @@ void DefaultUI::updateDoseMeasureState() {
 
     const Settings &settings = controller->getSettings();
     doseMeasureTarget = settings.getDoseMeasureTarget();
-    doseMeasureTrayWeight = settings.getDoseMeasureTrayWeight();
     doseMeasureAvgBeanWeight = settings.getDoseMeasureAvgBeanWeight();
     doseMeasureCupEmptyWeight = settings.getDoseMeasureCupEmptyWeight();
     doseMeasureCupEnabled = settings.isDoseMeasureCupEnabled();
@@ -1129,7 +1168,7 @@ void DefaultUI::updateDoseMeasureState() {
     const bool usingCupWeight =
         doseMeasurePhase == DoseMeasurePhase::GroundsWaitPlace || doseMeasurePhase == DoseMeasurePhase::GroundsMeasure ||
         doseMeasurePhase == DoseMeasurePhase::GroundsPrompt;
-    double effectiveWeight = rawWeight - (usingCupWeight ? doseMeasureCupEmptyWeight : doseMeasureTrayWeight);
+    double effectiveWeight = rawWeight - (usingCupWeight ? doseMeasureCupEmptyWeight : 0.0);
     if (effectiveWeight < 0.0) {
         effectiveWeight = 0.0;
     }
@@ -1273,7 +1312,7 @@ void DefaultUI::updateDoseMeasureState() {
 
         if (beansExactStable && !doseMeasureBeansExactAchieved) {
             doseMeasureBeansExactAchieved = true;
-            enqueueDoseMeasureBeep(2, 80);
+            forceDoseMeasureBeep(2, 80);
         }
 
         bool beansProceedAvailable = false;
@@ -1286,7 +1325,7 @@ void DefaultUI::updateDoseMeasureState() {
         const int previousProceedAvailable = doseMeasureProceedAvailable;
         doseMeasureProceedAvailable = beansProceedAvailable;
         doseMeasureShowPlay = beansProceedAvailable;
-        doseMeasureShowStartBrewActions = !doseMeasureCupEnabled && beansProceedAvailable && doseMeasureDosesRemaining <= 1;
+        doseMeasureShowStartBrewActions = !doseMeasureCupEnabled && beansProceedAvailable;
         if (doseMeasureBeansCorrect != inExact) {
             ESP_LOGI("DoseMeasure", "beans_exact_now=%d", inExact);
         }
@@ -1410,7 +1449,7 @@ void DefaultUI::updateDoseMeasureState() {
 
         if (groundsExactStable && !doseMeasureGroundsExactAchieved) {
             doseMeasureGroundsExactAchieved = true;
-            enqueueDoseMeasureBeep(2, 80);
+            forceDoseMeasureBeep(2, 80);
         }
 
         const int previousProceedAvailable = doseMeasureProceedAvailable;
