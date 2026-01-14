@@ -3,6 +3,7 @@
 #include <SPIFFS.h>
 #include <display/core/Controller.h>
 #include <display/core/ProfileManager.h>
+#include <display/core/SdBackup.h>
 #include <display/core/process/BrewProcess.h>
 #include <display/core/process/GrindProcess.h>
 #include <display/models/profile.h>
@@ -190,9 +191,13 @@ void WebUIPlugin::setupServer() {
     server.on("/api/scales/connect", [this](AsyncWebServerRequest *request) { handleBLEScaleConnect(request); });
     server.on("/api/scales/scan", [this](AsyncWebServerRequest *request) { handleBLEScaleScan(request); });
     server.on("/api/scales/info", [this](AsyncWebServerRequest *request) { handleBLEScaleInfo(request); });
+    server.on("/api/sd/backup", [this](AsyncWebServerRequest *request) { handleSdBackupList(request); });
     FS *fs = &SPIFFS;
     if (controller->isSDCard()) {
         fs = &SD_MMC;
+    }
+    if (controller->isSDCard()) {
+        server.serveStatic("/sd/backup", SD_MMC, "/gaggimate/backup").setCacheControl("no-store");
     }
     server.serveStatic("/api/history/", *fs, "/h/").setCacheControl("no-store");
     server.on("/api/history/index.bin", HTTP_GET, [this, fs](AsyncWebServerRequest *request) {
@@ -832,5 +837,65 @@ void WebUIPlugin::handleCoreDumpDownload(AsyncWebServerRequest *request) {
     response->addHeader("Content-Disposition", "attachment; filename=\"coredump.bin\"");
     response->addHeader("Cache-Control", "no-cache");
 
+    request->send(response);
+}
+
+void WebUIPlugin::handleSdBackupList(AsyncWebServerRequest *request) const {
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    JsonDocument doc;
+    doc["available"] = false;
+    doc["error"] = "";
+    JsonArray entries = doc["entries"].to<JsonArray>();
+
+    if (!controller->isSDCard() || !SdBackup::available()) {
+        doc["error"] = "SD not available";
+        serializeJson(doc, *response);
+        request->send(response);
+        return;
+    }
+
+    const char *rootPath = "/gaggimate/backup";
+    File root = SD_MMC.open(rootPath);
+    if (!root || !root.isDirectory()) {
+        doc["error"] = "Backup folder missing";
+        serializeJson(doc, *response);
+        request->send(response);
+        return;
+    }
+
+    doc["available"] = true;
+    const String rootStr(rootPath);
+
+    std::function<void(const char *)> walkDir = [&](const char *path) {
+        File dir = SD_MMC.open(path);
+        if (!dir || !dir.isDirectory()) {
+            return;
+        }
+        File file = dir.openNextFile();
+        while (file) {
+            const char *name = file.name();
+            String rel = String(name);
+            if (rel.startsWith(rootStr)) {
+                rel = rel.substring(rootStr.length());
+                if (rel.startsWith("/")) {
+                    rel = rel.substring(1);
+                }
+            }
+            JsonObject entry = entries.createNestedObject();
+            entry["path"] = rel;
+            entry["isDir"] = file.isDirectory();
+            if (!file.isDirectory()) {
+                entry["size"] = static_cast<uint32_t>(file.size());
+            }
+            if (file.isDirectory()) {
+                walkDir(name);
+            }
+            file = dir.openNextFile();
+        }
+        dir.close();
+    };
+
+    walkDir(rootPath);
+    serializeJson(doc, *response);
     request->send(response);
 }

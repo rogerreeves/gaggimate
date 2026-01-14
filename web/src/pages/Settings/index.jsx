@@ -21,6 +21,9 @@ export function Settings() {
   const [submitting, setSubmitting] = useState(false);
   const [gen] = useState(0);
   const [formData, setFormData] = useState({});
+  const [sdBackupEntries, setSdBackupEntries] = useState([]);
+  const [sdBackupError, setSdBackupError] = useState('');
+  const [sdBackupLoading, setSdBackupLoading] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('light');
   const [autowakeupSchedules, setAutoWakeupSchedules] = useState([
     { time: '07:00', days: [true, true, true, true, true, true, true] }, // Default: all days enabled
@@ -256,6 +259,27 @@ export function Settings() {
     },
     [setFormData, formRef, formData, autowakeupSchedules],
   );
+
+  const loadSdBackup = useCallback(async () => {
+    setSdBackupLoading(true);
+    setSdBackupError('');
+    try {
+      const response = await fetch('/api/sd/backup');
+      const data = await response.json();
+      if (!data.available) {
+        setSdBackupEntries([]);
+        setSdBackupError(data.error || 'SD not available');
+      } else {
+        const entries = Array.isArray(data.entries) ? data.entries : [];
+        entries.sort((a, b) => a.path.localeCompare(b.path));
+        setSdBackupEntries(entries);
+      }
+    } catch (err) {
+      setSdBackupEntries([]);
+      setSdBackupError('Failed to load SD backup list');
+    }
+    setSdBackupLoading(false);
+  }, []);
 
   const onExport = useCallback(() => {
     downloadJson(formData, 'settings.json');
@@ -1044,6 +1068,46 @@ export function Settings() {
                 <option value={1}>Light Theme</option>
               </select>
             </div>
+          </Card>
+
+          <Card sm={10} lg={5} title='SD Backup'>
+            <div className='flex items-center gap-2'>
+              <button
+                type='button'
+                className='btn btn-sm'
+                onClick={loadSdBackup}
+                disabled={sdBackupLoading}
+              >
+                {sdBackupLoading ? 'Loading…' : 'Refresh'}
+              </button>
+              {sdBackupError && <span className='text-sm text-error'>{sdBackupError}</span>}
+            </div>
+            {sdBackupEntries.length > 0 && (
+              <div className='mt-3 max-h-48 overflow-auto rounded border border-base-300 p-2 text-sm'>
+                {sdBackupEntries.map(entry => (
+                  <div key={entry.path} className='flex items-center justify-between gap-2 py-0.5'>
+                    {entry.isDir ? (
+                      <span className='opacity-70'>{entry.path}/</span>
+                    ) : (
+                      <a
+                        href={`/sd/backup/${encodeURI(entry.path)}`}
+                        className='link link-primary'
+                        target='_blank'
+                        rel='noreferrer'
+                      >
+                        {entry.path}
+                      </a>
+                    )}
+                    {!entry.isDir && (
+                      <span className='opacity-60'>{entry.size ?? 0} bytes</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {sdBackupEntries.length === 0 && !sdBackupError && (
+              <div className='mt-3 text-sm opacity-70'>No backup files found.</div>
+            )}
           </Card>
 
           {ledControl.value && (
