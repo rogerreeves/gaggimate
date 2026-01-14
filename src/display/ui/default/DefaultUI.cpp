@@ -628,6 +628,8 @@ void DefaultUI::setupReactive() {
                           [=]() { adjustHeatingIndicator(ui_SimpleProcessScreen_dials); }, &isTemperatureStable, &heatingFlash);
     effect_mgr.use_effect([=] { return currentScreen == ui_MenuScreen; }, [=]() { adjustHeatingIndicator(ui_MenuScreen_dials); },
                           &isTemperatureStable, &heatingFlash);
+    effect_mgr.use_effect([=] { return currentScreen == ui_ScreensaverScreen; },
+                          [=]() { adjustHeatingIndicator(ui_ScreensaverScreen_dials); }, &isTemperatureStable, &heatingFlash);
     effect_mgr.use_effect([=] { return currentScreen == ui_ProfileScreen; },
                           [=]() { adjustHeatingIndicator(ui_ProfileScreen_dials); }, &isTemperatureStable, &heatingFlash);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
@@ -641,6 +643,12 @@ void DefaultUI::setupReactive() {
                           [=]() {
                               lv_arc_set_value(uic_MenuScreen_dials_tempGauge, currentTemp);
                               lv_label_set_text_fmt(uic_MenuScreen_dials_tempText, "%d°C", currentTemp);
+                          },
+                          &currentTemp);
+    effect_mgr.use_effect([=] { return currentScreen == ui_ScreensaverScreen; },
+                          [=]() {
+                              lv_arc_set_value(uic_ScreensaverScreen_dials_tempGauge, currentTemp);
+                              lv_label_set_text_fmt(uic_ScreensaverScreen_dials_tempText, "%d°C", currentTemp);
                           },
                           &currentTemp);
     effect_mgr.use_effect([=] { return currentScreen == ui_StatusScreen; },
@@ -675,6 +683,8 @@ void DefaultUI::setupReactive() {
                           &currentTemp);
     effect_mgr.use_effect([=] { return currentScreen == ui_MenuScreen; }, [=]() { adjustTempTarget(ui_MenuScreen_dials); },
                           &targetTemp);
+    effect_mgr.use_effect([=] { return currentScreen == ui_ScreensaverScreen; },
+                          [=]() { adjustTempTarget(ui_ScreensaverScreen_dials); }, &targetTemp);
     effect_mgr.use_effect([=] { return currentScreen == ui_StatusScreen; },
                           [=]() {
                               lv_label_set_text_fmt(ui_StatusScreen_targetTemp, "%d°C", targetTemp);
@@ -701,6 +711,12 @@ void DefaultUI::setupReactive() {
                           [=]() {
                               lv_arc_set_value(uic_MenuScreen_dials_pressureGauge, pressure * 10.0f);
                               lv_label_set_text_fmt(uic_MenuScreen_dials_pressureText, "%.1f bar", pressure);
+                          },
+                          &pressure);
+    effect_mgr.use_effect([=] { return currentScreen == ui_ScreensaverScreen; },
+                          [=]() {
+                              lv_arc_set_value(uic_ScreensaverScreen_dials_pressureGauge, pressure * 10.0f);
+                              lv_label_set_text_fmt(uic_ScreensaverScreen_dials_pressureText, "%.1f bar", pressure);
                           },
                           &pressure);
     effect_mgr.use_effect([=] { return currentScreen == ui_StatusScreen; },
@@ -768,8 +784,8 @@ void DefaultUI::setupReactive() {
                           [=]() {
                               if (doseMeasureEnabled) {
                                   if (doseMeasurePhase == DoseMeasurePhase::Idle) {
-                                      lv_obj_set_width(ui_GrindScreen_targetDuration, 90);
-                                      lv_obj_set_height(ui_GrindScreen_targetDuration, 30);
+                                      lv_obj_set_width(ui_GrindScreen_targetDuration, 180);
+                                      lv_obj_set_height(ui_GrindScreen_targetDuration, 36);
                                       lv_obj_set_x(ui_GrindScreen_targetDuration, 30);
                                       lv_obj_set_style_text_font(ui_GrindScreen_targetDuration, &lv_font_montserrat_24,
                                                                  LV_PART_MAIN | LV_STATE_DEFAULT);

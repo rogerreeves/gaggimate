@@ -226,10 +226,10 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_add_flag(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN);
 
     ui_GrindScreen_beanButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
-    lv_imgbtn_set_src(ui_GrindScreen_beanButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_363557387, NULL);
+    lv_imgbtn_set_src(ui_GrindScreen_beanButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_coffee_bean_40x40, NULL);
     lv_obj_set_width(ui_GrindScreen_beanButton, 40);
     lv_obj_set_height(ui_GrindScreen_beanButton, 40);
-    lv_obj_set_x(ui_GrindScreen_beanButton, -22);
+    lv_obj_set_x(ui_GrindScreen_beanButton, -25);
     lv_obj_set_y(ui_GrindScreen_beanButton, 130);
     lv_obj_set_align(ui_GrindScreen_beanButton, LV_ALIGN_CENTER);
     ui_object_set_themeable_style_property(ui_GrindScreen_beanButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
@@ -242,7 +242,7 @@ void ui_GrindScreen_screen_init(void) {
     lv_imgbtn_set_src(ui_GrindScreen_brewButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_mug_hot_alt_40x40, NULL);
     lv_obj_set_width(ui_GrindScreen_brewButton, 40);
     lv_obj_set_height(ui_GrindScreen_brewButton, 40);
-    lv_obj_set_x(ui_GrindScreen_brewButton, 22);
+    lv_obj_set_x(ui_GrindScreen_brewButton, 25);
     lv_obj_set_y(ui_GrindScreen_brewButton, 130);
     lv_obj_set_align(ui_GrindScreen_brewButton, LV_ALIGN_CENTER);
     ui_object_set_themeable_style_property(ui_GrindScreen_brewButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,

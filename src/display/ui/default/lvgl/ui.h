@@ -64,6 +64,7 @@ LV_IMG_DECLARE(ui_img_mug_hot_alt_40x40); // assets/mug-hot-alt-40x40.png
 LV_IMG_DECLARE(ui_img_783005998);     // assets/wind-80x80.png
 LV_IMG_DECLARE(ui_img_545340440);     // assets/raindrops-80x80.png
 LV_IMG_DECLARE(ui_img_363557387);     // assets/coffee-bean-80x80.png
+LV_IMG_DECLARE(ui_img_coffee_bean_40x40); // assets/coffee-bean40x40.png
 LV_IMG_DECLARE(ui_img_445946954);     // assets/play-40x40.png
 LV_IMG_DECLARE(ui_img_1424216268);    // assets/equality-40x40.png
 LV_IMG_DECLARE(ui_img_340148213);     // assets/settings-40x40.png

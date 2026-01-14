@@ -15,9 +15,16 @@ extern void ui_ScreensaverScreen_screen_init(void);
 extern void ui_ScreensaverScreen_screen_destroy(void);
 extern void ui_event_ScreensaverScreen(lv_event_t *e);
 extern lv_obj_t *ui_ScreensaverScreen;
-extern lv_obj_t *ui_ScreensaverScreen_circle;
+extern lv_obj_t *ui_ScreensaverScreen_dials;
+extern lv_obj_t *ui_ScreensaverScreen_overlay;
 extern lv_obj_t *ui_ScreensaverScreen_logo;
 extern lv_obj_t *ui_ScreensaverScreen_touch;
+extern lv_obj_t *uic_ScreensaverScreen_dials_tempGauge;
+extern lv_obj_t *uic_ScreensaverScreen_dials_tempTarget;
+extern lv_obj_t *uic_ScreensaverScreen_dials_pressureGauge;
+extern lv_obj_t *uic_ScreensaverScreen_dials_pressureTarget;
+extern lv_obj_t *uic_ScreensaverScreen_dials_pressureText;
+extern lv_obj_t *uic_ScreensaverScreen_dials_tempText;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus

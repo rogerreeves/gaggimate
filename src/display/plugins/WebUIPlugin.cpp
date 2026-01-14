@@ -611,6 +611,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["mdnsName"] = settings.getMdnsName();
     doc["temperatureOffset"] = String(settings.getTemperatureOffset());
     doc["pressureScaling"] = String(settings.getPressureScaling());
+    doc["savedScale"] = settings.getSavedScale();
     doc["boilerFillActive"] = settings.isBoilerFillActive();
     doc["startupFillTime"] = settings.getStartupFillTime() / 1000;
     doc["steamFillTime"] = settings.getSteamFillTime() / 1000;

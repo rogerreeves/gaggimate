@@ -6,9 +6,17 @@
 #include "../ui.h"
 
 lv_obj_t *ui_ScreensaverScreen = NULL;
-lv_obj_t *ui_ScreensaverScreen_circle = NULL;
+lv_obj_t *uic_ScreensaverScreen_dials_tempText;
+lv_obj_t *uic_ScreensaverScreen_dials_pressureText;
+lv_obj_t *uic_ScreensaverScreen_dials_pressureTarget;
+lv_obj_t *uic_ScreensaverScreen_dials_pressureGauge;
+lv_obj_t *uic_ScreensaverScreen_dials_tempTarget;
+lv_obj_t *uic_ScreensaverScreen_dials_tempGauge;
+lv_obj_t *ui_ScreensaverScreen_dials = NULL;
+lv_obj_t *ui_ScreensaverScreen_overlay = NULL;
 lv_obj_t *ui_ScreensaverScreen_logo = NULL;
 lv_obj_t *ui_ScreensaverScreen_touch = NULL;
+static lv_timer_t *ui_ScreensaverScreen_overlayTimer = NULL;
 
 // event funtions
 void ui_event_ScreensaverScreen(lv_event_t *e) {
@@ -19,6 +27,14 @@ void ui_event_ScreensaverScreen(lv_event_t *e) {
     }
 }
 
+static void ui_ScreensaverScreen_overlayTimer_cb(lv_timer_t *timer) {
+    if (ui_ScreensaverScreen_overlay) {
+        lv_obj_add_flag(ui_ScreensaverScreen_overlay, LV_OBJ_FLAG_HIDDEN);
+    }
+    lv_timer_del(timer);
+    ui_ScreensaverScreen_overlayTimer = NULL;
+}
+
 // build funtions
 
 void ui_ScreensaverScreen_screen_init(void) {
@@ -26,24 +42,29 @@ void ui_ScreensaverScreen_screen_init(void) {
     lv_obj_clear_flag(ui_ScreensaverScreen, LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_obj_add_event_cb(ui_ScreensaverScreen, scr_unloaded_delete_cb, LV_EVENT_SCREEN_UNLOADED,
                         ui_ScreensaverScreen_screen_destroy);
-    lv_obj_set_style_bg_color(ui_ScreensaverScreen, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_ScreensaverScreen, 77, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_ScreensaverScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_Dark);
+    ui_object_set_themeable_style_property(ui_ScreensaverScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_Dark);
 
-    ui_ScreensaverScreen_circle = lv_obj_create(ui_ScreensaverScreen);
-    lv_obj_remove_style_all(ui_ScreensaverScreen_circle);
-    lv_obj_set_width(ui_ScreensaverScreen_circle, 380);
-    lv_obj_set_height(ui_ScreensaverScreen_circle, 380);
-    lv_obj_set_align(ui_ScreensaverScreen_circle, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_ScreensaverScreen_circle, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_obj_set_style_radius(ui_ScreensaverScreen_circle, LV_RADIUS_CIRCLE, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_ScreensaverScreen_circle, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_ScreensaverScreen_circle, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_ScreensaverScreen_dials = ui_dials_create(ui_ScreensaverScreen);
+    lv_obj_set_x(ui_ScreensaverScreen_dials, 0);
+    lv_obj_set_y(ui_ScreensaverScreen_dials, 0);
+
+    ui_ScreensaverScreen_overlay = lv_obj_create(ui_ScreensaverScreen);
+    lv_obj_remove_style_all(ui_ScreensaverScreen_overlay);
+    lv_obj_set_width(ui_ScreensaverScreen_overlay, 480);
+    lv_obj_set_height(ui_ScreensaverScreen_overlay, 480);
+    lv_obj_set_align(ui_ScreensaverScreen_overlay, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_ScreensaverScreen_overlay, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_obj_set_style_bg_color(ui_ScreensaverScreen_overlay, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ScreensaverScreen_overlay, 77, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_ScreensaverScreen_logo = lv_img_create(ui_ScreensaverScreen);
     lv_img_set_src(ui_ScreensaverScreen_logo, &ui_img_logo_png);
     lv_obj_set_width(ui_ScreensaverScreen_logo, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_ScreensaverScreen_logo, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_y(ui_ScreensaverScreen_logo, 10);
+    lv_obj_set_y(ui_ScreensaverScreen_logo, 0);
     lv_obj_set_align(ui_ScreensaverScreen_logo, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_ScreensaverScreen_logo, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_ScreensaverScreen_logo, LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -69,6 +90,19 @@ void ui_ScreensaverScreen_screen_init(void) {
                                            LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
 
     lv_obj_add_event_cb(ui_ScreensaverScreen, ui_event_ScreensaverScreen, LV_EVENT_ALL, NULL);
+
+    if (ui_ScreensaverScreen_overlayTimer) {
+        lv_timer_del(ui_ScreensaverScreen_overlayTimer);
+        ui_ScreensaverScreen_overlayTimer = NULL;
+    }
+    ui_ScreensaverScreen_overlayTimer = lv_timer_create(ui_ScreensaverScreen_overlayTimer_cb, 10000, NULL);
+
+    uic_ScreensaverScreen_dials_tempGauge = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_TEMPGAUGE);
+    uic_ScreensaverScreen_dials_tempTarget = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_TEMPTARGET);
+    uic_ScreensaverScreen_dials_pressureGauge = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_PRESSUREGAUGE);
+    uic_ScreensaverScreen_dials_pressureTarget = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_PRESSURETARGET);
+    uic_ScreensaverScreen_dials_pressureText = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_PRESSURETEXT);
+    uic_ScreensaverScreen_dials_tempText = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_TEMPTEXT);
 }
 
 void ui_ScreensaverScreen_screen_destroy(void) {
@@ -77,7 +111,18 @@ void ui_ScreensaverScreen_screen_destroy(void) {
 
     // NULL screen variables
     ui_ScreensaverScreen = NULL;
-    ui_ScreensaverScreen_circle = NULL;
+    ui_ScreensaverScreen_dials = NULL;
+    ui_ScreensaverScreen_overlay = NULL;
     ui_ScreensaverScreen_logo = NULL;
     ui_ScreensaverScreen_touch = NULL;
+    uic_ScreensaverScreen_dials_tempGauge = NULL;
+    uic_ScreensaverScreen_dials_tempTarget = NULL;
+    uic_ScreensaverScreen_dials_pressureGauge = NULL;
+    uic_ScreensaverScreen_dials_pressureTarget = NULL;
+    uic_ScreensaverScreen_dials_pressureText = NULL;
+    uic_ScreensaverScreen_dials_tempText = NULL;
+    if (ui_ScreensaverScreen_overlayTimer) {
+        lv_timer_del(ui_ScreensaverScreen_overlayTimer);
+        ui_ScreensaverScreen_overlayTimer = NULL;
+    }
 }
