@@ -1728,8 +1728,20 @@ void DefaultUI::updateStatusScreen() const {
         } else if (!statusSteamPromptReturnToBrew && now - statusSteamPromptSince >= 5000) {
             statusSteamPromptReturnToBrew = true;
         }
+        lv_obj_set_width(ui_StatusScreen_phaseLabel, 360);
+        lv_obj_set_height(ui_StatusScreen_phaseLabel, 60);
+        lv_obj_set_x(ui_StatusScreen_phaseLabel, 0);
+        lv_obj_set_y(ui_StatusScreen_phaseLabel, 0);
+        lv_obj_set_align(ui_StatusScreen_phaseLabel, LV_ALIGN_CENTER);
+        lv_obj_set_style_text_font(ui_StatusScreen_phaseLabel, &lv_font_montserrat_48, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_text(ui_StatusScreen_phaseLabel, "Steam?");
     } else {
+        lv_obj_set_width(ui_StatusScreen_phaseLabel, 335);
+        lv_obj_set_height(ui_StatusScreen_phaseLabel, 30);
+        lv_obj_set_x(ui_StatusScreen_phaseLabel, 0);
+        lv_obj_set_y(ui_StatusScreen_phaseLabel, -40);
+        lv_obj_set_align(ui_StatusScreen_phaseLabel, LV_ALIGN_CENTER);
+        lv_obj_set_style_text_font(ui_StatusScreen_phaseLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
         lv_label_set_text(ui_StatusScreen_phaseLabel, phase.name.c_str());
     }
 
