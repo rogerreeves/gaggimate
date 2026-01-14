@@ -47,6 +47,8 @@ class WebUIPlugin : public Plugin {
     void handleBLEScaleConnect(AsyncWebServerRequest *request);
     void handleBLEScaleInfo(AsyncWebServerRequest *request);
     void handleSdBackupList(AsyncWebServerRequest *request) const;
+    void handleSdBackupSaveSettings(AsyncWebServerRequest *request) const;
+    void handleSdBackupSaveProfiles(AsyncWebServerRequest *request) const;
     void updateOTAStatus(const String &version);
     void updateOTAProgress(uint8_t phase, int progress);
     void sendAutotuneResult();

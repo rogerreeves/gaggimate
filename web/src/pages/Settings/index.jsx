@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileExport } from '@fortawesome/free-solid-svg-icons/faFileExport';
 import { faFileImport } from '@fortawesome/free-solid-svg-icons/faFileImport';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons/faTrashCan';
+import { faSdCard } from '@fortawesome/free-solid-svg-icons/faSdCard';
 
 const ledControl = computed(() => machine.value.capabilities.ledControl);
 const pressureAvailable = computed(() => machine.value.capabilities.pressure);
@@ -24,6 +25,7 @@ export function Settings() {
   const [sdBackupEntries, setSdBackupEntries] = useState([]);
   const [sdBackupError, setSdBackupError] = useState('');
   const [sdBackupLoading, setSdBackupLoading] = useState(false);
+  const [sdBackupStatus, setSdBackupStatus] = useState('');
   const [currentTheme, setCurrentTheme] = useState('light');
   const [autowakeupSchedules, setAutoWakeupSchedules] = useState([
     { time: '07:00', days: [true, true, true, true, true, true, true] }, // Default: all days enabled
@@ -285,6 +287,21 @@ export function Settings() {
     downloadJson(formData, 'settings.json');
   }, [formData]);
 
+  const onSaveToSd = useCallback(async () => {
+    setSdBackupStatus('');
+    try {
+      const response = await fetch('/api/sd/backup/settings', { method: 'POST' });
+      const data = await response.json();
+      if (data.ok) {
+        setSdBackupStatus('Saved to SD');
+      } else {
+        setSdBackupStatus(data.error || 'Save failed');
+      }
+    } catch (err) {
+      setSdBackupStatus('Save failed');
+    }
+  }, []);
+
   const onUpload = function (evt) {
     if (evt.target.files.length) {
       const file = evt.target.files[0];
@@ -318,6 +335,15 @@ export function Settings() {
         >
           <FontAwesomeIcon icon={faFileExport} />
         </button>
+        <button
+          type='button'
+          onClick={onSaveToSd}
+          className='btn btn-ghost btn-sm'
+          title='Save Settings to SD'
+          aria-label='Save settings to SD'
+        >
+          <FontAwesomeIcon icon={faSdCard} />
+        </button>
         <label
           htmlFor='settingsImport'
           className='btn btn-ghost btn-sm cursor-pointer'
@@ -335,6 +361,7 @@ export function Settings() {
           className='hidden'
           aria-label='Import settings from JSON'
         />
+        {sdBackupStatus && <span className='ml-2 text-sm opacity-70'>{sdBackupStatus}</span>}
       </div>
       <form key='settings' ref={formRef} method='post' action='/api/settings' onSubmit={onSubmit}>
         <div className='grid grid-cols-1 gap-4 lg:grid-cols-10'>

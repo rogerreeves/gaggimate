@@ -889,12 +889,6 @@ void Settings::doSave() {
 
     preferences.end();
 
-    String backupErr;
-    if (SdBackup::backupSettings(*this, &backupErr)) {
-        ESP_LOGI("Settings", "SD backup settings OK");
-    } else {
-        ESP_LOGW("Settings", "SD backup settings FAIL: %s", backupErr.c_str());
-    }
 }
 
 void Settings::loopTask(void *arg) {

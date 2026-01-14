@@ -31,6 +31,7 @@ import { faTrashCan } from '@fortawesome/free-solid-svg-icons/faTrashCan';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import { faFileImport } from '@fortawesome/free-solid-svg-icons/faFileImport';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons/faEllipsisVertical';
+import { faSdCard } from '@fortawesome/free-solid-svg-icons/faSdCard';
 import { ConfirmButton } from '../../components/ConfirmButton.jsx';
 import { faTemperatureFull } from '@fortawesome/free-solid-svg-icons/faTemperatureFull';
 import { faClock } from '@fortawesome/free-solid-svg-icons/faClock';
@@ -530,6 +531,7 @@ export function ProfileList() {
   const apiService = useContext(ApiServiceContext);
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sdBackupStatus, setSdBackupStatus] = useState('');
   const favoriteCount = profiles.map(p => (p.favorite ? 1 : 0)).reduce((a, b) => a + b, 0);
   const unfavoriteDisabled = favoriteCount <= 1;
   const favoriteDisabled = favoriteCount >= 10;
@@ -692,6 +694,21 @@ export function ProfileList() {
     downloadJson(exportedProfiles, 'profiles.json');
   }, [profiles]);
 
+  const onSaveToSd = useCallback(async () => {
+    setSdBackupStatus('');
+    try {
+      const response = await fetch('/api/sd/backup/profiles', { method: 'POST' });
+      const data = await response.json();
+      if (data.ok) {
+        setSdBackupStatus('Saved to SD');
+      } else {
+        setSdBackupStatus(data.error || 'Save failed');
+      }
+    } catch (err) {
+      setSdBackupStatus('Save failed');
+    }
+  }, []);
+
   const onUpload = function (evt) {
     if (evt.target.files.length) {
       const file = evt.target.files[0];
@@ -744,6 +761,14 @@ export function ProfileList() {
         >
           <FontAwesomeIcon icon={faFileExport} />
         </button>
+        <button
+          onClick={onSaveToSd}
+          className='btn btn-ghost btn-sm'
+          title='Save profiles to SD'
+          aria-label='Save profiles to SD'
+        >
+          <FontAwesomeIcon icon={faSdCard} />
+        </button>
         <label
           htmlFor='profileImport'
           className='btn btn-ghost btn-sm cursor-pointer'
@@ -766,6 +791,7 @@ export function ProfileList() {
           tooltip='Delete all profiles'
           confirmTooltip='Confirm deletion'
         />
+        {sdBackupStatus && <span className='ml-2 text-sm opacity-70'>{sdBackupStatus}</span>}
       </div>
 
       <div className='grid grid-cols-1 gap-4 lg:grid-cols-12' role='list' aria-label='Profile list'>

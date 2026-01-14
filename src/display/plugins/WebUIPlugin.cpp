@@ -192,6 +192,8 @@ void WebUIPlugin::setupServer() {
     server.on("/api/scales/scan", [this](AsyncWebServerRequest *request) { handleBLEScaleScan(request); });
     server.on("/api/scales/info", [this](AsyncWebServerRequest *request) { handleBLEScaleInfo(request); });
     server.on("/api/sd/backup", [this](AsyncWebServerRequest *request) { handleSdBackupList(request); });
+    server.on("/api/sd/backup/settings", HTTP_POST, [this](AsyncWebServerRequest *request) { handleSdBackupSaveSettings(request); });
+    server.on("/api/sd/backup/profiles", HTTP_POST, [this](AsyncWebServerRequest *request) { handleSdBackupSaveProfiles(request); });
     FS *fs = &SPIFFS;
     if (controller->isSDCard()) {
         fs = &SD_MMC;
@@ -896,6 +898,48 @@ void WebUIPlugin::handleSdBackupList(AsyncWebServerRequest *request) const {
     };
 
     walkDir(rootPath);
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleSdBackupSaveSettings(AsyncWebServerRequest *request) const {
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    JsonDocument doc;
+    doc["ok"] = false;
+    doc["error"] = "";
+    if (!controller->isSDCard() || !SdBackup::available()) {
+        doc["error"] = "SD not available";
+        serializeJson(doc, *response);
+        request->send(response);
+        return;
+    }
+    String err;
+    if (SdBackup::backupSettings(controller->getSettings(), &err)) {
+        doc["ok"] = true;
+    } else {
+        doc["error"] = err;
+    }
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleSdBackupSaveProfiles(AsyncWebServerRequest *request) const {
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    JsonDocument doc;
+    doc["ok"] = false;
+    doc["error"] = "";
+    if (!controller->isSDCard() || !SdBackup::available()) {
+        doc["error"] = "SD not available";
+        serializeJson(doc, *response);
+        request->send(response);
+        return;
+    }
+    String err;
+    if (SdBackup::backupProfiles(SPIFFS, "/p", &err)) {
+        doc["ok"] = true;
+    } else {
+        doc["error"] = err;
+    }
     serializeJson(doc, *response);
     request->send(response);
 }
