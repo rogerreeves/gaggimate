@@ -6,6 +6,7 @@
 #include <Preferences.h>
 #include <display/core/constants.h>
 #include <display/core/utils.h>
+#include <ArduinoJson.h>
 #include <vector>
 
 #define PREFERENCES_KEY "controller"
@@ -74,6 +75,9 @@ class Settings {
     int getDoseMeasureDefaultDoseCount() const { return doseDefaultDoseCount; }
     int getStartupMode() const { return startupMode; }
     int getStandbyTimeout() const { return standbyTimeout; }
+    bool isScreensaverEnabled() const { return screensaverEnabled; }
+    int getScreensaverTimeout() const { return screensaverTimeout; }
+    bool isRestoreDoneOnce() const { return restoreDoneOnce; }
     int getInfuseBloomTime() const { return infuseBloomTime; }
     int getInfusePumpTime() const { return infusePumpTime; }
     int getPressurizeTime() const { return pressurizeTime; }
@@ -147,6 +151,9 @@ class Settings {
     void setDoseMeasureDefaultDoseCount(int dose_count);
     void setStartupMode(int startup_mode);
     void setStandbyTimeout(int standby_timeout);
+    void setScreensaverEnabled(bool enabled);
+    void setScreensaverTimeout(int screensaver_timeout);
+    void setRestoreDoneOnce(bool done);
     void setInfuseBloomTime(int infuse_bloom_time);
     void setInfusePumpTime(int infuse_pump_time);
     void setPressurizeTime(int pressurize_time);
@@ -203,6 +210,9 @@ class Settings {
     void setAutoWakeupEnabled(bool enabled);
     void setAutoWakeupSchedules(const std::vector<AutoWakeupSchedule> &schedules);
 
+    void fillJson(JsonObject obj) const;
+    void applyJson(const JsonObject &obj);
+
   private:
     Preferences preferences;
     bool dirty = false;
@@ -231,6 +241,9 @@ class Settings {
     bool autowakeupEnabled = false;
     std::vector<AutoWakeupSchedule> autowakeupSchedules;
     int standbyTimeout = DEFAULT_STANDBY_TIMEOUT_MS;
+    bool screensaverEnabled = true;
+    int screensaverTimeout = 120000;
+    bool restoreDoneOnce = false;
     String standbyLandingScreen = "menu";
     String pid = DEFAULT_PID;
     String pumpModelCoeffs = DEFAULT_PUMP_MODEL_COEFFS;

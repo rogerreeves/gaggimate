@@ -80,6 +80,8 @@ void onWakeup(lv_event_t *e) {
     }
 }
 
+void onScreensaverWake(lv_event_t *e) { controller.getUI()->onScreensaverWake(); }
+
 void onLoadStarted(lv_event_t *e) { controller.onScreenReady(); }
 
 void onStandby(lv_event_t *e) { controller.activateStandby(); }
@@ -123,6 +125,18 @@ void onGrindDoseCountLower(lv_event_t *e) {
 void onGrindReset(lv_event_t *e) {
   if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->resetDoseMeasureFlow();
+  }
+}
+
+void onGrindEndBean(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->onDoseMeasureEndBeanAction();
+  }
+}
+
+void onGrindEndBrew(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->onDoseMeasureEndBrewAction();
   }
 }
 

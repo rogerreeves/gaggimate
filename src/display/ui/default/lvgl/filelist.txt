@@ -3,6 +3,7 @@ components/ui_comp.c
 screens/ui_InitScreen.c
 screens/ui_ProfileScreen.c
 screens/ui_MenuScreen.c
+screens/ui_ScreensaverScreen.c
 screens/ui_BrewScreen.c
 screens/ui_StandbyScreen.c
 screens/ui_SimpleProcessScreen.c
@@ -28,6 +29,7 @@ images/ui_img_631115820.c
 images/ui_img_360122106.c
 images/ui_img_2044104741.c
 images/ui_img_979979123.c
+images/ui_img_mug_hot_alt_40x40.c
 images/ui_img_783005998.c
 images/ui_img_545340440.c
 images/ui_img_363557387.c

@@ -35,6 +35,7 @@ extern "C" {
 #include "screens/ui_InitScreen.h"
 #include "screens/ui_MenuScreen.h"
 #include "screens/ui_ProfileScreen.h"
+#include "screens/ui_ScreensaverScreen.h"
 #include "screens/ui_SimpleProcessScreen.h"
 #include "screens/ui_StandbyScreen.h"
 #include "screens/ui_StatusScreen.h"
@@ -59,6 +60,7 @@ LV_IMG_DECLARE(ui_img_631115820);     // assets/check-40x40.png
 LV_IMG_DECLARE(ui_img_360122106);     // assets/clock-40x40.png
 LV_IMG_DECLARE(ui_img_2044104741);    // assets/power-40x40.png
 LV_IMG_DECLARE(ui_img_979979123);     // assets/mug-hot-alt-80x80.png
+LV_IMG_DECLARE(ui_img_mug_hot_alt_40x40); // assets/mug-hot-alt-40x40.png
 LV_IMG_DECLARE(ui_img_783005998);     // assets/wind-80x80.png
 LV_IMG_DECLARE(ui_img_545340440);     // assets/raindrops-80x80.png
 LV_IMG_DECLARE(ui_img_363557387);     // assets/coffee-bean-80x80.png

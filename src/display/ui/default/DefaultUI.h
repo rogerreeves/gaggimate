@@ -44,6 +44,8 @@ class DefaultUI {
 
     void changeBrewScreenMode(BrewScreenState state);
     void onDoseMeasurePrimaryAction();
+    void onDoseMeasureEndBeanAction();
+    void onDoseMeasureEndBrewAction();
     void adjustDoseMeasureTarget(double delta);
     void adjustDoseMeasureDoseCount(int delta);
     void resetDoseMeasureFlow(bool preserveRemaining = false);
@@ -53,6 +55,7 @@ class DefaultUI {
     void onNextProfile();
     void onPreviousProfile();
     void onProfileSelect();
+    void onScreensaverWake();
     void setBrightness(int brightness) {
         if (panelDriver) {
             panelDriver->setBrightness(brightness);
@@ -69,6 +72,8 @@ class DefaultUI {
     void setupReactive();
 
     void handleScreenChange();
+    void maybeActivateScreensaver();
+    void setScreensaverReturnTarget(lv_obj_t *screen);
 
     void updateStandbyScreen();
     void updateStatusScreen() const;
@@ -133,6 +138,7 @@ class DefaultUI {
     int doseMeasureBeepedGroundsExact = false;
     int doseMeasureProceedAvailable = false;
     int doseMeasureShowPlay = false;
+    int doseMeasureShowEndActions = false;
     int doseMeasureGroundsCorrect = false;
     int doseMeasureBeansCorrect = false;
     int doseMeasureBeansExactAchieved = false;
@@ -151,6 +157,7 @@ class DefaultUI {
     int doseMeasurePresentConfirmed = false;
     unsigned long doseMeasureAutoTareStart = 0;
     unsigned long doseMeasureLastWeightLog = 0;
+    unsigned long doseMeasureForceAddUntil = 0;
     DoseMeasurePhase doseMeasureLastPhase = DoseMeasurePhase::Idle;
     int doseMeasureBeepQueue = 0;
     unsigned long doseMeasureBeepNextAt = 0;
@@ -190,6 +197,9 @@ class DefaultUI {
     lv_obj_t **targetScreen = &ui_InitScreen;
     lv_obj_t *currentScreen = ui_InitScreen;
     void (*targetScreenInit)(void) = &ui_InitScreen_screen_init;
+    bool screensaverActive = false;
+    lv_obj_t **screensaverReturnScreen = nullptr;
+    void (*screensaverReturnInit)(void) = nullptr;
 
     // Standby brightness control
     unsigned long standbyEnterTime = 0;

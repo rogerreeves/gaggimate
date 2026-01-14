@@ -6,6 +6,7 @@
 #include <ctime>
 #include <display/config.h>
 #include <display/core/constants.h>
+#include <display/core/SdBackup.h>
 #include <display/core/process/BrewProcess.h>
 #include <display/core/process/GrindProcess.h>
 #include <display/core/process/PumpProcess.h>
@@ -40,6 +41,41 @@ void Controller::setup() {
 #ifndef GAGGIMATE_HEADLESS
     setupPanel();
 #endif
+
+    String ssid = settings.getWifiSsid();
+    ssid.trim();
+    ESP_LOGI(LOG_TAG.c_str(), "Wi-Fi SSID length: %d", ssid.length());
+    if (ssid.length() == 0) {
+        if (!settings.isRestoreDoneOnce()) {
+            ESP_LOGI(LOG_TAG.c_str(), "SSID blank -> attempting SD restore");
+            if (!SdBackup::available()) {
+                ESP_LOGW(LOG_TAG.c_str(), "SD not available");
+            } else {
+                String settingsErr;
+                String profilesErr;
+                const bool settingsRestored = SdBackup::restoreSettings(settings, &settingsErr);
+                const bool profilesRestored = SdBackup::restoreProfiles(SPIFFS, "/p", &profilesErr);
+                if (!settingsRestored) {
+                    ESP_LOGW(LOG_TAG.c_str(), "Settings restore FAIL: %s", settingsErr.c_str());
+                }
+                if (!profilesRestored) {
+                    ESP_LOGW(LOG_TAG.c_str(), "Profiles restore FAIL: %s", profilesErr.c_str());
+                }
+                settings.setRestoreDoneOnce(true);
+                if (settingsRestored || profilesRestored) {
+                    ESP_LOGI(LOG_TAG.c_str(), "SD restore complete, rebooting");
+                    ESP.restart();
+                    while (true) {
+                        delay(1000);
+                    }
+                }
+            }
+        } else {
+            ESP_LOGI(LOG_TAG.c_str(), "SSID blank but restore already attempted; skipping");
+        }
+    } else {
+        ESP_LOGI(LOG_TAG.c_str(), "SSID present -> skipping SD restore");
+    }
 
     pluginManager = new PluginManager();
     FS *fs = &SPIFFS;

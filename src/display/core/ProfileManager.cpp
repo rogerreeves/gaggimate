@@ -1,4 +1,5 @@
 #include "ProfileManager.h"
+#include "SdBackup.h"
 #include <ArduinoJson.h>
 
 #include <utility>
@@ -175,12 +176,29 @@ bool ProfileManager::saveProfile(Profile &profile) {
     if (isNew) {
         _settings.addFavoritedProfile(profile.id);
     }
+    if (ok) {
+        String backupErr;
+        if (SdBackup::backupProfiles(*_fs, _dir.c_str(), &backupErr)) {
+            ESP_LOGI("ProfileManager", "SD backup profiles OK");
+        } else {
+            ESP_LOGW("ProfileManager", "SD backup profiles FAIL: %s", backupErr.c_str());
+        }
+    }
     return ok;
 }
 
 bool ProfileManager::deleteProfile(const String &uuid) {
     _settings.removeFavoritedProfile(uuid);
-    return _fs->remove(profilePath(uuid));
+    const bool removed = _fs->remove(profilePath(uuid));
+    if (removed) {
+        String backupErr;
+        if (SdBackup::backupProfiles(*_fs, _dir.c_str(), &backupErr)) {
+            ESP_LOGI("ProfileManager", "SD backup profiles OK");
+        } else {
+            ESP_LOGW("ProfileManager", "SD backup profiles FAIL: %s", backupErr.c_str());
+        }
+    }
+    return removed;
 }
 
 bool ProfileManager::profileExists(const String &uuid) { return _fs->exists(profilePath(uuid)); }

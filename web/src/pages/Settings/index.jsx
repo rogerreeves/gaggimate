@@ -56,6 +56,8 @@ export function Settings() {
         doseMeasureBeanCountLimit: fetchedSettings.doseMeasureBeanCountLimit ?? 20,
         doseMeasureDefaultDoseCount: fetchedSettings.doseMeasureDefaultDoseCount ?? 1,
         standbyLandingScreen: fetchedSettings.standbyLandingScreen ?? 'menu',
+        screensaverEnabled: fetchedSettings.screensaverEnabled ?? true,
+        screensaverTimeout: fetchedSettings.screensaverTimeout ?? 2,
       };
 
       // Extract Kf from PID string and separate them
@@ -148,6 +150,9 @@ export function Settings() {
       }
       if (key === 'autowakeupEnabled') {
         value = !formData.autowakeupEnabled;
+      }
+      if (key === 'screensaverEnabled') {
+        value = !formData.screensaverEnabled;
       }
       if (key === 'standbyDisplayEnabled') {
         value = !formData.standbyDisplayEnabled;
@@ -987,6 +992,40 @@ export function Settings() {
                 min='1'
                 value={formData.standbyBrightnessTimeout}
                 onChange={onChange('standbyBrightnessTimeout')}
+              />
+            </div>
+
+            <div className='divider'>Screensaver</div>
+            <div className='form-control'>
+              <label className='label cursor-pointer'>
+                <span className='label-text'>Enable screensaver</span>
+                <input
+                  id='screensaverEnabled'
+                  name='screensaverEnabled'
+                  value='screensaverEnabled'
+                  type='checkbox'
+                  className='toggle toggle-primary'
+                  checked={!!formData.screensaverEnabled}
+                  onChange={onChange('screensaverEnabled')}
+                />
+              </label>
+            </div>
+
+            <div className='form-control'>
+              <label htmlFor='screensaverTimeout' className='mb-2 block text-sm font-medium'>
+                Screensaver Timeout (minutes)
+              </label>
+              <input
+                id='screensaverTimeout'
+                name='screensaverTimeout'
+                type='number'
+                className='input input-bordered w-full'
+                placeholder='2'
+                min='0.5'
+                step='0.5'
+                value={formData.screensaverTimeout}
+                onChange={onChange('screensaverTimeout')}
+                disabled={!formData.screensaverEnabled}
               />
             </div>
 

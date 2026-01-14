@@ -1,4 +1,5 @@
 #include "Settings.h"
+#include "SdBackup.h"
 
 #include <algorithm>
 #include <utility>
@@ -54,6 +55,9 @@ Settings::Settings() {
     homeAssistantUser = preferences.getString("ha_u", "");
     homeAssistantPassword = preferences.getString("ha_pw", "");
     standbyTimeout = preferences.getInt("sbt", DEFAULT_STANDBY_TIMEOUT_MS);
+    screensaverEnabled = preferences.getBool("ss_en", true);
+    screensaverTimeout = preferences.getInt("ss_to", 120000);
+    restoreDoneOnce = preferences.getBool("rd_once", false);
     timezone = preferences.getString("tz", DEFAULT_TIMEZONE);
     clock24hFormat = preferences.getBool("clk_24h", true);
     selectedProfile = preferences.getString("sp", "");
@@ -256,6 +260,21 @@ void Settings::setStandbyTimeout(int standby_timeout) {
     save();
 }
 
+void Settings::setScreensaverEnabled(bool enabled) {
+    screensaverEnabled = enabled;
+    save();
+}
+
+void Settings::setScreensaverTimeout(int screensaver_timeout) {
+    screensaverTimeout = screensaver_timeout;
+    save();
+}
+
+void Settings::setRestoreDoneOnce(bool done) {
+    restoreDoneOnce = done;
+    save();
+}
+
 void Settings::setInfuseBloomTime(int infuse_bloom_time) {
     infuseBloomTime = infuse_bloom_time;
     save();
@@ -282,7 +301,16 @@ void Settings::setPumpModelCoeffs(const String &pumpModelCoeffs) {
 }
 
 void Settings::setWifiSsid(const String &wifiSsid) {
+    String current = this->wifiSsid;
+    String next = wifiSsid;
+    current.trim();
+    next.trim();
+    const bool wasBlank = current.length() == 0;
+    const bool isBlank = next.length() == 0;
     this->wifiSsid = wifiSsid;
+    if (!isBlank || (!wasBlank && isBlank)) {
+        restoreDoneOnce = false;
+    }
     save();
 }
 
@@ -521,6 +549,242 @@ void Settings::setAutoWakeupSchedules(const std::vector<AutoWakeupSchedule> &sch
     save();
 }
 
+void Settings::fillJson(JsonObject obj) const {
+    obj["startupMode"] = startupMode == MODE_BREW ? "brew" : "standby";
+    obj["targetSteamTemp"] = targetSteamTemp;
+    obj["targetWaterTemp"] = targetWaterTemp;
+    obj["homekit"] = homekit;
+    obj["volumetricTarget"] = volumetricTarget;
+    obj["otaChannel"] = otaChannel;
+    obj["savedScale"] = savedScale;
+    obj["homeAssistant"] = homeAssistant;
+    obj["haUser"] = homeAssistantUser;
+    obj["haPassword"] = homeAssistantPassword;
+    obj["haIP"] = homeAssistantIP;
+    obj["haPort"] = homeAssistantPort;
+    obj["haTopic"] = homeAssistantTopic;
+    obj["pid"] = pid;
+    obj["pumpModelCoeffs"] = pumpModelCoeffs;
+    obj["wifiSsid"] = wifiSsid;
+    obj["wifiPassword"] = wifiPassword;
+    obj["mdnsName"] = mdnsName;
+    obj["temperatureOffset"] = String(temperatureOffset);
+    obj["pressureScaling"] = String(pressureScaling);
+    obj["boilerFillActive"] = boilerFillActive;
+    obj["startupFillTime"] = startupFillTime / 1000;
+    obj["steamFillTime"] = steamFillTime / 1000;
+    obj["smartGrindActive"] = smartGrindActive;
+    obj["smartGrindToggle"] = smartGrindToggle;
+    obj["smartGrindIp"] = smartGrindIp;
+    obj["smartGrindMode"] = smartGrindMode;
+    obj["doseMeasureEnabled"] = doseMeasureEnabled;
+    obj["doseMeasureAvgBeanWeight"] = doseAvgBeanWeight;
+    obj["doseMeasureTarget"] = doseTarget;
+    obj["doseMeasureCupEnabled"] = doseCupEnabled;
+    obj["doseMeasureCupEmptyWeight"] = doseCupEmptyWeight;
+    obj["doseMeasureBeepEnabled"] = doseBeepEnabled;
+    obj["doseMeasureProceedBeanCount"] = doseProceedBeanCount;
+    obj["doseMeasureBeanCountLimit"] = doseBeanCountLimit;
+    obj["doseMeasureDefaultDoseCount"] = doseDefaultDoseCount;
+    obj["momentaryButtons"] = momentaryButtons;
+    obj["brewDelay"] = brewDelay;
+    obj["grindDelay"] = grindDelay;
+    obj["delayAdjust"] = delayAdjust;
+    obj["timezone"] = timezone;
+    obj["clock24hFormat"] = clock24hFormat;
+    obj["selectedProfile"] = selectedProfile;
+    obj["standbyTimeout"] = standbyTimeout / 1000;
+    obj["screensaverEnabled"] = screensaverEnabled;
+    obj["screensaverTimeout"] = screensaverTimeout / 60000.0f;
+    obj["mainBrightness"] = mainBrightness;
+    obj["standbyBrightness"] = standbyBrightness;
+    obj["standbyBrightnessTimeout"] = standbyBrightnessTimeout / 1000;
+    obj["standbyLandingScreen"] = standbyLandingScreen;
+    obj["steamPumpPercentage"] = steamPumpPercentage;
+    obj["steamPumpCutoff"] = steamPumpCutoff;
+    obj["themeMode"] = themeMode;
+    obj["sunriseR"] = sunriseR;
+    obj["sunriseG"] = sunriseG;
+    obj["sunriseB"] = sunriseB;
+    obj["sunriseW"] = sunriseW;
+    obj["sunriseExtBrightness"] = sunriseExtBrightness;
+    obj["emptyTankDistance"] = emptyTankDistance;
+    obj["fullTankDistance"] = fullTankDistance;
+    obj["altRelayFunction"] = altRelayFunction;
+    obj["autowakeupEnabled"] = autowakeupEnabled;
+
+    String schedulesStr = "";
+    for (size_t i = 0; i < autowakeupSchedules.size(); i++) {
+        if (i > 0)
+            schedulesStr += ";";
+        schedulesStr += autowakeupSchedules[i].time + "|";
+        for (int j = 0; j < 7; j++) {
+            schedulesStr += autowakeupSchedules[i].days[j] ? "1" : "0";
+        }
+    }
+    obj["autowakeupSchedules"] = schedulesStr;
+}
+
+void Settings::applyJson(const JsonObject &obj) {
+    if (obj.containsKey("startupMode")) {
+        String mode = obj["startupMode"].as<String>();
+        startupMode = mode == "brew" ? MODE_BREW : MODE_STANDBY;
+    }
+    if (obj.containsKey("targetSteamTemp"))
+        targetSteamTemp = obj["targetSteamTemp"].as<int>();
+    if (obj.containsKey("targetWaterTemp"))
+        targetWaterTemp = obj["targetWaterTemp"].as<int>();
+    if (obj.containsKey("homekit"))
+        homekit = obj["homekit"].as<bool>();
+    if (obj.containsKey("volumetricTarget"))
+        volumetricTarget = obj["volumetricTarget"].as<bool>();
+    if (obj.containsKey("otaChannel"))
+        otaChannel = obj["otaChannel"].as<String>();
+    if (obj.containsKey("savedScale"))
+        savedScale = obj["savedScale"].as<String>();
+    if (obj.containsKey("temperatureOffset"))
+        temperatureOffset = obj["temperatureOffset"].as<int>();
+    if (obj.containsKey("pressureScaling"))
+        pressureScaling = obj["pressureScaling"].as<float>();
+    if (obj.containsKey("pid"))
+        pid = obj["pid"].as<String>();
+    if (obj.containsKey("pumpModelCoeffs"))
+        pumpModelCoeffs = obj["pumpModelCoeffs"].as<String>();
+    if (obj.containsKey("wifiSsid"))
+        wifiSsid = obj["wifiSsid"].as<String>();
+    if (obj.containsKey("wifiPassword"))
+        wifiPassword = obj["wifiPassword"].as<String>();
+    if (obj.containsKey("mdnsName"))
+        mdnsName = obj["mdnsName"].as<String>();
+    if (obj.containsKey("boilerFillActive"))
+        boilerFillActive = obj["boilerFillActive"].as<bool>();
+    if (obj.containsKey("startupFillTime"))
+        startupFillTime = obj["startupFillTime"].as<int>() * 1000;
+    if (obj.containsKey("steamFillTime"))
+        steamFillTime = obj["steamFillTime"].as<int>() * 1000;
+    if (obj.containsKey("smartGrindActive"))
+        smartGrindActive = obj["smartGrindActive"].as<bool>();
+    if (obj.containsKey("smartGrindIp"))
+        smartGrindIp = obj["smartGrindIp"].as<String>();
+    if (obj.containsKey("smartGrindMode"))
+        smartGrindMode = obj["smartGrindMode"].as<int>();
+    if (obj.containsKey("smartGrindToggle"))
+        smartGrindToggle = obj["smartGrindToggle"].as<bool>();
+    if (obj.containsKey("doseMeasureEnabled"))
+        doseMeasureEnabled = obj["doseMeasureEnabled"].as<bool>();
+    if (obj.containsKey("doseMeasureAvgBeanWeight"))
+        doseAvgBeanWeight = obj["doseMeasureAvgBeanWeight"].as<double>();
+    if (obj.containsKey("doseMeasureTarget"))
+        doseTarget = obj["doseMeasureTarget"].as<double>();
+    if (obj.containsKey("doseMeasureCupEnabled"))
+        doseCupEnabled = obj["doseMeasureCupEnabled"].as<bool>();
+    if (obj.containsKey("doseMeasureCupEmptyWeight"))
+        doseCupEmptyWeight = obj["doseMeasureCupEmptyWeight"].as<double>();
+    if (obj.containsKey("doseMeasureBeepEnabled"))
+        doseBeepEnabled = obj["doseMeasureBeepEnabled"].as<bool>();
+    if (obj.containsKey("doseMeasureProceedBeanCount"))
+        doseProceedBeanCount = obj["doseMeasureProceedBeanCount"].as<int>();
+    if (obj.containsKey("doseMeasureBeanCountLimit"))
+        doseBeanCountLimit = obj["doseMeasureBeanCountLimit"].as<int>();
+    if (obj.containsKey("doseMeasureDefaultDoseCount"))
+        doseDefaultDoseCount = obj["doseMeasureDefaultDoseCount"].as<int>();
+    if (obj.containsKey("homeAssistant"))
+        homeAssistant = obj["homeAssistant"].as<bool>();
+    if (obj.containsKey("haUser"))
+        homeAssistantUser = obj["haUser"].as<String>();
+    if (obj.containsKey("haPassword"))
+        homeAssistantPassword = obj["haPassword"].as<String>();
+    if (obj.containsKey("haIP"))
+        homeAssistantIP = obj["haIP"].as<String>();
+    if (obj.containsKey("haPort"))
+        homeAssistantPort = obj["haPort"].as<int>();
+    if (obj.containsKey("haTopic"))
+        homeAssistantTopic = obj["haTopic"].as<String>();
+    if (obj.containsKey("momentaryButtons"))
+        momentaryButtons = obj["momentaryButtons"].as<bool>();
+    if (obj.containsKey("delayAdjust"))
+        delayAdjust = obj["delayAdjust"].as<bool>();
+    if (obj.containsKey("brewDelay"))
+        brewDelay = obj["brewDelay"].as<double>();
+    if (obj.containsKey("grindDelay"))
+        grindDelay = obj["grindDelay"].as<double>();
+    if (obj.containsKey("timezone"))
+        timezone = obj["timezone"].as<String>();
+    if (obj.containsKey("clock24hFormat"))
+        clock24hFormat = obj["clock24hFormat"].as<bool>();
+    if (obj.containsKey("selectedProfile"))
+        selectedProfile = obj["selectedProfile"].as<String>();
+    if (obj.containsKey("standbyTimeout"))
+        standbyTimeout = obj["standbyTimeout"].as<int>() * 1000;
+    if (obj.containsKey("screensaverEnabled"))
+        screensaverEnabled = obj["screensaverEnabled"].as<bool>();
+    if (obj.containsKey("screensaverTimeout"))
+        screensaverTimeout = static_cast<int>(obj["screensaverTimeout"].as<float>() * 60000.0f);
+    if (obj.containsKey("mainBrightness"))
+        mainBrightness = obj["mainBrightness"].as<int>();
+    if (obj.containsKey("standbyBrightness"))
+        standbyBrightness = obj["standbyBrightness"].as<int>();
+    if (obj.containsKey("standbyBrightnessTimeout"))
+        standbyBrightnessTimeout = obj["standbyBrightnessTimeout"].as<int>() * 1000;
+    if (obj.containsKey("standbyLandingScreen"))
+        standbyLandingScreen = obj["standbyLandingScreen"].as<String>();
+    if (obj.containsKey("steamPumpPercentage"))
+        steamPumpPercentage = obj["steamPumpPercentage"].as<float>();
+    if (obj.containsKey("steamPumpCutoff"))
+        steamPumpCutoff = obj["steamPumpCutoff"].as<float>();
+    if (obj.containsKey("themeMode"))
+        themeMode = obj["themeMode"].as<int>();
+    if (obj.containsKey("sunriseR"))
+        sunriseR = obj["sunriseR"].as<int>();
+    if (obj.containsKey("sunriseG"))
+        sunriseG = obj["sunriseG"].as<int>();
+    if (obj.containsKey("sunriseB"))
+        sunriseB = obj["sunriseB"].as<int>();
+    if (obj.containsKey("sunriseW"))
+        sunriseW = obj["sunriseW"].as<int>();
+    if (obj.containsKey("sunriseExtBrightness"))
+        sunriseExtBrightness = obj["sunriseExtBrightness"].as<int>();
+    if (obj.containsKey("emptyTankDistance"))
+        emptyTankDistance = obj["emptyTankDistance"].as<int>();
+    if (obj.containsKey("fullTankDistance"))
+        fullTankDistance = obj["fullTankDistance"].as<int>();
+    if (obj.containsKey("altRelayFunction"))
+        altRelayFunction = obj["altRelayFunction"].as<int>();
+    if (obj.containsKey("autowakeupEnabled"))
+        autowakeupEnabled = obj["autowakeupEnabled"].as<bool>();
+    if (obj.containsKey("autowakeupSchedules")) {
+        String schedulesStr = obj["autowakeupSchedules"].as<String>();
+        autowakeupSchedules.clear();
+        if (schedulesStr.length() > 0) {
+            int start = 0;
+            int end = schedulesStr.indexOf(';');
+            while (end != -1 || start < schedulesStr.length()) {
+                String scheduleStr = (end != -1) ? schedulesStr.substring(start, end) : schedulesStr.substring(start);
+                int pipePos = scheduleStr.indexOf('|');
+                if (pipePos != -1) {
+                    String timeStr = scheduleStr.substring(0, pipePos);
+                    String daysStr = scheduleStr.substring(pipePos + 1);
+                    AutoWakeupSchedule schedule;
+                    schedule.time = timeStr;
+                    if (daysStr.length() == 7) {
+                        for (int i = 0; i < 7; i++) {
+                            schedule.days[i] = (daysStr.charAt(i) == '1');
+                        }
+                    }
+                    autowakeupSchedules.push_back(schedule);
+                }
+                if (end == -1)
+                    break;
+                start = end + 1;
+                end = schedulesStr.indexOf(';', start);
+            }
+        }
+        if (autowakeupSchedules.empty()) {
+            autowakeupSchedules.push_back(AutoWakeupSchedule("07:00"));
+        }
+    }
+}
+
 void Settings::doSave() {
     if (!dirty) {
         return;
@@ -579,6 +843,9 @@ void Settings::doSave() {
     preferences.putBool("clk_24h", clock24hFormat);
     preferences.putString("sp", selectedProfile);
     preferences.putInt("sbt", standbyTimeout);
+    preferences.putBool("ss_en", screensaverEnabled);
+    preferences.putInt("ss_to", screensaverTimeout);
+    preferences.putBool("rd_once", restoreDoneOnce);
     preferences.putBool("pm", profilesMigrated);
     preferences.putBool("mb", momentaryButtons);
     preferences.putString("fp", implode(favoritedProfiles, ","));
@@ -621,6 +888,13 @@ void Settings::doSave() {
     preferences.putInt("alt_relay", altRelayFunction);
 
     preferences.end();
+
+    String backupErr;
+    if (SdBackup::backupSettings(*this, &backupErr)) {
+        ESP_LOGI("Settings", "SD backup settings OK");
+    } else {
+        ESP_LOGW("Settings", "SD backup settings FAIL: %s", backupErr.c_str());
+    }
 }
 
 void Settings::loopTask(void *arg) {

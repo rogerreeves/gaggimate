@@ -501,6 +501,9 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             settings->setClockFormat(request->hasArg("clock24hFormat"));
             if (request->hasArg("standbyTimeout"))
                 settings->setStandbyTimeout(request->arg("standbyTimeout").toInt() * 1000);
+            settings->setScreensaverEnabled(request->hasArg("screensaverEnabled"));
+            if (request->hasArg("screensaverTimeout"))
+                settings->setScreensaverTimeout(static_cast<int>(request->arg("screensaverTimeout").toFloat() * 60000.0f));
             if (request->hasArg("mainBrightness"))
                 settings->setMainBrightness(request->arg("mainBrightness").toInt());
             if (request->hasArg("standbyBrightness"))
@@ -623,6 +626,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["timezone"] = settings.getTimezone();
     doc["clock24hFormat"] = settings.isClock24hFormat();
     doc["standbyTimeout"] = settings.getStandbyTimeout() / 1000;
+    doc["screensaverEnabled"] = settings.isScreensaverEnabled();
+    doc["screensaverTimeout"] = settings.getScreensaverTimeout() / 60000.0f;
     doc["mainBrightness"] = settings.getMainBrightness();
     doc["standbyBrightness"] = settings.getStandbyBrightness();
     doc["standbyBrightnessTimeout"] = settings.getStandbyBrightnessTimeout() / 1000;

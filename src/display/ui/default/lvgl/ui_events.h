@@ -37,6 +37,7 @@ void onProfileSave(lv_event_t *e);
 void onProfileAccept(lv_event_t *e);
 void onProfileSaveAsNew(lv_event_t *e);
 void onWakeup(lv_event_t *e);
+void onScreensaverWake(lv_event_t *e);
 void onSimpleProcessScreenLoad(lv_event_t *e);
 void onSimpleProcessToggle(lv_event_t *e);
 void onSteamTempLower(lv_event_t *e);
@@ -51,6 +52,8 @@ void onGrindTimeLower(lv_event_t *e);
 void onGrindDoseCountRaise(lv_event_t *e);
 void onGrindDoseCountLower(lv_event_t *e);
 void onGrindReset(lv_event_t *e);
+void onGrindEndBean(lv_event_t *e);
+void onGrindEndBrew(lv_event_t *e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

@@ -18,6 +18,8 @@ lv_obj_t *ui_GrindScreen_contentPanel7 = NULL;
 lv_obj_t *ui_GrindScreen_mainLabel7 = NULL;
 lv_obj_t *ui_GrindScreen_proceedLabel = NULL;
 lv_obj_t *ui_GrindScreen_refreshButton = NULL;
+lv_obj_t *ui_GrindScreen_beanButton = NULL;
+lv_obj_t *ui_GrindScreen_brewButton = NULL;
 lv_obj_t *ui_GrindScreen_startButton = NULL;
 lv_obj_t *ui_GrindScreen_doseCountIcon = NULL;
 lv_obj_t *ui_GrindScreen_doseCountRow = NULL;
@@ -66,6 +68,22 @@ void ui_event_GrindScreen_refreshButton(lv_event_t *e) {
 
     if (event_code == LV_EVENT_CLICKED) {
         onGrindReset(e);
+    }
+}
+
+void ui_event_GrindScreen_beanButton(lv_event_t *e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if (event_code == LV_EVENT_CLICKED) {
+        onGrindEndBean(e);
+    }
+}
+
+void ui_event_GrindScreen_brewButton(lv_event_t *e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if (event_code == LV_EVENT_CLICKED) {
+        onGrindEndBrew(e);
     }
 }
 
@@ -207,6 +225,32 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_set_style_transform_zoom(ui_GrindScreen_refreshButton, 512, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_flag(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN);
 
+    ui_GrindScreen_beanButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
+    lv_imgbtn_set_src(ui_GrindScreen_beanButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_363557387, NULL);
+    lv_obj_set_width(ui_GrindScreen_beanButton, 40);
+    lv_obj_set_height(ui_GrindScreen_beanButton, 40);
+    lv_obj_set_x(ui_GrindScreen_beanButton, -22);
+    lv_obj_set_y(ui_GrindScreen_beanButton, 130);
+    lv_obj_set_align(ui_GrindScreen_beanButton, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_beanButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_beanButton, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+    lv_obj_add_flag(ui_GrindScreen_beanButton, LV_OBJ_FLAG_HIDDEN);
+
+    ui_GrindScreen_brewButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
+    lv_imgbtn_set_src(ui_GrindScreen_brewButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_mug_hot_alt_40x40, NULL);
+    lv_obj_set_width(ui_GrindScreen_brewButton, 40);
+    lv_obj_set_height(ui_GrindScreen_brewButton, 40);
+    lv_obj_set_x(ui_GrindScreen_brewButton, 22);
+    lv_obj_set_y(ui_GrindScreen_brewButton, 130);
+    lv_obj_set_align(ui_GrindScreen_brewButton, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_brewButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_brewButton, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+    lv_obj_add_flag(ui_GrindScreen_brewButton, LV_OBJ_FLAG_HIDDEN);
+
     ui_GrindScreen_doseCountRow = lv_obj_create(ui_GrindScreen_contentPanel7);
     lv_obj_remove_style_all(ui_GrindScreen_doseCountRow);
     lv_obj_set_width(ui_GrindScreen_doseCountRow, 300);
@@ -217,7 +261,7 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_clear_flag(ui_GrindScreen_doseCountRow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_GrindScreen_doseCountIcon = lv_img_create(ui_GrindScreen_doseCountRow);
-    lv_img_set_src(ui_GrindScreen_doseCountIcon, &ui_img_979979123);
+    lv_img_set_src(ui_GrindScreen_doseCountIcon, &ui_img_mug_hot_alt_40x40);
     lv_obj_set_width(ui_GrindScreen_doseCountIcon, 40);
     lv_obj_set_height(ui_GrindScreen_doseCountIcon, 40);
     lv_obj_set_x(ui_GrindScreen_doseCountIcon, -120);
@@ -366,6 +410,8 @@ void ui_GrindScreen_screen_init(void) {
     lv_obj_add_event_cb(ui_GrindScreen_ImgButton2, ui_event_GrindScreen_ImgButton2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_startButton, ui_event_GrindScreen_startButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_refreshButton, ui_event_GrindScreen_refreshButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_beanButton, ui_event_GrindScreen_beanButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_brewButton, ui_event_GrindScreen_brewButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_upDurationButton, ui_event_GrindScreen_upDurationButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_downDurationButton, ui_event_GrindScreen_downDurationButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_doseCountUp, ui_event_GrindScreen_doseCountUp, LV_EVENT_ALL, NULL);
@@ -399,6 +445,8 @@ void ui_GrindScreen_screen_destroy(void) {
     ui_GrindScreen_proceedLabel = NULL;
     ui_GrindScreen_startButton = NULL;
     ui_GrindScreen_refreshButton = NULL;
+    ui_GrindScreen_beanButton = NULL;
+    ui_GrindScreen_brewButton = NULL;
     ui_GrindScreen_doseCountIcon = NULL;
     ui_GrindScreen_doseCountRow = NULL;
     ui_GrindScreen_doseCountLabel = NULL;

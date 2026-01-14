@@ -277,6 +277,7 @@ void DefaultUI::loop() {
         effect_mgr.evaluate_all();
     }
 
+    maybeActivateScreensaver();
     lv_task_handler();
 }
 
@@ -285,6 +286,63 @@ void DefaultUI::loopProfiles() {
         profileManager->loadProfile(currentProfileId, currentProfileChoice);
         profileLoaded = 1;
     }
+}
+
+void DefaultUI::maybeActivateScreensaver() {
+    const Settings &settings = controller->getSettings();
+    if (!settings.isScreensaverEnabled()) {
+        return;
+    }
+    if (screensaverActive || controller->getMode() == MODE_STANDBY) {
+        return;
+    }
+    lv_obj_t *screen = lv_scr_act();
+    if (screen == ui_StandbyScreen || screen == ui_ScreensaverScreen) {
+        return;
+    }
+    const unsigned long inactiveMs = lv_disp_get_inactive_time(NULL);
+    if (inactiveMs < static_cast<unsigned long>(settings.getScreensaverTimeout())) {
+        return;
+    }
+    setScreensaverReturnTarget(screen);
+    changeScreen(&ui_ScreensaverScreen, &ui_ScreensaverScreen_screen_init);
+}
+
+void DefaultUI::setScreensaverReturnTarget(lv_obj_t *screen) {
+    if (screen == ui_BrewScreen) {
+        screensaverReturnScreen = &ui_BrewScreen;
+        screensaverReturnInit = &ui_BrewScreen_screen_init;
+    } else if (screen == ui_GrindScreen) {
+        screensaverReturnScreen = &ui_GrindScreen;
+        screensaverReturnInit = &ui_GrindScreen_screen_init;
+    } else if (screen == ui_MenuScreen) {
+        screensaverReturnScreen = &ui_MenuScreen;
+        screensaverReturnInit = &ui_MenuScreen_screen_init;
+    } else if (screen == ui_ProfileScreen) {
+        screensaverReturnScreen = &ui_ProfileScreen;
+        screensaverReturnInit = &ui_ProfileScreen_screen_init;
+    } else if (screen == ui_StatusScreen) {
+        screensaverReturnScreen = &ui_StatusScreen;
+        screensaverReturnInit = &ui_StatusScreen_screen_init;
+    } else if (screen == ui_SimpleProcessScreen) {
+        screensaverReturnScreen = &ui_SimpleProcessScreen;
+        screensaverReturnInit = &ui_SimpleProcessScreen_screen_init;
+    } else {
+        screensaverReturnScreen = &ui_MenuScreen;
+        screensaverReturnInit = &ui_MenuScreen_screen_init;
+    }
+}
+
+void DefaultUI::onScreensaverWake() {
+    controller->updateLastAction();
+    screensaverActive = false;
+    if (screensaverReturnScreen && screensaverReturnInit) {
+        changeScreen(screensaverReturnScreen, screensaverReturnInit);
+    } else {
+        changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
+    }
+    screensaverReturnScreen = nullptr;
+    screensaverReturnInit = nullptr;
 }
 
 void DefaultUI::changeScreen(lv_obj_t **screen, void (*target_init)()) {
@@ -310,6 +368,10 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
         doseMeasureShowPlay = false;
         doseMeasureShowStartBrewActions = false;
         rerender = true;
+        return;
+    }
+
+    if (doseMeasureShowEndActions) {
         return;
     }
 
@@ -368,6 +430,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
         return;
 
     BLEScales.tare();
+    doseMeasureForceAddUntil = millis() + 1500;
     if (!doseMeasureDoseCountDirty) {
         const Settings &settings = controller->getSettings();
         doseMeasureDoseCount = settings.getDoseMeasureDefaultDoseCount();
@@ -397,8 +460,34 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
     doseMeasureBeepQueue = 0;
     doseMeasureBeepNextAt = 0;
     doseMeasureShowStartBrewActions = false;
+    doseMeasureShowEndActions = false;
     doseMeasureLabel = "Add Beans";
     rerender = true;
+}
+
+void DefaultUI::onDoseMeasureEndBeanAction() {
+    if (!doseMeasureEnabled || !bluetoothScales) {
+        return;
+    }
+    forceDoseMeasureBeep(1, 0);
+    if (doseMeasureDosesRemaining > 1) {
+        doseMeasureDosesRemaining -= 1;
+        resetDoseMeasureFlow(true);
+        return;
+    }
+    resetDoseMeasureFlow(false);
+}
+
+void DefaultUI::onDoseMeasureEndBrewAction() {
+    if (!doseMeasureEnabled || !bluetoothScales) {
+        return;
+    }
+    forceDoseMeasureBeep(1, 0);
+    if (doseMeasurePhase == DoseMeasurePhase::BeansMeasure && !doseMeasureCupEnabled) {
+        beginDoseMeasureBrewTransition(true);
+    } else {
+        beginDoseMeasureBrewTransition(false);
+    }
 }
 
 void DefaultUI::adjustDoseMeasureTarget(double delta) {
@@ -427,6 +516,7 @@ void DefaultUI::resetDoseMeasureFlow(bool preserveRemaining) {
     doseMeasureProceedAvailable = false;
     doseMeasureShowPlay = true;
     doseMeasureShowStartBrewActions = false;
+    doseMeasureShowEndActions = false;
     doseMeasureBeansCorrect = false;
     doseMeasureGroundsCorrect = false;
     doseMeasureBeansExactAchieved = false;
@@ -445,6 +535,7 @@ void DefaultUI::resetDoseMeasureFlow(bool preserveRemaining) {
     doseMeasurePresentSince = 0;
     doseMeasurePresentConfirmed = false;
     doseMeasureAutoTareStart = 0;
+    doseMeasureForceAddUntil = 0;
     if (!preserveRemaining) {
         doseMeasureDosesRemaining = 0;
         doseMeasureDoseCountDirty = false;
@@ -790,27 +881,23 @@ void DefaultUI::setupReactive() {
                           &grindActive);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
-                              const bool showStart = !doseMeasureEnabled || doseMeasureShowPlay;
+                              const bool showStart = !doseMeasureEnabled || (doseMeasureShowPlay && !doseMeasureShowEndActions);
                               _ui_flag_modify(ui_GrindScreen_startButton, LV_OBJ_FLAG_HIDDEN,
                                               showStart ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
-                              const bool showRefresh = showStart && doseMeasureShowStartBrewActions;
-                              if (showRefresh) {
-                                  lv_imgbtn_set_src(ui_GrindScreen_refreshButton, LV_IMGBTN_STATE_RELEASED, nullptr,
-                                                    &ui_img_1765671371, nullptr);
-                                  lv_imgbtn_set_src(ui_GrindScreen_refreshButton, LV_IMGBTN_STATE_PRESSED, nullptr,
-                                                    &ui_img_1765671371, nullptr);
-                                  lv_obj_set_x(ui_GrindScreen_refreshButton, -22);
-                                  lv_obj_set_x(ui_GrindScreen_startButton, 22);
-                              } else {
+                              if (showStart) {
                                   lv_obj_set_x(ui_GrindScreen_startButton, 0);
                               }
-                              _ui_flag_modify(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN,
-                                              showRefresh ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+                              const bool showEndActions = doseMeasureEnabled && doseMeasureShowEndActions;
+                              _ui_flag_modify(ui_GrindScreen_beanButton, LV_OBJ_FLAG_HIDDEN,
+                                              showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+                              _ui_flag_modify(ui_GrindScreen_brewButton, LV_OBJ_FLAG_HIDDEN,
+                                              showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+                              _ui_flag_modify(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
                               _ui_flag_modify(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN,
                                               (doseMeasureEnabled && !bluetoothScales) ? _UI_MODIFY_FLAG_ADD
                                                                                        : _UI_MODIFY_FLAG_REMOVE);
                           },
-                          &doseMeasureEnabled, &doseMeasureShowPlay, &doseMeasureShowStartBrewActions, &bluetoothScales);
+                          &doseMeasureEnabled, &doseMeasureShowPlay, &doseMeasureShowEndActions, &bluetoothScales);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
                               const bool hideTarget = doseMeasureEnabled && !bluetoothScales;
@@ -832,6 +919,19 @@ void DefaultUI::setupReactive() {
                                   return;
                               }
 
+                              if (doseMeasureShowEndActions) {
+                                  lv_obj_set_width(ui_GrindScreen_proceedLabel, 200);
+                                  lv_obj_set_height(ui_GrindScreen_proceedLabel, 24);
+                                  lv_obj_set_x(ui_GrindScreen_proceedLabel, 0);
+                                  lv_obj_set_y(ui_GrindScreen_proceedLabel, 83);
+                                  lv_obj_set_style_text_font(ui_GrindScreen_proceedLabel, &lv_font_montserrat_24,
+                                                             LV_PART_MAIN | LV_STATE_DEFAULT);
+                                  lv_label_set_text(ui_GrindScreen_proceedLabel,
+                                                    doseMeasureDosesRemaining > 1 ? "Next Dose" : "Brew?");
+                                  _ui_flag_modify(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+                                  return;
+                              }
+
                               if (doseMeasureProceedAvailable) {
                                   lv_obj_set_width(ui_GrindScreen_proceedLabel, 200);
                                   lv_obj_set_height(ui_GrindScreen_proceedLabel, 24);
@@ -846,12 +946,10 @@ void DefaultUI::setupReactive() {
                                       if (doseMeasureCupEnabled) {
                                           lv_label_set_text(ui_GrindScreen_proceedLabel, "Proceed");
                                       } else {
-                                          lv_label_set_text(ui_GrindScreen_proceedLabel,
-                                                            doseMeasureShowStartBrewActions ? "Start Brew?" : "Proceed");
+                                          lv_label_set_text(ui_GrindScreen_proceedLabel, "Proceed");
                                       }
                                   } else if (isGroundsPhase) {
-                                      lv_label_set_text(ui_GrindScreen_proceedLabel,
-                                                        doseMeasureShowStartBrewActions ? "Start Brew?" : "Proceed");
+                                      lv_label_set_text(ui_GrindScreen_proceedLabel, "Proceed");
                                   } else {
                                       lv_label_set_text(ui_GrindScreen_proceedLabel, "");
                                   }
@@ -861,7 +959,7 @@ void DefaultUI::setupReactive() {
                               }
                           },
                           &doseMeasureProceedAvailable, &doseMeasurePhase, &doseMeasureCupEnabled, &doseMeasureDosesRemaining,
-                          &doseMeasureEnabled, &bluetoothScales);
+                          &doseMeasureEnabled, &bluetoothScales, &doseMeasureShowEndActions);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
                               const bool showDoseCount =
@@ -965,6 +1063,11 @@ void DefaultUI::setupReactive() {
     effect_mgr.use_effect([=] { return currentScreen == ui_StandbyScreen; },
                           [=]() { lv_img_set_src(ui_StandbyScreen_logo, christmasMode ? &ui_img_1510335 : &ui_img_logo_png); },
                           &christmasMode);
+    effect_mgr.use_effect([=] { return currentScreen == ui_ScreensaverScreen; },
+                          [=]() {
+                              lv_img_set_src(ui_ScreensaverScreen_logo, christmasMode ? &ui_img_1510335 : &ui_img_logo_png);
+                          },
+                          &christmasMode);
 }
 
 void DefaultUI::handleScreenChange() {
@@ -972,10 +1075,15 @@ void DefaultUI::handleScreenChange() {
 
     if (current != *targetScreen) {
         if (*targetScreen == ui_StandbyScreen) {
+            screensaverActive = false;
             standbyEnterTime = millis();
+        } else if (*targetScreen == ui_ScreensaverScreen) {
+            screensaverActive = true;
         } else if (current == ui_StandbyScreen) {
             const Settings &settings = controller->getSettings();
             setBrightness(settings.getMainBrightness());
+        } else if (current == ui_ScreensaverScreen) {
+            screensaverActive = false;
         }
 
         _ui_screen_change(targetScreen, LV_SCR_LOAD_ANIM_NONE, 0, 0, targetScreenInit);
@@ -1155,11 +1263,13 @@ void DefaultUI::updateDoseMeasureState() {
             doseMeasureProceedAvailable = false;
             doseMeasureShowPlay = false;
             doseMeasureShowStartBrewActions = false;
+            doseMeasureShowEndActions = false;
             return;
         }
         doseMeasureLabel = String(doseMeasureTarget, 1) + "g";
         doseMeasureShowPlay = true;
         doseMeasureShowStartBrewActions = false;
+        doseMeasureShowEndActions = false;
         return;
     }
 
@@ -1295,6 +1405,17 @@ void DefaultUI::updateDoseMeasureState() {
     doseMeasureShowStartBrewActions = false;
 
     if (doseMeasurePhase == DoseMeasurePhase::BeansMeasure) {
+        if (doseMeasureForceAddUntil != 0 && now < doseMeasureForceAddUntil) {
+            doseMeasureLabel = "Add Beans";
+            doseMeasureProceedAvailable = false;
+            doseMeasureShowPlay = false;
+            doseMeasureShowEndActions = false;
+            doseMeasureBeansCorrect = false;
+            doseMeasureBeansExactSince = 0;
+            doseMeasureBeansExactAchieved = false;
+            return;
+        }
+        doseMeasureForceAddUntil = 0;
         const double diff = doseMeasureTarget - effectiveWeight;
         const double absDiff = fabs(diff);
         const bool inExact = absDiff <= BEANS_EXACT_TOL_G;
@@ -1324,8 +1445,15 @@ void DefaultUI::updateDoseMeasureState() {
 
         const int previousProceedAvailable = doseMeasureProceedAvailable;
         doseMeasureProceedAvailable = beansProceedAvailable;
-        doseMeasureShowPlay = beansProceedAvailable;
-        doseMeasureShowStartBrewActions = !doseMeasureCupEnabled && beansProceedAvailable;
+        if (!doseMeasureCupEnabled && beansProceedAvailable) {
+            doseMeasureShowEndActions = true;
+            doseMeasureShowPlay = false;
+            doseMeasureProceedAvailable = false;
+        } else {
+            doseMeasureShowEndActions = false;
+            doseMeasureShowPlay = beansProceedAvailable;
+        }
+        doseMeasureShowStartBrewActions = false;
         if (doseMeasureBeansCorrect != inExact) {
             ESP_LOGI("DoseMeasure", "beans_exact_now=%d", inExact);
         }
@@ -1384,6 +1512,7 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureLabel = "Grind Beans";
         doseMeasureProceedAvailable = false;
         doseMeasureShowPlay = false;
+        doseMeasureShowEndActions = false;
 
         if (removedStable) {
             doseMeasurePhase = DoseMeasurePhase::PreGroundsAutoTare;
@@ -1399,6 +1528,7 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureLabel = "Grind Beans";
         doseMeasureProceedAvailable = false;
         doseMeasureShowPlay = false;
+        doseMeasureShowEndActions = false;
 
         if (doseMeasureAutoTareStart == 0) {
             doseMeasureAutoTareStart = now;
@@ -1421,6 +1551,7 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureProceedAvailable = false;
         doseMeasureShowPlay = false;
         doseMeasureGroundsCorrect = false;
+        doseMeasureShowEndActions = false;
 
         if (presentStable) {
             doseMeasurePhase = DoseMeasurePhase::GroundsMeasure;
@@ -1455,8 +1586,15 @@ void DefaultUI::updateDoseMeasureState() {
         const int previousProceedAvailable = doseMeasureProceedAvailable;
         const bool groundsProceedAvailable = absDiff <= GROUNDS_PROCEED_TOL_G;
         doseMeasureProceedAvailable = groundsProceedAvailable;
-        doseMeasureShowPlay = groundsProceedAvailable;
-        doseMeasureShowStartBrewActions = groundsProceedAvailable && doseMeasureDosesRemaining <= 1;
+        if (groundsProceedAvailable) {
+            doseMeasureShowEndActions = true;
+            doseMeasureShowPlay = false;
+            doseMeasureProceedAvailable = false;
+        } else {
+            doseMeasureShowEndActions = false;
+            doseMeasureShowPlay = false;
+        }
+        doseMeasureShowStartBrewActions = false;
         if (doseMeasureGroundsCorrect != inExact) {
             ESP_LOGI("DoseMeasure", "grounds_exact_now=%d", inExact);
         }
@@ -1514,8 +1652,9 @@ void DefaultUI::updateDoseMeasureState() {
     if (doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
         doseMeasureLabel = "Start Brew?";
         doseMeasureProceedAvailable = false;
-        doseMeasureShowPlay = true;
-        doseMeasureShowStartBrewActions = true;
+        doseMeasureShowPlay = false;
+        doseMeasureShowStartBrewActions = false;
+        doseMeasureShowEndActions = true;
 
         if (presentStable) {
             doseMeasurePhase = DoseMeasurePhase::GroundsMeasure;
