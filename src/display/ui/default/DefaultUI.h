@@ -22,6 +22,7 @@ int16_t calculate_angle(int set_temp, int range, int offset);
 enum class BrewScreenState { Brew, Settings };
 enum class DoseMeasurePhase {
     Idle,
+    PlaceCup,
     BeansMeasure,
     GrindBeansWaitRemove,
     PreGroundsAutoTare,
@@ -80,6 +81,8 @@ class DefaultUI {
     void updateDoseMeasureState();
     void switchToBrewFromDoseMeasure();
     void beginDoseMeasureBrewTransition(bool showGrindNotice);
+    void startDoseMeasureBeansCycle(bool initializeCounts);
+    void enterDoseMeasurePlaceCup();
     void enqueueDoseMeasureBeep(int count, unsigned long spacingMs = 0);
     void forceDoseMeasureBeep(int count, unsigned long spacingMs);
 
