@@ -51,22 +51,28 @@ void Controller::setup() {
             if (!SdBackup::available()) {
                 ESP_LOGW(LOG_TAG.c_str(), "SD not available");
             } else {
-                String settingsErr;
-                String profilesErr;
-                const bool settingsRestored = SdBackup::restoreSettings(settings, &settingsErr);
-                const bool profilesRestored = SdBackup::restoreProfiles(SPIFFS, "/p", &profilesErr);
-                if (!settingsRestored) {
-                    ESP_LOGW(LOG_TAG.c_str(), "Settings restore FAIL: %s", settingsErr.c_str());
-                }
-                if (!profilesRestored) {
-                    ESP_LOGW(LOG_TAG.c_str(), "Profiles restore FAIL: %s", profilesErr.c_str());
-                }
-                settings.setRestoreDoneOnce(true);
-                if (settingsRestored || profilesRestored) {
-                    ESP_LOGI(LOG_TAG.c_str(), "SD restore complete, rebooting");
-                    ESP.restart();
-                    while (true) {
-                        delay(1000);
+                const bool hasSettingsBackup = SdBackup::fileExists("/gaggimate/backup/settings.json");
+                const bool hasProfilesBackup = SdBackup::fileExists("/gaggimate/backup/profiles");
+                if (!hasSettingsBackup && !hasProfilesBackup) {
+                    ESP_LOGW(LOG_TAG.c_str(), "SD restore skipped: no backup files found");
+                } else {
+                    String settingsErr;
+                    String profilesErr;
+                    const bool settingsRestored = SdBackup::restoreSettings(settings, &settingsErr);
+                    const bool profilesRestored = SdBackup::restoreProfiles(SPIFFS, "/p", &profilesErr);
+                    if (!settingsRestored) {
+                        ESP_LOGW(LOG_TAG.c_str(), "Settings restore FAIL: %s", settingsErr.c_str());
+                    }
+                    if (!profilesRestored) {
+                        ESP_LOGW(LOG_TAG.c_str(), "Profiles restore FAIL: %s", profilesErr.c_str());
+                    }
+                    settings.setRestoreDoneOnce(true);
+                    if (settingsRestored || profilesRestored) {
+                        ESP_LOGI(LOG_TAG.c_str(), "SD restore complete, rebooting");
+                        ESP.restart();
+                        while (true) {
+                            delay(1000);
+                        }
                     }
                 }
             }
