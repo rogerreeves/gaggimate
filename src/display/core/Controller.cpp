@@ -58,21 +58,29 @@ void Controller::setup() {
                 } else {
                     String settingsErr;
                     String profilesErr;
-                    const bool settingsRestored = SdBackup::restoreSettings(settings, &settingsErr);
-                    const bool profilesRestored = SdBackup::restoreProfiles(SPIFFS, "/p", &profilesErr);
-                    if (!settingsRestored) {
-                        ESP_LOGW(LOG_TAG.c_str(), "Settings restore FAIL: %s", settingsErr.c_str());
+                    bool settingsRestored = false;
+                    bool profilesRestored = false;
+                    if (hasSettingsBackup) {
+                        settingsRestored = SdBackup::restoreSettings(settings, &settingsErr);
+                        if (!settingsRestored) {
+                            ESP_LOGW(LOG_TAG.c_str(), "Settings restore FAIL: %s", settingsErr.c_str());
+                        }
                     }
-                    if (!profilesRestored) {
-                        ESP_LOGW(LOG_TAG.c_str(), "Profiles restore FAIL: %s", profilesErr.c_str());
+                    if (hasProfilesBackup) {
+                        profilesRestored = SdBackup::restoreProfiles(SPIFFS, "/p", &profilesErr);
+                        if (!profilesRestored) {
+                            ESP_LOGW(LOG_TAG.c_str(), "Profiles restore FAIL: %s", profilesErr.c_str());
+                        }
                     }
                     settings.setRestoreDoneOnce(true);
-                    if (settingsRestored || profilesRestored) {
+                    if (settingsRestored && profilesRestored) {
                         ESP_LOGI(LOG_TAG.c_str(), "SD restore complete, rebooting");
                         ESP.restart();
                         while (true) {
                             delay(1000);
                         }
+                    } else {
+                        ESP_LOGI(LOG_TAG.c_str(), "SD restore skipped reboot; continuing boot");
                     }
                 }
             }
