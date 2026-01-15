@@ -191,7 +191,7 @@ void WebUIPlugin::setupServer() {
     server.on("/api/scales/connect", [this](AsyncWebServerRequest *request) { handleBLEScaleConnect(request); });
     server.on("/api/scales/scan", [this](AsyncWebServerRequest *request) { handleBLEScaleScan(request); });
     server.on("/api/scales/info", [this](AsyncWebServerRequest *request) { handleBLEScaleInfo(request); });
-    server.on("/api/sd/backup", [this](AsyncWebServerRequest *request) { handleSdBackupList(request); });
+    server.on("/api/sd/backup", HTTP_GET, [this](AsyncWebServerRequest *request) { handleSdBackupList(request); });
     server.on("/api/sd/backup/settings", HTTP_POST, [this](AsyncWebServerRequest *request) { handleSdBackupSaveSettings(request); });
     server.on("/api/sd/backup/profiles", HTTP_POST, [this](AsyncWebServerRequest *request) { handleSdBackupSaveProfiles(request); });
     FS *fs = &SPIFFS;

@@ -880,6 +880,13 @@ void DefaultUI::setupReactive() {
                                               showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
                               _ui_flag_modify(ui_GrindScreen_brewButton, LV_OBJ_FLAG_HIDDEN,
                                               showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+                              if (showEndActions) {
+                                  constexpr int iconHalfSize = 20;
+                                  constexpr int iconGap = 10;
+                                  constexpr int iconOffset = iconHalfSize + (iconGap / 2);
+                                  lv_obj_set_x(ui_GrindScreen_beanButton, -iconOffset);
+                                  lv_obj_set_x(ui_GrindScreen_brewButton, iconOffset);
+                              }
                               _ui_flag_modify(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
                               _ui_flag_modify(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN,
                                               (doseMeasureEnabled && !bluetoothScales) ? _UI_MODIFY_FLAG_ADD
@@ -897,8 +904,8 @@ void DefaultUI::setupReactive() {
                           [=]() {
                               if (doseMeasureEnabled && !bluetoothScales) {
                                   lv_label_set_text(ui_GrindScreen_proceedLabel, "Connect Scales");
-                                  lv_obj_set_width(ui_GrindScreen_proceedLabel, 280);
-                                  lv_obj_set_height(ui_GrindScreen_proceedLabel, 48);
+                                  lv_obj_set_width(ui_GrindScreen_proceedLabel, 320);
+                                  lv_obj_set_height(ui_GrindScreen_proceedLabel, 72);
                                   lv_obj_set_x(ui_GrindScreen_proceedLabel, 0);
                                   lv_obj_set_y(ui_GrindScreen_proceedLabel, 0);
                                   lv_obj_set_style_text_font(ui_GrindScreen_proceedLabel, &lv_font_montserrat_36,
