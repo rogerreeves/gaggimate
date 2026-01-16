@@ -59,9 +59,9 @@ void onSteamScreen(lv_event_t *e) {
 void onWakeup(lv_event_t *e) {
     const String landing = controller.getSettings().getStandbyLandingScreen();
     if (landing == "menu") {
-        controller.getUI()->changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
         controller.deactivate();
         controller.setMode(MODE_BREW);
+        controller.getUI()->changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
     } else if (landing == "grind") {
         controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
         controller.deactivate();

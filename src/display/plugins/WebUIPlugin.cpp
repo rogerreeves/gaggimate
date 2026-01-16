@@ -11,6 +11,8 @@
 #include <esp_err.h>
 #include <esp_partition.h>
 #include <esp_system.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 #include <SD_MMC.h>
 #include <algorithm>
@@ -23,6 +25,25 @@
 
 static std::unordered_map<uint32_t, std::string> rxBuffers;
 static WebUIPlugin *g_webUIPlugin = nullptr;
+
+namespace {
+struct SdBackupTaskContext {
+    bool ok = false;
+    String err;
+    SemaphoreHandle_t done = nullptr;
+};
+
+void sdBackupProfilesTask(void *param) {
+    auto *ctx = static_cast<SdBackupTaskContext *>(param);
+    String err;
+    ctx->ok = SdBackup::backupProfiles(SPIFFS, "/p", &err);
+    ctx->err = err;
+    if (ctx->done) {
+        xSemaphoreGive(ctx->done);
+    }
+    vTaskDelete(nullptr);
+}
+} // namespace
 
 WebUIPlugin::WebUIPlugin() : server(80), ws("/ws") { g_webUIPlugin = this; }
 
@@ -935,12 +956,30 @@ void WebUIPlugin::handleSdBackupSaveProfiles(AsyncWebServerRequest *request) con
         request->send(response);
         return;
     }
-    String err;
-    if (SdBackup::backupProfiles(SPIFFS, "/p", &err)) {
+    SdBackupTaskContext ctx;
+    ctx.done = xSemaphoreCreateBinary();
+    if (!ctx.done) {
+        doc["error"] = "backup init failed";
+        serializeJson(doc, *response);
+        request->send(response);
+        return;
+    }
+    if (xTaskCreatePinnedToCore(sdBackupProfilesTask, "SdBackupProfiles", configMINIMAL_STACK_SIZE * 6, &ctx, 1, nullptr, 1) !=
+        pdPASS) {
+        vSemaphoreDelete(ctx.done);
+        doc["error"] = "backup task failed";
+        serializeJson(doc, *response);
+        request->send(response);
+        return;
+    }
+    if (xSemaphoreTake(ctx.done, pdMS_TO_TICKS(15000)) != pdTRUE) {
+        doc["error"] = "backup timeout";
+    } else if (ctx.ok) {
         doc["ok"] = true;
     } else {
-        doc["error"] = err;
+        doc["error"] = ctx.err;
     }
+    vSemaphoreDelete(ctx.done);
     serializeJson(doc, *response);
     request->send(response);
 }
