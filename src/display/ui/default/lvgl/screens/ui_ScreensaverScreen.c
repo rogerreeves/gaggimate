@@ -28,11 +28,7 @@ void ui_event_ScreensaverScreen(lv_event_t *e) {
 }
 
 static void ui_ScreensaverScreen_overlayTimer_cb(lv_timer_t *timer) {
-    if (ui_ScreensaverScreen_overlay) {
-        lv_obj_add_flag(ui_ScreensaverScreen_overlay, LV_OBJ_FLAG_HIDDEN);
-    }
-    lv_timer_del(timer);
-    ui_ScreensaverScreen_overlayTimer = NULL;
+    LV_UNUSED(timer);
 }
 
 // build funtions
@@ -58,7 +54,7 @@ void ui_ScreensaverScreen_screen_init(void) {
     lv_obj_set_align(ui_ScreensaverScreen_overlay, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_ScreensaverScreen_overlay, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_obj_set_style_bg_color(ui_ScreensaverScreen_overlay, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_ScreensaverScreen_overlay, 77, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ScreensaverScreen_overlay, 128, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_ScreensaverScreen_logo = lv_img_create(ui_ScreensaverScreen);
     lv_img_set_src(ui_ScreensaverScreen_logo, &ui_img_logo_png);
@@ -95,7 +91,6 @@ void ui_ScreensaverScreen_screen_init(void) {
         lv_timer_del(ui_ScreensaverScreen_overlayTimer);
         ui_ScreensaverScreen_overlayTimer = NULL;
     }
-    ui_ScreensaverScreen_overlayTimer = lv_timer_create(ui_ScreensaverScreen_overlayTimer_cb, 10000, NULL);
 
     uic_ScreensaverScreen_dials_tempGauge = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_TEMPGAUGE);
     uic_ScreensaverScreen_dials_tempTarget = ui_comp_get_child(ui_ScreensaverScreen_dials, UI_COMP_DIALS_TEMPTARGET);

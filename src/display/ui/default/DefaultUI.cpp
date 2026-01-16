@@ -875,17 +875,17 @@ void DefaultUI::setupReactive() {
                               if (showStart) {
                                   lv_obj_set_x(ui_GrindScreen_startButton, 0);
                               }
-                              const bool showEndActions = doseMeasureEnabled && doseMeasureShowEndActions;
+                              const bool showEndActions = doseMeasureEnabled && doseMeasureShowEndActions && bluetoothScales;
                               _ui_flag_modify(ui_GrindScreen_beanButton, LV_OBJ_FLAG_HIDDEN,
                                               showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
                               _ui_flag_modify(ui_GrindScreen_brewButton, LV_OBJ_FLAG_HIDDEN,
                                               showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
                               if (showEndActions) {
                                   constexpr int iconHalfSize = 20;
-                                  constexpr int iconGap = 10;
+                                  constexpr int iconGap = 20;
                                   constexpr int iconOffset = iconHalfSize + (iconGap / 2);
-                                  lv_obj_set_x(ui_GrindScreen_beanButton, -iconOffset);
-                                  lv_obj_set_x(ui_GrindScreen_brewButton, iconOffset);
+                                  lv_obj_set_pos(ui_GrindScreen_beanButton, -iconOffset, 130);
+                                  lv_obj_set_pos(ui_GrindScreen_brewButton, iconOffset, 130);
                               }
                               _ui_flag_modify(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
                               _ui_flag_modify(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_HIDDEN,

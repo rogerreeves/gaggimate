@@ -97,16 +97,24 @@ bool copyDirRecursive(fs::FS &fromFS, const char *fromDir, fs::FS &toFS, const c
     File file = root.openNextFile();
     while (file) {
         String name = file.name();
+        String source = name;
+        if (!name.startsWith("/")) {
+            source = String(fromDir);
+            if (!source.endsWith("/")) {
+                source += "/";
+            }
+            source += name;
+        }
         String leaf = name.substring(name.lastIndexOf('/') + 1);
         String target = String(toDir) + "/" + leaf;
         if (file.isDirectory()) {
-            if (!copyDirRecursive(fromFS, name.c_str(), toFS, target.c_str(), err)) {
+            if (!copyDirRecursive(fromFS, source.c_str(), toFS, target.c_str(), err)) {
                 file.close();
                 root.close();
                 return false;
             }
         } else {
-            if (!SdBackup::atomicCopyFile(fromFS, name.c_str(), toFS, target.c_str(), err)) {
+            if (!SdBackup::atomicCopyFile(fromFS, source.c_str(), toFS, target.c_str(), err)) {
                 file.close();
                 root.close();
                 return false;
