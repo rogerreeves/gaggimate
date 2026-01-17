@@ -9,6 +9,7 @@ SET(SOURCES components/ui_comp_dials.c
     screens/ui_SimpleProcessScreen.c
     screens/ui_StatusScreen.c
     screens/ui_GrindScreen.c
+    screens/ui_GrindScreen_SingleDose.c
     ui_theme_manager.cpp
     ui_themes.cpp
     ui.c
