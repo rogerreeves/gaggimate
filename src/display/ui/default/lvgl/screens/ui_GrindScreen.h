@@ -54,6 +54,8 @@ extern lv_obj_t *uic_GrindScreen_dials_pressureGauge;
 extern lv_obj_t *uic_GrindScreen_dials_pressureTarget;
 extern lv_obj_t *uic_GrindScreen_dials_pressureText;
 extern lv_obj_t *uic_GrindScreen_dials_tempText;
+void ui_GrindScreen_singleDose_screen_init(void);
+void ui_GrindScreen_singleDose_screen_destroy(void);
 
 #ifdef __cplusplus
 } /*extern "C"*/

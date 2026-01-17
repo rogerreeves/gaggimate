@@ -5,88 +5,69 @@
 
 #include "../ui.h"
 
-lv_obj_t *uic_GrindScreen_dials_tempText;
-lv_obj_t *uic_GrindScreen_dials_pressureText;
-lv_obj_t *uic_GrindScreen_dials_pressureTarget;
-lv_obj_t *uic_GrindScreen_dials_pressureGauge;
-lv_obj_t *uic_GrindScreen_dials_tempTarget;
-lv_obj_t *uic_GrindScreen_dials_tempGauge;
-lv_obj_t *ui_GrindScreen = NULL;
-lv_obj_t *ui_GrindScreen_dials = NULL;
-lv_obj_t *ui_GrindScreen_ImgButton2 = NULL;
-lv_obj_t *ui_GrindScreen_contentPanel7 = NULL;
-lv_obj_t *ui_GrindScreen_mainLabel7 = NULL;
-lv_obj_t *ui_GrindScreen_startButton = NULL;
-lv_obj_t *ui_GrindScreen_targetContainer = NULL;
-lv_obj_t *ui_GrindScreen_targetDuration = NULL;
-lv_obj_t *ui_GrindScreen_upDurationButton = NULL;
-lv_obj_t *ui_GrindScreen_downDurationButton = NULL;
-lv_obj_t *ui_GrindScreen_targetSymbol = NULL;
-lv_obj_t *ui_GrindScreen_modeSwitch = NULL;
-lv_obj_t *ui_GrindScreen_volumetricButton = NULL;
-lv_obj_t *ui_GrindScreen_weightLabel = NULL;
 // event funtions
-void ui_event_GrindScreen(lv_event_t *e) {
-    lv_event_code_t event_code = lv_event_get_code(e);
 
-    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
-        lv_indev_wait_release(lv_indev_get_act());
-        onMenuClick(e);
-    }
-    if (event_code == LV_EVENT_SCREEN_LOADED) {
-        onGrindScreenLoad(e);
-    }
-}
+lv_obj_t *ui_GrindScreen_proceedLabel = NULL;
+lv_obj_t *ui_GrindScreen_refreshButton = NULL;
+lv_obj_t *ui_GrindScreen_beanButton = NULL;
+lv_obj_t *ui_GrindScreen_brewButton = NULL;
+lv_obj_t *ui_GrindScreen_doseCountIcon = NULL;
+lv_obj_t *ui_GrindScreen_doseCountRow = NULL;
+lv_obj_t *ui_GrindScreen_doseCountLabel = NULL;
+lv_obj_t *ui_GrindScreen_doseCountUp = NULL;
+lv_obj_t *ui_GrindScreen_doseCountDown = NULL;
 
-void ui_event_GrindScreen_ImgButton2(lv_event_t *e) {
-    lv_event_code_t event_code = lv_event_get_code(e);
 
-    if (event_code == LV_EVENT_CLICKED) {
-        onMenuClick(e);
-    }
-}
 
-void ui_event_GrindScreen_startButton(lv_event_t *e) {
+void ui_event_GrindScreen_refreshButton(lv_event_t *e) {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if (event_code == LV_EVENT_CLICKED) {
-        onGrindToggle(e);
+        onGrindReset(e);
     }
 }
 
-void ui_event_GrindScreen_upDurationButton(lv_event_t *e) {
+void ui_event_GrindScreen_beanButton(lv_event_t *e) {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if (event_code == LV_EVENT_CLICKED) {
-        onGrindTimeRaise(e);
+        onGrindEndBean(e);
     }
 }
 
-void ui_event_GrindScreen_downDurationButton(lv_event_t *e) {
+void ui_event_GrindScreen_brewButton(lv_event_t *e) {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if (event_code == LV_EVENT_CLICKED) {
-        onGrindTimeLower(e);
+        onGrindEndBrew(e);
     }
 }
 
-void ui_event_GrindScreen_modeSwitch(lv_event_t *e) {
+void ui_event_GrindScreen_doseCountUp(lv_event_t *e) {
     lv_event_code_t event_code = lv_event_get_code(e);
 
     if (event_code == LV_EVENT_CLICKED) {
-        onVolumetricClick(e);
-    }
-    if (event_code == LV_EVENT_LONG_PRESSED) {
-        onVolumetricHold(e);
+        onGrindDoseCountRaise(e);
     }
 }
+
+void ui_event_GrindScreen_doseCountDown(lv_event_t *e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if (event_code == LV_EVENT_CLICKED) {
+        onGrindDoseCountLower(e);
+    }
+}
+
+
+
 
 // build funtions
 
-void ui_GrindScreen_screen_init(void) {
+void ui_GrindScreen_singleDose_screen_init(void) {
     ui_GrindScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_GrindScreen, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_obj_add_event_cb(ui_GrindScreen, scr_unloaded_delete_cb, LV_EVENT_SCREEN_UNLOADED, ui_GrindScreen_screen_destroy);
+    lv_obj_add_event_cb(ui_GrindScreen, scr_unloaded_delete_cb, LV_EVENT_SCREEN_UNLOADED, ui_GrindScreen_singleDose_screen_destroy);
     ui_object_set_themeable_style_property(ui_GrindScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
                                            _ui_theme_color_Dark);
     ui_object_set_themeable_style_property(ui_GrindScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
@@ -135,6 +116,21 @@ void ui_GrindScreen_screen_init(void) {
                                            _ui_theme_alpha_NiceWhite);
     lv_obj_set_style_text_font(ui_GrindScreen_mainLabel7, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_GrindScreen_proceedLabel = lv_label_create(ui_GrindScreen_contentPanel7);
+    lv_obj_set_width(ui_GrindScreen_proceedLabel, 200);
+    lv_obj_set_height(ui_GrindScreen_proceedLabel, 24);
+    lv_obj_set_x(ui_GrindScreen_proceedLabel, 0);
+    lv_obj_set_y(ui_GrindScreen_proceedLabel, 83);
+    lv_obj_set_align(ui_GrindScreen_proceedLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_GrindScreen_proceedLabel, "");
+    ui_object_set_themeable_style_property(ui_GrindScreen_proceedLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_proceedLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_text_align(ui_GrindScreen_proceedLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_GrindScreen_proceedLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(ui_GrindScreen_proceedLabel, LV_OBJ_FLAG_HIDDEN);
+
     ui_GrindScreen_startButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
     lv_imgbtn_set_src(ui_GrindScreen_startButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_445946954, NULL);
     lv_obj_set_width(ui_GrindScreen_startButton, 40);
@@ -147,15 +143,115 @@ void ui_GrindScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_GrindScreen_startButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR_OPA,
                                            _ui_theme_alpha_NiceWhite);
 
+    ui_GrindScreen_refreshButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
+    lv_imgbtn_set_src(ui_GrindScreen_refreshButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_1765671371, NULL);
+    lv_obj_set_width(ui_GrindScreen_refreshButton, 40);
+    lv_obj_set_height(ui_GrindScreen_refreshButton, 40);
+    lv_obj_set_x(ui_GrindScreen_refreshButton, -22);
+    lv_obj_set_y(ui_GrindScreen_refreshButton, 130);
+    lv_obj_set_align(ui_GrindScreen_refreshButton, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_refreshButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_refreshButton, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_transform_zoom(ui_GrindScreen_refreshButton, 512, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(ui_GrindScreen_refreshButton, LV_OBJ_FLAG_HIDDEN);
+
+    ui_GrindScreen_beanButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
+    lv_imgbtn_set_src(ui_GrindScreen_beanButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_coffee_bean_40x40, NULL);
+    lv_obj_set_width(ui_GrindScreen_beanButton, 40);
+    lv_obj_set_height(ui_GrindScreen_beanButton, 40);
+    lv_obj_set_x(ui_GrindScreen_beanButton, -30);
+    lv_obj_set_y(ui_GrindScreen_beanButton, 130);
+    lv_obj_set_align(ui_GrindScreen_beanButton, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_beanButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_beanButton, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+    lv_obj_add_flag(ui_GrindScreen_beanButton, LV_OBJ_FLAG_HIDDEN);
+
+    ui_GrindScreen_brewButton = lv_imgbtn_create(ui_GrindScreen_contentPanel7);
+    lv_imgbtn_set_src(ui_GrindScreen_brewButton, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_mug_hot_alt_40x40, NULL);
+    lv_obj_set_width(ui_GrindScreen_brewButton, 40);
+    lv_obj_set_height(ui_GrindScreen_brewButton, 40);
+    lv_obj_set_x(ui_GrindScreen_brewButton, 30);
+    lv_obj_set_y(ui_GrindScreen_brewButton, 130);
+    lv_obj_set_align(ui_GrindScreen_brewButton, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_brewButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_brewButton, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+    lv_obj_add_flag(ui_GrindScreen_brewButton, LV_OBJ_FLAG_HIDDEN);
+
+    ui_GrindScreen_doseCountRow = lv_obj_create(ui_GrindScreen_contentPanel7);
+    lv_obj_remove_style_all(ui_GrindScreen_doseCountRow);
+    lv_obj_set_width(ui_GrindScreen_doseCountRow, 300);
+    lv_obj_set_height(ui_GrindScreen_doseCountRow, 50);
+    lv_obj_set_x(ui_GrindScreen_doseCountRow, 0);
+    lv_obj_set_y(ui_GrindScreen_doseCountRow, 45);
+    lv_obj_set_align(ui_GrindScreen_doseCountRow, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_GrindScreen_doseCountRow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
+
+    ui_GrindScreen_doseCountIcon = lv_img_create(ui_GrindScreen_doseCountRow);
+    lv_img_set_src(ui_GrindScreen_doseCountIcon, &ui_img_mug_hot_alt_40x40);
+    lv_obj_set_width(ui_GrindScreen_doseCountIcon, 40);
+    lv_obj_set_height(ui_GrindScreen_doseCountIcon, 40);
+    lv_obj_set_x(ui_GrindScreen_doseCountIcon, -120);
+    lv_obj_set_y(ui_GrindScreen_doseCountIcon, 0);
+    lv_obj_set_align(ui_GrindScreen_doseCountIcon, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountIcon, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+
+    ui_GrindScreen_doseCountLabel = lv_label_create(ui_GrindScreen_doseCountRow);
+    lv_obj_set_width(ui_GrindScreen_doseCountLabel, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_GrindScreen_doseCountLabel, 30);
+    lv_obj_set_x(ui_GrindScreen_doseCountLabel, 30);
+    lv_obj_set_y(ui_GrindScreen_doseCountLabel, 0);
+    lv_obj_set_align(ui_GrindScreen_doseCountLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_GrindScreen_doseCountLabel, "1x");
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_text_align(ui_GrindScreen_doseCountLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_GrindScreen_doseCountLabel, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_GrindScreen_doseCountUp = lv_imgbtn_create(ui_GrindScreen_doseCountRow);
+    lv_imgbtn_set_src(ui_GrindScreen_doseCountUp, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_390988422, NULL);
+    lv_obj_set_width(ui_GrindScreen_doseCountUp, 40);
+    lv_obj_set_height(ui_GrindScreen_doseCountUp, 40);
+    lv_obj_set_x(ui_GrindScreen_doseCountUp, 120);
+    lv_obj_set_y(ui_GrindScreen_doseCountUp, 0);
+    lv_obj_set_align(ui_GrindScreen_doseCountUp, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountUp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountUp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR_OPA,
+                                           _ui_theme_alpha_NiceWhite);
+
+    ui_GrindScreen_doseCountDown = lv_imgbtn_create(ui_GrindScreen_doseCountRow);
+    lv_imgbtn_set_src(ui_GrindScreen_doseCountDown, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_834125362, NULL);
+    lv_obj_set_width(ui_GrindScreen_doseCountDown, 40);
+    lv_obj_set_height(ui_GrindScreen_doseCountDown, 40);
+    lv_obj_set_x(ui_GrindScreen_doseCountDown, -60);
+    lv_obj_set_y(ui_GrindScreen_doseCountDown, 0);
+    lv_obj_set_align(ui_GrindScreen_doseCountDown, LV_ALIGN_CENTER);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountDown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
+                                           _ui_theme_color_NiceWhite);
+    ui_object_set_themeable_style_property(ui_GrindScreen_doseCountDown, LV_PART_MAIN | LV_STATE_DEFAULT,
+                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
+
     ui_GrindScreen_targetContainer = lv_obj_create(ui_GrindScreen_contentPanel7);
     lv_obj_remove_style_all(ui_GrindScreen_targetContainer);
     lv_obj_set_width(ui_GrindScreen_targetContainer, 300);
     lv_obj_set_height(ui_GrindScreen_targetContainer, 50);
+    lv_obj_set_y(ui_GrindScreen_targetContainer, -30);
     lv_obj_set_align(ui_GrindScreen_targetContainer, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_GrindScreen_targetContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_GrindScreen_targetDuration = lv_label_create(ui_GrindScreen_targetContainer);
-    lv_obj_set_width(ui_GrindScreen_targetDuration, 90);
+    lv_obj_set_width(ui_GrindScreen_targetDuration, LV_SIZE_CONTENT);
     lv_obj_set_height(ui_GrindScreen_targetDuration, 30);
     lv_obj_set_x(ui_GrindScreen_targetDuration, 30);
     lv_obj_set_y(ui_GrindScreen_targetDuration, 0);
@@ -207,22 +303,15 @@ void ui_GrindScreen_screen_init(void) {
                                            _ui_theme_alpha_NiceWhite);
 
     ui_GrindScreen_modeSwitch = lv_obj_create(ui_GrindScreen_contentPanel7);
+    lv_obj_remove_style_all(ui_GrindScreen_modeSwitch);
     lv_obj_set_width(ui_GrindScreen_modeSwitch, 160);
     lv_obj_set_height(ui_GrindScreen_modeSwitch, 50);
     lv_obj_set_x(ui_GrindScreen_modeSwitch, 0);
-    lv_obj_set_y(ui_GrindScreen_modeSwitch, -80);
+    lv_obj_set_y(ui_GrindScreen_modeSwitch, -100);
     lv_obj_set_align(ui_GrindScreen_modeSwitch, LV_ALIGN_CENTER);
     lv_obj_set_flex_flow(ui_GrindScreen_modeSwitch, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_GrindScreen_modeSwitch, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
     lv_obj_clear_flag(ui_GrindScreen_modeSwitch, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
-                                           _ui_theme_color_Dark);
-    ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
-                                           _ui_theme_alpha_Dark);
-    ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_GrindScreen_modeSwitch, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_NiceWhite);
 
     ui_GrindScreen_volumetricButton = lv_img_create(ui_GrindScreen_modeSwitch);
     lv_img_set_src(ui_GrindScreen_volumetricButton, &ui_img_1424216268);
@@ -252,8 +341,13 @@ void ui_GrindScreen_screen_init(void) {
 
     lv_obj_add_event_cb(ui_GrindScreen_ImgButton2, ui_event_GrindScreen_ImgButton2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_startButton, ui_event_GrindScreen_startButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_refreshButton, ui_event_GrindScreen_refreshButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_beanButton, ui_event_GrindScreen_beanButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_brewButton, ui_event_GrindScreen_brewButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_upDurationButton, ui_event_GrindScreen_upDurationButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_downDurationButton, ui_event_GrindScreen_downDurationButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_doseCountUp, ui_event_GrindScreen_doseCountUp, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_GrindScreen_doseCountDown, ui_event_GrindScreen_doseCountDown, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen_modeSwitch, ui_event_GrindScreen_modeSwitch, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_GrindScreen, ui_event_GrindScreen, LV_EVENT_ALL, NULL);
     uic_GrindScreen_dials_tempGauge = ui_comp_get_child(ui_GrindScreen_dials, UI_COMP_DIALS_TEMPGAUGE);
@@ -264,7 +358,7 @@ void ui_GrindScreen_screen_init(void) {
     uic_GrindScreen_dials_tempText = ui_comp_get_child(ui_GrindScreen_dials, UI_COMP_DIALS_TEMPTEXT);
 }
 
-void ui_GrindScreen_screen_destroy(void) {
+void ui_GrindScreen_singleDose_screen_destroy(void) {
     if (ui_GrindScreen)
         lv_obj_del(ui_GrindScreen);
 
@@ -280,7 +374,16 @@ void ui_GrindScreen_screen_destroy(void) {
     ui_GrindScreen_ImgButton2 = NULL;
     ui_GrindScreen_contentPanel7 = NULL;
     ui_GrindScreen_mainLabel7 = NULL;
+    ui_GrindScreen_proceedLabel = NULL;
     ui_GrindScreen_startButton = NULL;
+    ui_GrindScreen_refreshButton = NULL;
+    ui_GrindScreen_beanButton = NULL;
+    ui_GrindScreen_brewButton = NULL;
+    ui_GrindScreen_doseCountIcon = NULL;
+    ui_GrindScreen_doseCountRow = NULL;
+    ui_GrindScreen_doseCountLabel = NULL;
+    ui_GrindScreen_doseCountUp = NULL;
+    ui_GrindScreen_doseCountDown = NULL;
     ui_GrindScreen_targetContainer = NULL;
     ui_GrindScreen_targetDuration = NULL;
     ui_GrindScreen_upDurationButton = NULL;

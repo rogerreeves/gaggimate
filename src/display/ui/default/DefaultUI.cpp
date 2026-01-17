@@ -151,7 +151,11 @@ void DefaultUI::init() {
             changeScreen(&ui_BrewScreen, &ui_BrewScreen_screen_init);
             break;
         case MODE_GRIND:
-            changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+            if (controller->getSettings().isDoseMeasureEnabled()) {
+                changeScreen(&ui_GrindScreen, &ui_GrindScreen_singleDose_screen_init);
+            } else {
+                changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+            }
             break;
         case MODE_STEAM:
             changeScreen(&ui_SimpleProcessScreen, &ui_SimpleProcessScreen_screen_init);
@@ -875,6 +879,9 @@ void DefaultUI::setupReactive() {
                               if (showStart) {
                                   lv_obj_set_x(ui_GrindScreen_startButton, 0);
                               }
+                              if (!ui_GrindScreen_beanButton || !ui_GrindScreen_brewButton) {
+                                  return;
+                              }
                               const bool showEndActions = doseMeasureEnabled && doseMeasureShowEndActions && bluetoothScales;
                               _ui_flag_modify(ui_GrindScreen_beanButton, LV_OBJ_FLAG_HIDDEN,
                                               showEndActions ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
@@ -902,6 +909,9 @@ void DefaultUI::setupReactive() {
                           &doseMeasureEnabled, &bluetoothScales);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
+                              if (!ui_GrindScreen_proceedLabel) {
+                                  return;
+                              }
                               if (doseMeasureEnabled && !bluetoothScales) {
                                   lv_label_set_text(ui_GrindScreen_proceedLabel, "Connect Scales");
                                   lv_obj_set_width(ui_GrindScreen_proceedLabel, 320);
@@ -957,6 +967,9 @@ void DefaultUI::setupReactive() {
                           &doseMeasureEnabled, &bluetoothScales, &doseMeasureShowEndActions);
     effect_mgr.use_effect([=] { return currentScreen == ui_GrindScreen; },
                           [=]() {
+                              if (!ui_GrindScreen_doseCountRow || !ui_GrindScreen_doseCountIcon || !ui_GrindScreen_doseCountLabel) {
+                                  return;
+                              }
                               const bool showDoseCount =
                                   doseMeasureEnabled && doseMeasurePhase == DoseMeasurePhase::Idle && bluetoothScales;
                               _ui_flag_modify(ui_GrindScreen_doseCountIcon, LV_OBJ_FLAG_HIDDEN,

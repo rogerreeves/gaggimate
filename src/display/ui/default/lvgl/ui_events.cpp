@@ -63,7 +63,11 @@ void onWakeup(lv_event_t *e) {
         controller.setMode(MODE_BREW);
         controller.getUI()->changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
     } else if (landing == "grind") {
-        controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+        if (controller.getSettings().isDoseMeasureEnabled()) {
+            controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_singleDose_screen_init);
+        } else {
+            controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+        }
         controller.deactivate();
         controller.setMode(MODE_GRIND);
     } else if (landing == "steam") {
@@ -148,7 +152,11 @@ void onMenuClick(lv_event_t *e) {
 }
 
 void onGrindScreen(lv_event_t *e) {
-    controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+    if (controller.getSettings().isDoseMeasureEnabled()) {
+        controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_singleDose_screen_init);
+    } else {
+        controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
+    }
     controller.setMode(MODE_GRIND);
 }
 
@@ -215,9 +223,15 @@ void onGrindScreenLoad(lv_event_t *e) {
     lv_obj_set_ext_click_area(ui_GrindScreen_upDurationButton, 40);
     lv_obj_set_ext_click_area(ui_GrindScreen_downDurationButton, 40);
     lv_obj_set_ext_click_area(ui_GrindScreen_startButton, 25);
-    lv_obj_set_ext_click_area(ui_GrindScreen_refreshButton, 25);
-    lv_obj_set_ext_click_area(ui_GrindScreen_doseCountUp, 40);
-    lv_obj_set_ext_click_area(ui_GrindScreen_doseCountDown, 40);
+    if (ui_GrindScreen_refreshButton) {
+        lv_obj_set_ext_click_area(ui_GrindScreen_refreshButton, 25);
+    }
+    if (ui_GrindScreen_doseCountUp) {
+        lv_obj_set_ext_click_area(ui_GrindScreen_doseCountUp, 40);
+    }
+    if (ui_GrindScreen_doseCountDown) {
+        lv_obj_set_ext_click_area(ui_GrindScreen_doseCountDown, 40);
+    }
     lv_obj_set_ext_click_area(ui_GrindScreen_ImgButton2, 20);
 }
 
