@@ -1,5 +1,15 @@
 SET(SOURCES components/ui_comp_dials.c
     components/ui_comp.c
+    components/ui_comp_layout_main.c
+    components/ui_comp_layout_settings.c
+    components/ui_comp_layout_settings_single.c
+    components/ui_comp_button_menu.c
+    components/ui_comp_button_profiles.c
+    components/ui_comp_button_confirm.c
+    components/ui_comp_button_save.c
+    fonts/ui_font_sfprodisplaybold_18.c
+    fonts/ui_font_sfprodisplaybold_24.c
+    fonts/ui_font_sfprodisplaybold_45.c
     screens/ui_InitScreen.c
     screens/ui_ProfileScreen.c
     screens/ui_MenuScreen.c
@@ -8,6 +18,7 @@ SET(SOURCES components/ui_comp_dials.c
     screens/ui_StandbyScreen.c
     screens/ui_SimpleProcessScreen.c
     screens/ui_StatusScreen.c
+    screens/ui_TargetTempScreen.c
     screens/ui_GrindScreen.c
     screens/ui_GrindScreen_SingleDose.c
     ui_theme_manager.cpp
@@ -51,6 +62,9 @@ SET(SOURCES components/ui_comp_dials.c
     images/ui_img_1829139226.c
     images/ui_img_flowmeter_png.c
     images/ui_img_1510335.c
-    images/ui_img_691326438.c)
+    images/ui_img_691326438.c
+    images/ui_img_background_minimal.c
+    images/ui_img_minimal_indicator_temp.c
+    images/ui_img_minimal_indicator_pressure.c)
 
 add_library(ui ${SOURCES})

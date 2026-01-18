@@ -23,6 +23,7 @@ lv_obj_t *ui_StatusScreen_Image8 = NULL;
 lv_obj_t *ui_StatusScreen_currentDuration = NULL;
 lv_obj_t *ui_StatusScreen_stepLabel = NULL;
 lv_obj_t *ui_StatusScreen_phaseLabel = NULL;
+lv_obj_t *ui_StatusScreen_phaseArcContainer = NULL;
 lv_obj_t *ui_StatusScreen_barContainer = NULL;
 lv_obj_t *ui_StatusScreen_brewBar = NULL;
 lv_obj_t *ui_StatusScreen_labelContainer = NULL;
@@ -68,6 +69,12 @@ void ui_StatusScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_StatusScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
                                            _ui_theme_alpha_Dark);
 
+    lv_obj_t *ui_StatusScreen_background = lv_img_create(ui_StatusScreen);
+    lv_img_set_src(ui_StatusScreen_background, &ui_img_background_minimal);
+    lv_obj_set_align(ui_StatusScreen_background, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_StatusScreen_background, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_StatusScreen_background, LV_OBJ_FLAG_SCROLLABLE);
+
     ui_StatusScreen_dials = ui_dials_create(ui_StatusScreen);
     lv_obj_set_x(ui_StatusScreen_dials, 0);
     lv_obj_set_y(ui_StatusScreen_dials, 0);
@@ -93,6 +100,13 @@ void ui_StatusScreen_screen_init(void) {
     lv_obj_set_style_bg_color(ui_StatusScreen_contentPanel2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_StatusScreen_contentPanel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_width(ui_StatusScreen_contentPanel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_StatusScreen_phaseArcContainer = lv_obj_create(ui_StatusScreen);
+    lv_obj_remove_style_all(ui_StatusScreen_phaseArcContainer);
+    lv_obj_set_width(ui_StatusScreen_phaseArcContainer, 480);
+    lv_obj_set_height(ui_StatusScreen_phaseArcContainer, 480);
+    lv_obj_set_align(ui_StatusScreen_phaseArcContainer, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_StatusScreen_phaseArcContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
     ui_StatusScreen_targetDuration = lv_label_create(ui_StatusScreen_contentPanel2);
     lv_obj_set_width(ui_StatusScreen_targetDuration, 80);
@@ -217,6 +231,7 @@ void ui_StatusScreen_screen_init(void) {
     lv_obj_clear_flag(ui_StatusScreen_barContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
     lv_obj_set_style_pad_row(ui_StatusScreen_barContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_column(ui_StatusScreen_barContainer, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(ui_StatusScreen_barContainer, LV_OBJ_FLAG_HIDDEN);
 
     ui_StatusScreen_brewBar = lv_bar_create(ui_StatusScreen_barContainer);
     lv_bar_set_range(ui_StatusScreen_brewBar, 0, 27);
@@ -306,6 +321,7 @@ void ui_StatusScreen_screen_destroy(void) {
     ui_StatusScreen_currentDuration = NULL;
     ui_StatusScreen_stepLabel = NULL;
     ui_StatusScreen_phaseLabel = NULL;
+    ui_StatusScreen_phaseArcContainer = NULL;
     ui_StatusScreen_barContainer = NULL;
     ui_StatusScreen_brewBar = NULL;
     ui_StatusScreen_labelContainer = NULL;

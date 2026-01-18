@@ -10,6 +10,7 @@
 #include "./lvgl/ui.h"
 
 class Controller;
+class BrewProcess;
 
 constexpr int RERENDER_INTERVAL_IDLE = 2500;
 constexpr int RERENDER_INTERVAL_ACTIVE = 100;
@@ -30,6 +31,7 @@ enum class DoseMeasurePhase {
     GroundsMeasure,
     GroundsPrompt
 };
+enum class TargetTempKind { Steam, Water };
 
 class DefaultUI {
   public:
@@ -56,7 +58,10 @@ class DefaultUI {
     void onNextProfile();
     void onPreviousProfile();
     void onProfileSelect();
+    void openTargetTemp(TargetTempKind kind);
+    void closeTargetTemp();
     void onScreensaverWake();
+    bool handleBrewStartRequest();
     void setBrightness(int brightness) {
         if (panelDriver) {
             panelDriver->setBrightness(brightness);
@@ -77,8 +82,19 @@ class DefaultUI {
     void setScreensaverReturnTarget(lv_obj_t *screen);
 
     void updateStandbyScreen();
-    void updateStatusScreen() const;
+    void updateStatusScreen();
+    void buildStatusPhaseArcs(const BrewProcess *brewProcess);
+    void updateStatusPhaseArcs(const BrewProcess *brewProcess, float currentPhaseFraction);
+    void resetStatusPhaseArcs();
+    void updateSimpleProcessLabel();
+    void updateSimpleProcessActions();
+    void updateTargetTempScreen();
     void updateDoseMeasureState();
+    void updateDialTemp(lv_obj_t *dials);
+    void updateDialPressure(lv_obj_t *dials);
+    void updateDialTempTarget(lv_obj_t *dials);
+    void updateDialPressureTarget(lv_obj_t *dials, float targetPressure);
+    void updateBrewScaleStatusLabel();
     void switchToBrewFromDoseMeasure();
     void beginDoseMeasureBrewTransition(bool showGrindNotice);
     void startDoseMeasureBeansCycle(bool initializeCounts);
@@ -184,10 +200,37 @@ class DefaultUI {
     int pressureScaling = DEFAULT_PRESSURE_SCALING;
     int heatingFlash = 0;
     double bluetoothWeight = 0.0;
+    int steamLabelState = -1;
+    unsigned long steamLabelToggleSince = 0;
+    bool steamLabelShowHeating = false;
+    unsigned long steamLabelReadySince = 0;
+    bool steamLabelReadyShown = false;
+    int steamLabelTargetTemp = 0;
+    unsigned long brewScaleFlashSince = 0;
+    bool brewScaleFlashVisible = true;
+    unsigned long brewScaleAttemptUntil = 0;
+    bool brewScaleBypassAllowed = false;
+    unsigned long brewScaleWarningCycleStart = 0;
+    TargetTempKind targetTempKind = TargetTempKind::Steam;
+    int targetTempInitial = 0;
+    int targetTempScreenLastValue = -1;
+    int targetTempScreenSaveState = -1;
+    int tempIndicatorAngle = -1;
+    int pressureIndicatorAngle = -1;
+    int tempTargetAngle = -1;
+    int pressureTargetAngle = -1;
     BrewScreenState brewScreenState = BrewScreenState::Brew;
     mutable bool statusSteamPromptActive = false;
     mutable unsigned long statusSteamPromptSince = 0;
     mutable bool statusSteamPromptReturnToBrew = false;
+    static constexpr int MAX_STATUS_PHASES = 12;
+    lv_obj_t *statusPhaseTrackArcs[MAX_STATUS_PHASES] = {nullptr};
+    lv_obj_t *statusPhaseProgressArcs[MAX_STATUS_PHASES] = {nullptr};
+    float statusPhaseStartDeg[MAX_STATUS_PHASES] = {0.0f};
+    float statusPhaseSweepDeg[MAX_STATUS_PHASES] = {0.0f};
+    int statusPhaseCount = 0;
+    String statusPhaseProfileKey = "";
+    bool statusPhaseArcsBuilt = false;
 
     int currentProfileIdx;
     String currentProfileId = "";

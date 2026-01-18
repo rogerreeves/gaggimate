@@ -27,6 +27,12 @@ void ui_InitScreen_screen_init(void) {
                                            _ui_theme_color_Dark);
     ui_object_set_themeable_style_property(ui_InitScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_Dark);
 
+    lv_obj_t *ui_InitScreen_background = lv_img_create(ui_InitScreen);
+    lv_img_set_src(ui_InitScreen_background, &ui_img_background_minimal);
+    lv_obj_set_align(ui_InitScreen_background, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_InitScreen_background, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_InitScreen_background, LV_OBJ_FLAG_SCROLLABLE);
+
     ui_InitScreen_Image2 = lv_img_create(ui_InitScreen);
     lv_img_set_src(ui_InitScreen_Image2, &ui_img_logo_png);
     lv_obj_set_width(ui_InitScreen_Image2, LV_SIZE_CONTENT);  /// 1

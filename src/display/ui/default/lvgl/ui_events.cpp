@@ -16,7 +16,11 @@ void onBrewCancel(lv_event_t *e) {
     controller.clear();
 }
 
-void onBrewStart(lv_event_t *e) { controller.activate(); }
+void onBrewStart(lv_event_t *e) {
+    if (controller.getUI()->handleBrewStartRequest()) {
+        controller.activate();
+    }
+}
 
 void onBrewTempLower(lv_event_t *e) { controller.lowerTemp(); }
 
@@ -29,6 +33,20 @@ void onBrewTimeRaise(lv_event_t *e) { controller.raiseBrewTarget(); }
 void onSteamTempLower(lv_event_t *e) { controller.lowerTemp(); }
 
 void onSteamTempRaise(lv_event_t *e) { controller.raiseTemp(); }
+
+void onSimpleProcessTargetTempOpen(lv_event_t *e) {
+    if (controller.getMode() == MODE_WATER) {
+        controller.getUI()->openTargetTemp(TargetTempKind::Water);
+    } else {
+        controller.getUI()->openTargetTemp(TargetTempKind::Steam);
+    }
+}
+
+void onTargetTempLower(lv_event_t *e) { controller.lowerTemp(); }
+
+void onTargetTempRaise(lv_event_t *e) { controller.raiseTemp(); }
+
+void onTargetTempSaveBack(lv_event_t *e) { controller.getUI()->closeTargetTemp(); }
 
 void onStatusScreenPause(lv_event_t *e) {
     if (controller.getUI()->isSteamPromptActive()) {
@@ -145,6 +163,16 @@ void onGrindEndBrew(lv_event_t *e) {
   }
 }
 
+void onProfilesClick(lv_event_t *e) { controller.getUI()->onProfileSwitch(); }
+
+void onConfirmClick(lv_event_t *e) {
+    (void)e;
+}
+
+void onSaveClick(lv_event_t *e) {
+    (void)e;
+}
+
 void onMenuClick(lv_event_t *e) {
     controller.deactivate();
     controller.setMode(MODE_BREW);
@@ -202,16 +230,40 @@ void onMenuScreenLoad(lv_event_t *e) {
 }
 
 void onBrewScreenLoad(lv_event_t *e) {
-    lv_obj_set_ext_click_area(ui_BrewScreen_startButton, 25);
-    lv_obj_set_ext_click_area(ui_BrewScreen_profileSelectBtn, 25);
-    lv_obj_set_ext_click_area(ui_BrewScreen_ImgButton5, 20);
+    lv_obj_set_ext_click_area(ui_BrewScreen_profileName, 25);
+    lv_obj_set_ext_click_area(ui_BrewScreen_menuLabel, 20);
+    lv_obj_set_ext_click_area(ui_BrewScreen_profilesLabel, 20);
+    lv_obj_set_ext_click_area(ui_BrewScreen_settingsButton, 20);
 }
 
 void onSimpleProcessScreenLoad(lv_event_t *e) {
-    lv_obj_set_ext_click_area(ui_SimpleProcessScreen_downTempButton, 40);
-    lv_obj_set_ext_click_area(ui_SimpleProcessScreen_upTempButton, 40);
-    lv_obj_set_ext_click_area(ui_SimpleProcessScreen_goButton, 25);
-    lv_obj_set_ext_click_area(ui_SimpleProcessScreen_ImgButton6, 20);
+    if (ui_SimpleProcessScreen_minusLabel) {
+        lv_obj_set_ext_click_area(ui_SimpleProcessScreen_minusLabel, 20);
+    }
+    if (ui_SimpleProcessScreen_plusLabel) {
+        lv_obj_set_ext_click_area(ui_SimpleProcessScreen_plusLabel, 20);
+    }
+    if (ui_SimpleProcessScreen_actionLabel) {
+        lv_obj_set_ext_click_area(ui_SimpleProcessScreen_actionLabel, 25);
+    }
+    if (ui_SimpleProcessScreen_ImgButton6) {
+        lv_obj_set_ext_click_area(ui_SimpleProcessScreen_ImgButton6, 20);
+    }
+    if (ui_SimpleProcessScreen_targetTemp) {
+        lv_obj_set_ext_click_area(ui_SimpleProcessScreen_targetTemp, 20);
+    }
+}
+
+void onTargetTempScreenLoad(lv_event_t *e) {
+    if (ui_TargetTempScreen_minusLabel) {
+        lv_obj_set_ext_click_area(ui_TargetTempScreen_minusLabel, 20);
+    }
+    if (ui_TargetTempScreen_plusLabel) {
+        lv_obj_set_ext_click_area(ui_TargetTempScreen_plusLabel, 20);
+    }
+    if (ui_TargetTempScreen_saveLabel) {
+        lv_obj_set_ext_click_area(ui_TargetTempScreen_saveLabel, 25);
+    }
 }
 
 void onStatusScreenLoad(lv_event_t *e) {

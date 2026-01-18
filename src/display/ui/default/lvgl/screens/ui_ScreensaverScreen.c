@@ -43,6 +43,12 @@ void ui_ScreensaverScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_ScreensaverScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
                                            _ui_theme_alpha_Dark);
 
+    lv_obj_t *ui_ScreensaverScreen_background = lv_img_create(ui_ScreensaverScreen);
+    lv_img_set_src(ui_ScreensaverScreen_background, &ui_img_background_minimal);
+    lv_obj_set_align(ui_ScreensaverScreen_background, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_ScreensaverScreen_background, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_ScreensaverScreen_background, LV_OBJ_FLAG_SCROLLABLE);
+
     ui_ScreensaverScreen_dials = ui_dials_create(ui_ScreensaverScreen);
     lv_obj_set_x(ui_ScreensaverScreen_dials, 0);
     lv_obj_set_y(ui_ScreensaverScreen_dials, 0);

@@ -39,6 +39,7 @@ extern "C" {
 #include "screens/ui_SimpleProcessScreen.h"
 #include "screens/ui_StandbyScreen.h"
 #include "screens/ui_StatusScreen.h"
+#include "screens/ui_TargetTempScreen.h"
 
 ///////////////////// VARIABLES ////////////////////
 
@@ -46,6 +47,10 @@ extern "C" {
 extern lv_obj_t *ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
+LV_FONT_DECLARE(ui_font_sfprodisplaybold_18);
+LV_FONT_DECLARE(ui_font_sfprodisplaybold_24);
+LV_FONT_DECLARE(ui_font_sfprodisplaybold_45);
+
 LV_IMG_DECLARE(ui_img_logo_png);      // assets/logo.png
 LV_IMG_DECLARE(ui_img_untitled_png);  // assets/Untitled.png
 LV_IMG_DECLARE(ui_img_489054950);     // assets/gauge-fill.png
@@ -80,6 +85,9 @@ LV_IMG_DECLARE(ui_img_1732953241);    // assets/tap-60x60.png
 LV_IMG_DECLARE(ui_img_1456692430);    // assets/pause-40x40.png
 LV_IMG_DECLARE(ui_img_1829139226);    // assets/angle-down-40x40.png
 LV_IMG_DECLARE(ui_img_flowmeter_png); // assets/flowmeter.png
+LV_IMG_DECLARE(ui_img_background_minimal); // assets/background_minimal.png
+LV_IMG_DECLARE(ui_img_minimal_indicator_temp); // assets/minimal_indicator_temp.png
+LV_IMG_DECLARE(ui_img_minimal_indicator_pressure); // assets/minimal_indicator_pressure.png
 LV_IMG_DECLARE(ui_img_1510335);       // assets/logo-christmas.png
 LV_IMG_DECLARE(ui_img_691326438);     // assets/wind-40x40.png
 

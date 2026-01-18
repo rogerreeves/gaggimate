@@ -33,6 +33,17 @@ void ui_StandbyScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_StandbyScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
                                            _ui_theme_alpha_Dark);
 
+    lv_obj_t *ui_StandbyScreen_background = lv_img_create(ui_StandbyScreen);
+    lv_img_set_src(ui_StandbyScreen_background, &ui_img_background_minimal);
+    lv_obj_set_align(ui_StandbyScreen_background, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_StandbyScreen_background, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_StandbyScreen_background, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *ui_StandbyScreen_layout = ui_layout_main_create(ui_StandbyScreen);
+    lv_obj_t *layout_top = ui_comp_get_child(ui_StandbyScreen_layout, UI_COMP_LAYOUT_MAIN_TOP);
+    lv_obj_t *layout_mid_left = ui_comp_get_child(ui_StandbyScreen_layout, UI_COMP_LAYOUT_MAIN_MID_TOP_LEFT);
+    lv_obj_t *layout_mid_right = ui_comp_get_child(ui_StandbyScreen_layout, UI_COMP_LAYOUT_MAIN_MID_TOP_RIGHT);
+
     ui_StandbyScreen_logo = lv_img_create(ui_StandbyScreen);
     lv_img_set_src(ui_StandbyScreen_logo, &ui_img_logo_png);
     lv_obj_set_width(ui_StandbyScreen_logo, LV_SIZE_CONTENT);  /// 1
@@ -47,102 +58,35 @@ void ui_StandbyScreen_screen_init(void) {
     ui_object_set_themeable_style_property(ui_StandbyScreen_logo, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR_OPA,
                                            _ui_theme_alpha_NiceWhite);
 
-    ui_StandbyScreen_time = lv_label_create(ui_StandbyScreen);
-    lv_obj_set_width(ui_StandbyScreen_time, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_StandbyScreen_time, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_StandbyScreen_time, 0);
-    lv_obj_set_y(ui_StandbyScreen_time, -150);
+    ui_StandbyScreen_time = lv_label_create(layout_top);
+    lv_obj_set_width(ui_StandbyScreen_time, LV_SIZE_CONTENT);
+    lv_obj_set_height(ui_StandbyScreen_time, LV_SIZE_CONTENT);
     lv_obj_set_align(ui_StandbyScreen_time, LV_ALIGN_CENTER);
     lv_label_set_text(ui_StandbyScreen_time, "0:00");
-    ui_object_set_themeable_style_property(ui_StandbyScreen_time, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_time, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_text_color(ui_StandbyScreen_time, lv_color_hex(0x727373), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_StandbyScreen_time, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_align(ui_StandbyScreen_time, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_StandbyScreen_time, &lv_font_montserrat_34, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_StandbyScreen_time, &ui_font_sfprodisplaybold_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_StandbyScreen_Container1 = lv_obj_create(ui_StandbyScreen);
-    lv_obj_remove_style_all(ui_StandbyScreen_Container1);
-    lv_obj_set_width(ui_StandbyScreen_Container1, 300);
-    lv_obj_set_height(ui_StandbyScreen_Container1, 20);
-    lv_obj_set_x(ui_StandbyScreen_Container1, 0);
-    lv_obj_set_y(ui_StandbyScreen_Container1, -210);
-    lv_obj_set_align(ui_StandbyScreen_Container1, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_StandbyScreen_Container1, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(ui_StandbyScreen_Container1, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_StandbyScreen_Container1, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
-
-    ui_StandbyScreen_wifiIcon = lv_img_create(ui_StandbyScreen_Container1);
+    ui_StandbyScreen_wifiIcon = lv_img_create(layout_mid_left);
     lv_img_set_src(ui_StandbyScreen_wifiIcon, &ui_img_364513079);
     lv_obj_set_width(ui_StandbyScreen_wifiIcon, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_StandbyScreen_wifiIcon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_StandbyScreen_wifiIcon, 20);
-    lv_obj_set_y(ui_StandbyScreen_wifiIcon, -210);
-    lv_obj_set_align(ui_StandbyScreen_wifiIcon, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_StandbyScreen_wifiIcon, LV_ALIGN_RIGHT_MID);
     lv_obj_add_flag(ui_StandbyScreen_wifiIcon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_StandbyScreen_wifiIcon, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    ui_object_set_themeable_style_property(ui_StandbyScreen_wifiIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_Dark);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_wifiIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_Dark);
-    lv_obj_set_style_border_width(ui_StandbyScreen_wifiIcon, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_wifiIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
-                                           _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_wifiIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR_OPA,
-                                           _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_img_recolor(ui_StandbyScreen_wifiIcon, lv_color_hex(0x727373), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_StandbyScreen_wifiIcon, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_StandbyScreen_bluetoothIcon = lv_img_create(ui_StandbyScreen_Container1);
+    ui_StandbyScreen_bluetoothIcon = lv_img_create(layout_mid_right);
     lv_img_set_src(ui_StandbyScreen_bluetoothIcon, &ui_img_1091371356);
     lv_obj_set_width(ui_StandbyScreen_bluetoothIcon, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_StandbyScreen_bluetoothIcon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_StandbyScreen_bluetoothIcon, -20);
-    lv_obj_set_y(ui_StandbyScreen_bluetoothIcon, -210);
-    lv_obj_set_align(ui_StandbyScreen_bluetoothIcon, LV_ALIGN_CENTER);
+    lv_obj_set_align(ui_StandbyScreen_bluetoothIcon, LV_ALIGN_LEFT_MID);
     lv_obj_add_flag(ui_StandbyScreen_bluetoothIcon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
     lv_obj_clear_flag(ui_StandbyScreen_bluetoothIcon, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    ui_object_set_themeable_style_property(ui_StandbyScreen_bluetoothIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_Dark);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_bluetoothIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_Dark);
-    lv_obj_set_style_border_width(ui_StandbyScreen_bluetoothIcon, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_bluetoothIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
-                                           _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_bluetoothIcon, LV_PART_MAIN | LV_STATE_DEFAULT,
-                                           LV_STYLE_IMG_RECOLOR_OPA, _ui_theme_alpha_NiceWhite);
-
-    ui_StandbyScreen_updateIcon = lv_img_create(ui_StandbyScreen_Container1);
-    lv_img_set_src(ui_StandbyScreen_updateIcon, &ui_img_1765671371);
-    lv_obj_set_width(ui_StandbyScreen_updateIcon, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_StandbyScreen_updateIcon, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_StandbyScreen_updateIcon, -20);
-    lv_obj_set_y(ui_StandbyScreen_updateIcon, -210);
-    lv_obj_set_align(ui_StandbyScreen_updateIcon, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_StandbyScreen_updateIcon, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
-    lv_obj_clear_flag(ui_StandbyScreen_updateIcon, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    ui_object_set_themeable_style_property(ui_StandbyScreen_updateIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_Dark);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_updateIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_Dark);
-    lv_obj_set_style_border_width(ui_StandbyScreen_updateIcon, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_updateIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
-                                           _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_updateIcon, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR_OPA,
-                                           _ui_theme_alpha_NiceWhite);
-
-    ui_StandbyScreen_Image3 = lv_img_create(ui_StandbyScreen);
-    lv_img_set_src(ui_StandbyScreen_Image3, &ui_img_1732953241);
-    lv_obj_set_width(ui_StandbyScreen_Image3, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(ui_StandbyScreen_Image3, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_StandbyScreen_Image3, 0);
-    lv_obj_set_y(ui_StandbyScreen_Image3, 150);
-    lv_obj_set_align(ui_StandbyScreen_Image3, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_StandbyScreen_Image3, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
-    lv_obj_clear_flag(ui_StandbyScreen_Image3, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_img_set_zoom(ui_StandbyScreen_Image3, 210);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_Image3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR,
-                                           _ui_theme_color_NiceWhite);
-    ui_object_set_themeable_style_property(ui_StandbyScreen_Image3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_IMG_RECOLOR_OPA,
-                                           _ui_theme_alpha_NiceWhite);
+    lv_obj_set_style_img_recolor(ui_StandbyScreen_bluetoothIcon, lv_color_hex(0x727373), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_img_recolor_opa(ui_StandbyScreen_bluetoothIcon, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_StandbyScreen, ui_event_StandbyScreen, LV_EVENT_ALL, NULL);
 }

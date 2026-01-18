@@ -93,6 +93,7 @@ class Settings {
     bool isVolumetricTarget() const { return volumetricTarget; }
     String getOTAChannel() const { return otaChannel; }
     String getSavedScale() const { return savedScale; }
+    bool getBrewScaleWarningShown() const { return brewScaleWarningShown; }
     bool isBoilerFillActive() const { return boilerFillActive; }
     int getStartupFillTime() const { return startupFillTime; }
     int getSteamFillTime() const { return steamFillTime; }
@@ -169,6 +170,7 @@ class Settings {
     void setVolumetricTarget(bool volumetric_target);
     void setOTAChannel(const String &otaChannel);
     void setSavedScale(const String &savedScale);
+    void setBrewScaleWarningShown(bool shown);
     void setBoilerFillActive(bool boiler_fill_active);
     void setStartupFillTime(int startup_fill_time);
     void setSteamFillTime(int steam_fill_time);
@@ -251,6 +253,7 @@ class Settings {
     String wifiPassword = "";
     String mdnsName = DEFAULT_MDNS_NAME;
     String savedScale = "";
+    bool brewScaleWarningShown = false;
     bool homekit = false;
     bool volumetricTarget = true;
     bool boilerFillActive = false;

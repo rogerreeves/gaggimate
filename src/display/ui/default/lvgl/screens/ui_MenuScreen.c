@@ -78,6 +78,12 @@ void ui_MenuScreen_screen_init(void) {
                                            _ui_theme_color_Dark);
     ui_object_set_themeable_style_property(ui_MenuScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_Dark);
 
+    lv_obj_t *ui_MenuScreen_background = lv_img_create(ui_MenuScreen);
+    lv_img_set_src(ui_MenuScreen_background, &ui_img_background_minimal);
+    lv_obj_set_align(ui_MenuScreen_background, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_MenuScreen_background, LV_OBJ_FLAG_ADV_HITTEST);
+    lv_obj_clear_flag(ui_MenuScreen_background, LV_OBJ_FLAG_SCROLLABLE);
+
     ui_MenuScreen_dials = ui_dials_create(ui_MenuScreen);
     lv_obj_set_x(ui_MenuScreen_dials, 0);
     lv_obj_set_y(ui_MenuScreen_dials, 0);

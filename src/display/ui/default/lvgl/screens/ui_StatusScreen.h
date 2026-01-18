@@ -28,6 +28,7 @@ extern lv_obj_t *ui_StatusScreen_Image8;
 extern lv_obj_t *ui_StatusScreen_currentDuration;
 extern lv_obj_t *ui_StatusScreen_stepLabel;
 extern lv_obj_t *ui_StatusScreen_phaseLabel;
+extern lv_obj_t *ui_StatusScreen_phaseArcContainer;
 extern lv_obj_t *ui_StatusScreen_barContainer;
 extern lv_obj_t *ui_StatusScreen_brewBar;
 extern lv_obj_t *ui_StatusScreen_labelContainer;

@@ -40,6 +40,7 @@ Settings::Settings() {
     infuseBloomTime = preferences.getInt("ibt", 0);
     pressurizeTime = preferences.getInt("pt", 0);
     savedScale = preferences.getString("ssc", "");
+    brewScaleWarningShown = preferences.getBool("bsw", false);
     momentaryButtons = preferences.getBool("mb", false);
     boilerFillActive = preferences.getBool("bf_a", false);
     startupFillTime = preferences.getInt("bf_su", 5000);
@@ -341,6 +342,11 @@ void Settings::setOTAChannel(const String &otaChannel) {
 
 void Settings::setSavedScale(const String &savedScale) {
     this->savedScale = savedScale;
+    save();
+}
+
+void Settings::setBrewScaleWarningShown(bool shown) {
+    brewScaleWarningShown = shown;
     save();
 }
 
@@ -826,6 +832,7 @@ void Settings::doSave() {
     preferences.putInt("ibt", infuseBloomTime);
     preferences.putInt("pt", pressurizeTime);
     preferences.putString("ssc", savedScale);
+    preferences.putBool("bsw", brewScaleWarningShown);
     preferences.putBool("bf_a", boilerFillActive);
     preferences.putInt("bf_su", startupFillTime);
     preferences.putInt("bf_st", steamFillTime);

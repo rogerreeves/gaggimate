@@ -42,6 +42,11 @@ void onSimpleProcessScreenLoad(lv_event_t *e);
 void onSimpleProcessToggle(lv_event_t *e);
 void onSteamTempLower(lv_event_t *e);
 void onSteamTempRaise(lv_event_t *e);
+void onSimpleProcessTargetTempOpen(lv_event_t *e);
+void onTargetTempLower(lv_event_t *e);
+void onTargetTempRaise(lv_event_t *e);
+void onTargetTempSaveBack(lv_event_t *e);
+void onTargetTempScreenLoad(lv_event_t *e);
 void onStatusScreenLoad(lv_event_t *e);
 void onStatusScreenPause(lv_event_t *e);
 void onBrewCancel(lv_event_t *e);
@@ -54,6 +59,9 @@ void onGrindDoseCountLower(lv_event_t *e);
 void onGrindReset(lv_event_t *e);
 void onGrindEndBean(lv_event_t *e);
 void onGrindEndBrew(lv_event_t *e);
+void onProfilesClick(lv_event_t *e);
+void onConfirmClick(lv_event_t *e);
+void onSaveClick(lv_event_t *e);
 
 #ifdef __cplusplus
 } /*extern "C"*/
