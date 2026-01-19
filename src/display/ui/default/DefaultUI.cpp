@@ -1087,11 +1087,17 @@ void DefaultUI::handleScreenChange() {
         if (*targetScreen == ui_StandbyScreen) {
             screensaverActive = false;
             standbyEnterTime = millis();
+            if (pluginManager) {
+                pluginManager->trigger("ui:standby:enter");
+            }
         } else if (*targetScreen == ui_ScreensaverScreen) {
             screensaverActive = true;
         } else if (current == ui_StandbyScreen) {
             const Settings &settings = controller->getSettings();
             setBrightness(settings.getMainBrightness());
+            if (pluginManager) {
+                pluginManager->trigger("ui:standby:exit");
+            }
         } else if (current == ui_ScreensaverScreen) {
             screensaverActive = false;
         }

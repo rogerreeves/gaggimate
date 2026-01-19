@@ -68,6 +68,14 @@ Settings::Settings() {
     steamPumpCutoff = preferences.getFloat("spc", DEFAULT_STEAM_PUMP_CUTOFF);
     historyIndex = preferences.getInt("hi", 0);
     autowakeupEnabled = preferences.getBool("ab_en", false);
+    shellyEnabled = preferences.getBool("sh_en", false);
+    shellyGrinderEnabled = preferences.getBool("sh_gr", false);
+    shellyLedEnabled = preferences.getBool("sh_led", false);
+    shellyMainPowerEnabled = preferences.getBool("sh_mp", false);
+    shellyLedMode = preferences.getInt("sh_lm", 0);
+    shellyDevicesJson = preferences.getString("sh_dev", "[]");
+    shellyAssignmentsJson = preferences.getString("sh_asg", "[]");
+    shellyScheduleJson = preferences.getString("sh_sch", "{}");
 
     // Load schedule format: "time1|days1;time2|days2" where days is 7-bit string (e.g., "1111100" for weekdays only)
     String schedulesStr = preferences.getString("ab_schedules", "");
@@ -549,6 +557,38 @@ void Settings::setAutoWakeupSchedules(const std::vector<AutoWakeupSchedule> &sch
     save();
 }
 
+void Settings::setShellyEnabled(bool enabled) {
+    shellyEnabled = enabled;
+}
+
+void Settings::setShellyGrinderEnabled(bool enabled) {
+    shellyGrinderEnabled = enabled;
+}
+
+void Settings::setShellyLedEnabled(bool enabled) {
+    shellyLedEnabled = enabled;
+}
+
+void Settings::setShellyMainPowerEnabled(bool enabled) {
+    shellyMainPowerEnabled = enabled;
+}
+
+void Settings::setShellyLedMode(int mode) {
+    shellyLedMode = mode;
+}
+
+void Settings::setShellyDevicesJson(String json) {
+    shellyDevicesJson = std::move(json);
+}
+
+void Settings::setShellyAssignmentsJson(String json) {
+    shellyAssignmentsJson = std::move(json);
+}
+
+void Settings::setShellyScheduleJson(String json) {
+    shellyScheduleJson = std::move(json);
+}
+
 void Settings::fillJson(JsonObject obj) const {
     obj["startupMode"] = startupMode == MODE_BREW ? "brew" : "standby";
     obj["targetSteamTemp"] = targetSteamTemp;
@@ -612,6 +652,14 @@ void Settings::fillJson(JsonObject obj) const {
     obj["fullTankDistance"] = fullTankDistance;
     obj["altRelayFunction"] = altRelayFunction;
     obj["autowakeupEnabled"] = autowakeupEnabled;
+    obj["shellyEnabled"] = shellyEnabled;
+    obj["shellyGrinderEnabled"] = shellyGrinderEnabled;
+    obj["shellyLedEnabled"] = shellyLedEnabled;
+    obj["shellyMainPowerEnabled"] = shellyMainPowerEnabled;
+    obj["shellyLedMode"] = shellyLedMode;
+    obj["shellyDevicesJson"] = shellyDevicesJson;
+    obj["shellyAssignmentsJson"] = shellyAssignmentsJson;
+    obj["shellyScheduleJson"] = shellyScheduleJson;
 
     String schedulesStr = "";
     for (size_t i = 0; i < autowakeupSchedules.size(); i++) {
@@ -752,6 +800,22 @@ void Settings::applyJson(const JsonObject &obj) {
         altRelayFunction = obj["altRelayFunction"].as<int>();
     if (obj.containsKey("autowakeupEnabled"))
         autowakeupEnabled = obj["autowakeupEnabled"].as<bool>();
+    if (obj.containsKey("shellyEnabled"))
+        shellyEnabled = obj["shellyEnabled"].as<bool>();
+    if (obj.containsKey("shellyGrinderEnabled"))
+        shellyGrinderEnabled = obj["shellyGrinderEnabled"].as<bool>();
+    if (obj.containsKey("shellyLedEnabled"))
+        shellyLedEnabled = obj["shellyLedEnabled"].as<bool>();
+    if (obj.containsKey("shellyMainPowerEnabled"))
+        shellyMainPowerEnabled = obj["shellyMainPowerEnabled"].as<bool>();
+    if (obj.containsKey("shellyLedMode"))
+        shellyLedMode = obj["shellyLedMode"].as<int>();
+    if (obj.containsKey("shellyDevicesJson"))
+        shellyDevicesJson = obj["shellyDevicesJson"].as<String>();
+    if (obj.containsKey("shellyAssignmentsJson"))
+        shellyAssignmentsJson = obj["shellyAssignmentsJson"].as<String>();
+    if (obj.containsKey("shellyScheduleJson"))
+        shellyScheduleJson = obj["shellyScheduleJson"].as<String>();
     if (obj.containsKey("autowakeupSchedules")) {
         String schedulesStr = obj["autowakeupSchedules"].as<String>();
         autowakeupSchedules.clear();
@@ -854,6 +918,14 @@ void Settings::doSave() {
     preferences.putFloat("spc", steamPumpCutoff);
     preferences.putInt("hi", historyIndex);
     preferences.putBool("ab_en", autowakeupEnabled);
+    preferences.putBool("sh_en", shellyEnabled);
+    preferences.putBool("sh_gr", shellyGrinderEnabled);
+    preferences.putBool("sh_led", shellyLedEnabled);
+    preferences.putBool("sh_mp", shellyMainPowerEnabled);
+    preferences.putInt("sh_lm", shellyLedMode);
+    preferences.putString("sh_dev", shellyDevicesJson);
+    preferences.putString("sh_asg", shellyAssignmentsJson);
+    preferences.putString("sh_sch", shellyScheduleJson);
 
     // Save schedule format
     String schedulesForSave = "";

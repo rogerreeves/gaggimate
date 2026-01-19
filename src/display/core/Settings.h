@@ -131,6 +131,14 @@ class Settings {
     int getAltRelayFunction() const { return altRelayFunction; }
     bool isAutoWakeupEnabled() const { return autowakeupEnabled; }
     std::vector<AutoWakeupSchedule> getAutoWakeupSchedules() const { return autowakeupSchedules; }
+    bool isShellyEnabled() const { return shellyEnabled; }
+    bool isShellyGrinderEnabled() const { return shellyGrinderEnabled; }
+    bool isShellyLedEnabled() const { return shellyLedEnabled; }
+    bool isShellyMainPowerEnabled() const { return shellyMainPowerEnabled; }
+    int getShellyLedMode() const { return shellyLedMode; }
+    String getShellyDevicesJson() const { return shellyDevicesJson; }
+    String getShellyAssignmentsJson() const { return shellyAssignmentsJson; }
+    String getShellyScheduleJson() const { return shellyScheduleJson; }
     void setTargetBrewTemp(int target_brew_temp);
     void setTargetSteamTemp(int target_steam_temp);
     void setTargetWaterTemp(int target_water_temp);
@@ -209,6 +217,14 @@ class Settings {
     void setAltRelayFunction(int alt_relay_function);
     void setAutoWakeupEnabled(bool enabled);
     void setAutoWakeupSchedules(const std::vector<AutoWakeupSchedule> &schedules);
+    void setShellyEnabled(bool enabled);
+    void setShellyGrinderEnabled(bool enabled);
+    void setShellyLedEnabled(bool enabled);
+    void setShellyMainPowerEnabled(bool enabled);
+    void setShellyLedMode(int mode);
+    void setShellyDevicesJson(String json);
+    void setShellyAssignmentsJson(String json);
+    void setShellyScheduleJson(String json);
 
     void fillJson(JsonObject obj) const;
     void applyJson(const JsonObject &obj);
@@ -240,6 +256,14 @@ class Settings {
     int startupMode = MODE_STANDBY;
     bool autowakeupEnabled = false;
     std::vector<AutoWakeupSchedule> autowakeupSchedules;
+    bool shellyEnabled = false;
+    bool shellyGrinderEnabled = false;
+    bool shellyLedEnabled = false;
+    bool shellyMainPowerEnabled = false;
+    int shellyLedMode = 0;
+    String shellyDevicesJson = "[]";
+    String shellyAssignmentsJson = "[]";
+    String shellyScheduleJson = "{}";
     int standbyTimeout = DEFAULT_STANDBY_TIMEOUT_MS;
     bool screensaverEnabled = true;
     int screensaverTimeout = 120000;

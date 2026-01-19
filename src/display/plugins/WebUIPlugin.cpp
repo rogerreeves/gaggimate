@@ -17,6 +17,7 @@
 #include <SD_MMC.h>
 #include <algorithm>
 #include <display/plugins/BLEScalePlugin.h>
+#include <display/plugins/ShellyPlugin.h>
 #include <display/plugins/ShotHistoryPlugin.h>
 #include <string>
 #include <unordered_map>
@@ -215,6 +216,11 @@ void WebUIPlugin::setupServer() {
     server.on("/api/sd/backup", HTTP_GET, [this](AsyncWebServerRequest *request) { handleSdBackupList(request); });
     server.on("/api/sd/backup/settings", HTTP_POST, [this](AsyncWebServerRequest *request) { handleSdBackupSaveSettings(request); });
     server.on("/api/sd/backup/profiles", HTTP_POST, [this](AsyncWebServerRequest *request) { handleSdBackupSaveProfiles(request); });
+    server.on("/api/shelly/devices", [this](AsyncWebServerRequest *request) { handleShellyDevices(request); });
+    server.on("/api/shelly/scan", [this](AsyncWebServerRequest *request) { handleShellyScan(request); });
+    server.on("/api/shelly/test", [this](AsyncWebServerRequest *request) { handleShellyTest(request); });
+    server.on("/api/shelly/assignments", [this](AsyncWebServerRequest *request) { handleShellyAssignments(request); });
+    server.on("/api/shelly/schedule", [this](AsyncWebServerRequest *request) { handleShellySchedule(request); });
     FS *fs = &SPIFFS;
     if (controller->isSDCard()) {
         fs = &SD_MMC;
@@ -492,6 +498,27 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setSmartGrindIp(request->arg("smartGrindIp"));
             if (request->hasArg("smartGrindMode"))
                 settings->setSmartGrindMode(request->arg("smartGrindMode").toInt());
+            if (request->hasArg("shellyEnabled"))
+                settings->setShellyEnabled(true);
+            else
+                settings->setShellyEnabled(false);
+            if (request->hasArg("shellyGrinderEnabled"))
+                settings->setShellyGrinderEnabled(true);
+            else
+                settings->setShellyGrinderEnabled(false);
+            if (request->hasArg("shellyLedEnabled"))
+                settings->setShellyLedEnabled(true);
+            else
+                settings->setShellyLedEnabled(false);
+            if (request->hasArg("shellyMainPowerEnabled"))
+                settings->setShellyMainPowerEnabled(true);
+            else
+                settings->setShellyMainPowerEnabled(false);
+            if (request->hasArg("shellyLedMode"))
+                settings->setShellyLedMode(request->arg("shellyLedMode").toInt());
+            if (settings->isShellyGrinderEnabled()) {
+                settings->setSmartGrindActive(false);
+            }
             settings->setDoseMeasureEnabled(request->hasArg("doseMeasureEnabled"));
             if (request->hasArg("doseMeasureAvgBeanWeight"))
                 settings->setDoseMeasureAvgBeanWeight(request->arg("doseMeasureAvgBeanWeight").toDouble());
@@ -607,6 +634,11 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
             }
             settings->save(true);
         });
+        {
+            Settings &settings = controller->getSettings();
+            Shelly.updateConfig(settings.isShellyEnabled(), settings.isShellyGrinderEnabled(), settings.isShellyLedEnabled(),
+                                settings.isShellyMainPowerEnabled(), static_cast<ShellyLedMode>(settings.getShellyLedMode()));
+        }
         pluginManager->trigger("settings:changed");
         controller->setTargetTemp(controller->getTargetTemp());
         controller->setPumpModelCoeffs();
@@ -639,6 +671,11 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["smartGrindActive"] = settings.isSmartGrindActive();
     doc["smartGrindIp"] = settings.getSmartGrindIp();
     doc["smartGrindMode"] = settings.getSmartGrindMode();
+    doc["shellyEnabled"] = settings.isShellyEnabled();
+    doc["shellyGrinderEnabled"] = settings.isShellyGrinderEnabled();
+    doc["shellyLedEnabled"] = settings.isShellyLedEnabled();
+    doc["shellyMainPowerEnabled"] = settings.isShellyMainPowerEnabled();
+    doc["shellyLedMode"] = settings.getShellyLedMode();
     doc["doseMeasureEnabled"] = settings.isDoseMeasureEnabled();
     doc["doseMeasureAvgBeanWeight"] = settings.getDoseMeasureAvgBeanWeight();
     doc["doseMeasureTarget"] = settings.getDoseMeasureTarget();
@@ -980,6 +1017,185 @@ void WebUIPlugin::handleSdBackupSaveProfiles(AsyncWebServerRequest *request) con
         doc["error"] = ctx.err;
     }
     vSemaphoreDelete(ctx.done);
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleShellyDevices(AsyncWebServerRequest *request) const {
+    JsonDocument doc;
+    if (request->method() == HTTP_POST) {
+        String host = request->arg("host");
+        String username = request->arg("username");
+        String password = request->arg("password");
+        String err;
+        bool ok = Shelly.addDevice(host, username, password, &err);
+        doc["ok"] = ok;
+        if (!ok) {
+            doc["error"] = err;
+        }
+    } else if (request->method() == HTTP_DELETE) {
+        String id = request->arg("id");
+        bool ok = Shelly.removeDevice(id);
+        doc["ok"] = ok;
+        if (!ok) {
+            doc["error"] = "Device not found";
+        }
+    } else {
+        doc["ok"] = true;
+    }
+
+    JsonArray devices = doc["devices"].to<JsonArray>();
+    for (const auto &device : Shelly.getDevices()) {
+        JsonObject obj = devices.createNestedObject();
+        obj["id"] = device.id;
+        obj["name"] = device.name;
+        obj["model"] = device.model;
+        obj["host"] = device.host;
+        obj["auth"] = device.authEnabled;
+        obj["channels"] = device.channels;
+    }
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleShellyScan(AsyncWebServerRequest *request) const {
+    JsonDocument doc;
+    if (request->method() != HTTP_POST) {
+        request->send(404);
+        return;
+    }
+
+    String err;
+    bool ok = Shelly.startScan(&err);
+    doc["ok"] = ok;
+    if (!ok) {
+        doc["error"] = err;
+    }
+    doc["inProgress"] = Shelly.isScanInProgress();
+
+    JsonArray results = doc["results"].to<JsonArray>();
+    for (const auto &result : Shelly.getScanResults()) {
+        JsonObject obj = results.createNestedObject();
+        obj["host"] = result.host;
+        obj["name"] = result.name;
+        obj["model"] = result.model;
+        obj["id"] = result.id;
+        obj["authRequired"] = result.authRequired;
+        obj["channels"] = result.channels;
+    }
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleShellyTest(AsyncWebServerRequest *request) const {
+    if (request->method() != HTTP_POST) {
+        request->send(404);
+        return;
+    }
+
+    JsonDocument doc;
+    String id = request->arg("deviceId");
+    uint8_t channel = static_cast<uint8_t>(request->arg("channel").toInt());
+    String err;
+    bool ok = Shelly.testRelay(id, channel, &err);
+    doc["ok"] = ok;
+    if (!ok) {
+        doc["error"] = err;
+    }
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleShellyAssignments(AsyncWebServerRequest *request) const {
+    JsonDocument doc;
+    if (request->method() == HTTP_POST) {
+        String payload = request->arg("assignments");
+        JsonDocument parsed;
+        DeserializationError err = deserializeJson(parsed, payload);
+        if (err || !parsed.is<JsonArray>()) {
+            doc["ok"] = false;
+            doc["error"] = "Invalid assignments";
+        } else {
+            std::vector<ShellyAssignment> newAssignments;
+            for (JsonVariant v : parsed.as<JsonArray>()) {
+                ShellyAssignment assignment;
+                assignment.deviceId = v["deviceId"] | "";
+                assignment.channel = v["channel"] | 0;
+                assignment.function = static_cast<ShellyFunction>(v["function"] | 0);
+                newAssignments.push_back(assignment);
+            }
+            String error;
+            bool ok = Shelly.setAssignments(newAssignments, &error);
+            doc["ok"] = ok;
+            if (!ok) {
+                doc["error"] = error;
+            }
+        }
+    } else {
+        doc["ok"] = true;
+    }
+
+    JsonArray assignments = doc["assignments"].to<JsonArray>();
+    for (const auto &assignment : Shelly.getAssignments()) {
+        JsonObject obj = assignments.createNestedObject();
+        obj["deviceId"] = assignment.deviceId;
+        obj["channel"] = assignment.channel;
+        obj["function"] = static_cast<uint8_t>(assignment.function);
+    }
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    serializeJson(doc, *response);
+    request->send(response);
+}
+
+void WebUIPlugin::handleShellySchedule(AsyncWebServerRequest *request) const {
+    JsonDocument doc;
+    if (request->method() == HTTP_POST) {
+        ShellySchedule schedule = Shelly.getSchedule();
+        schedule.enabled = request->arg("enabled") == "1";
+        if (request->hasArg("onTime")) {
+            schedule.onTime = request->arg("onTime");
+        }
+        if (request->hasArg("offTime")) {
+            schedule.offTime = request->arg("offTime");
+        }
+        if (request->hasArg("days")) {
+            String days = request->arg("days");
+            if (days.length() == 7) {
+                for (int i = 0; i < 7; i++) {
+                    schedule.days[i] = days.charAt(i) == '1';
+                }
+            }
+        }
+        String err;
+        bool ok = Shelly.updateSchedule(schedule, &err);
+        doc["ok"] = ok;
+        if (!ok) {
+            doc["error"] = err;
+        }
+    } else {
+        doc["ok"] = true;
+    }
+
+    ShellySchedule schedule = Shelly.getSchedule();
+    doc["enabled"] = schedule.enabled;
+    doc["onTime"] = schedule.onTime;
+    doc["offTime"] = schedule.offTime;
+    String days;
+    for (int i = 0; i < 7; i++) {
+        days += schedule.days[i] ? "1" : "0";
+    }
+    doc["days"] = days;
+    doc["syncStatus"] = Shelly.getScheduleSyncStatus();
+    doc["syncMessage"] = Shelly.getScheduleSyncMessage();
+
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
     serializeJson(doc, *response);
     request->send(response);
 }

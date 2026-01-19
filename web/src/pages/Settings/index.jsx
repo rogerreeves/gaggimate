@@ -8,6 +8,7 @@ import { machine } from '../../services/ApiService.js';
 import { getStoredTheme, handleThemeChange } from '../../utils/themeManager.js';
 import { setDashboardLayout, DASHBOARD_LAYOUTS } from '../../utils/dashboardManager.js';
 import { PluginCard } from './PluginCard.jsx';
+import { ShellyCard } from './ShellyCard.jsx';
 import { downloadJson } from '../../utils/download.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileExport } from '@fortawesome/free-solid-svg-icons/faFileExport';
@@ -27,6 +28,18 @@ export function Settings() {
   const [sdBackupLoading, setSdBackupLoading] = useState(false);
   const [sdBackupStatus, setSdBackupStatus] = useState('');
   const [currentTheme, setCurrentTheme] = useState('light');
+  const [shellyDevices, setShellyDevices] = useState([]);
+  const [shellyAssignments, setShellyAssignments] = useState([]);
+  const [shellySchedule, setShellySchedule] = useState({
+    enabled: false,
+    onTime: '06:30',
+    offTime: '10:30',
+    days: [true, true, true, true, true, false, false],
+  });
+  const [shellyScanResults, setShellyScanResults] = useState([]);
+  const [shellyScanError, setShellyScanError] = useState('');
+  const [shellySyncStatus, setShellySyncStatus] = useState('');
+  const [shellySyncMessage, setShellySyncMessage] = useState('');
   const [autowakeupSchedules, setAutoWakeupSchedules] = useState([
     { time: '07:00', days: [true, true, true, true, true, true, true] }, // Default: all days enabled
   ]);
@@ -63,6 +76,11 @@ export function Settings() {
         standbyLandingScreen: fetchedSettings.standbyLandingScreen ?? 'menu',
         screensaverEnabled: fetchedSettings.screensaverEnabled ?? true,
         screensaverTimeout: fetchedSettings.screensaverTimeout ?? 2,
+        shellyEnabled: fetchedSettings.shellyEnabled ?? false,
+        shellyGrinderEnabled: fetchedSettings.shellyGrinderEnabled ?? false,
+        shellyLedEnabled: fetchedSettings.shellyLedEnabled ?? false,
+        shellyMainPowerEnabled: fetchedSettings.shellyMainPowerEnabled ?? false,
+        shellyLedMode: fetchedSettings.shellyLedMode ?? 0,
       };
 
       // Extract Kf from PID string and separate them
@@ -159,6 +177,18 @@ export function Settings() {
       if (key === 'screensaverEnabled') {
         value = !formData.screensaverEnabled;
       }
+      if (key === 'shellyEnabled') {
+        value = !formData.shellyEnabled;
+      }
+      if (key === 'shellyGrinderEnabled') {
+        value = !formData.shellyGrinderEnabled;
+      }
+      if (key === 'shellyLedEnabled') {
+        value = !formData.shellyLedEnabled;
+      }
+      if (key === 'shellyMainPowerEnabled') {
+        value = !formData.shellyMainPowerEnabled;
+      }
       if (key === 'standbyDisplayEnabled') {
         value = !formData.standbyDisplayEnabled;
         // Set standby brightness to 0 when toggle is off
@@ -180,6 +210,132 @@ export function Settings() {
         [key]: value,
       });
     };
+  };
+
+  const loadShellyData = useCallback(async () => {
+    try {
+      const deviceResponse = await fetch('/api/shelly/devices');
+      const deviceData = await deviceResponse.json();
+      setShellyDevices(deviceData.devices || []);
+
+      const assignResponse = await fetch('/api/shelly/assignments');
+      const assignData = await assignResponse.json();
+      setShellyAssignments(assignData.assignments || []);
+
+      const scheduleResponse = await fetch('/api/shelly/schedule');
+      const scheduleData = await scheduleResponse.json();
+      const days = scheduleData.days
+        ? scheduleData.days.split('').map(d => d === '1')
+        : [true, true, true, true, true, false, false];
+      setShellySchedule({
+        enabled: scheduleData.enabled ?? false,
+        onTime: scheduleData.onTime ?? '06:30',
+        offTime: scheduleData.offTime ?? '10:30',
+        days,
+      });
+      setShellySyncStatus(scheduleData.syncStatus || '');
+      setShellySyncMessage(scheduleData.syncMessage || '');
+    } catch (error) {
+      console.error('Shelly load error', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (formData.shellyEnabled) {
+      loadShellyData();
+    }
+  }, [formData.shellyEnabled, loadShellyData]);
+
+  const handleShellyScan = async () => {
+    setShellyScanError('');
+    try {
+      const response = await fetch('/api/shelly/scan', { method: 'POST' });
+      const data = await response.json();
+      if (!data.ok) {
+        setShellyScanError(data.error || 'Scan failed');
+      }
+      setShellyScanResults(data.results || []);
+    } catch (error) {
+      setShellyScanError('Scan failed');
+    }
+  };
+
+  const handleShellyAddDevice = async (host, username, password) => {
+    const payload = new FormData();
+    payload.append('host', host);
+    if (username) {
+      payload.append('username', username);
+    }
+    if (password) {
+      payload.append('password', password);
+    }
+    const response = await fetch('/api/shelly/devices', { method: 'POST', body: payload });
+    const data = await response.json();
+    if (!data.ok) {
+      setShellyScanError(data.error || 'Add failed');
+    }
+    setShellyDevices(data.devices || []);
+  };
+
+  const handleShellyRemoveDevice = async deviceId => {
+    const response = await fetch(`/api/shelly/devices?id=${encodeURIComponent(deviceId)}`, {
+      method: 'DELETE',
+    });
+    const data = await response.json();
+    if (!data.ok) {
+      setShellyScanError(data.error || 'Remove failed');
+    }
+    setShellyDevices(data.devices || []);
+    await loadShellyData();
+  };
+
+  const handleShellyTest = async (deviceId, channel) => {
+    const payload = new FormData();
+    payload.append('deviceId', deviceId);
+    payload.append('channel', channel.toString());
+    await fetch('/api/shelly/test', { method: 'POST', body: payload });
+  };
+
+  const handleShellyAssignmentChange = async (deviceId, channel, fn) => {
+    const updated = [...shellyAssignments.filter(a => !(a.deviceId === deviceId && a.channel === channel)), {
+      deviceId,
+      channel,
+      function: fn,
+    }];
+    setShellyAssignments(updated);
+    const payload = new FormData();
+    payload.append('assignments', JSON.stringify(updated));
+    const response = await fetch('/api/shelly/assignments', { method: 'POST', body: payload });
+    const data = await response.json();
+    if (!data.ok) {
+      setShellyScanError(data.error || 'Assignment failed');
+      await loadShellyData();
+    }
+  };
+
+  const handleShellyScheduleChange = (key, value) => {
+    if (key === 'day') {
+      const days = [...shellySchedule.days];
+      days[value] = !days[value];
+      setShellySchedule({ ...shellySchedule, days });
+      return;
+    }
+    setShellySchedule({ ...shellySchedule, [key]: value });
+  };
+
+  const handleShellyScheduleSave = async () => {
+    const payload = new FormData();
+    payload.append('enabled', shellySchedule.enabled ? '1' : '0');
+    payload.append('onTime', shellySchedule.onTime);
+    payload.append('offTime', shellySchedule.offTime);
+    payload.append(
+      'days',
+      shellySchedule.days.map(day => (day ? '1' : '0')).join('')
+    );
+    const response = await fetch('/api/shelly/schedule', { method: 'POST', body: payload });
+    const data = await response.json();
+    setShellySyncStatus(data.syncStatus || '');
+    setShellySyncMessage(data.syncMessage || '');
   };
 
   const addAutoWakeupSchedule = () => {
@@ -1276,6 +1432,31 @@ export function Settings() {
               updateAutoWakeupTime={updateAutoWakeupTime}
               updateAutoWakeupDay={updateAutoWakeupDay}
             />
+            <div className='mt-6'>
+              <ShellyCard
+                enabled={formData.shellyEnabled}
+                grinderEnabled={formData.shellyGrinderEnabled}
+                ledEnabled={formData.shellyLedEnabled}
+                mainPowerEnabled={formData.shellyMainPowerEnabled}
+                ledMode={formData.shellyLedMode ?? 0}
+                onToggle={onChange}
+                onLedModeChange={onChange('shellyLedMode')}
+                devices={shellyDevices}
+                assignments={shellyAssignments}
+                schedule={shellySchedule}
+                syncStatus={shellySyncStatus}
+                syncMessage={shellySyncMessage}
+                scanResults={shellyScanResults}
+                scanError={shellyScanError}
+                onScan={handleShellyScan}
+                onAddDevice={handleShellyAddDevice}
+                onRemoveDevice={handleShellyRemoveDevice}
+                onTestDevice={handleShellyTest}
+                onAssignmentChange={handleShellyAssignmentChange}
+                onScheduleChange={handleShellyScheduleChange}
+                onScheduleSave={handleShellyScheduleSave}
+              />
+            </div>
           </Card>
         </div>
 

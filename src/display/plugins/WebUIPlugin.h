@@ -49,6 +49,11 @@ class WebUIPlugin : public Plugin {
     void handleSdBackupList(AsyncWebServerRequest *request) const;
     void handleSdBackupSaveSettings(AsyncWebServerRequest *request) const;
     void handleSdBackupSaveProfiles(AsyncWebServerRequest *request) const;
+    void handleShellyDevices(AsyncWebServerRequest *request) const;
+    void handleShellyScan(AsyncWebServerRequest *request) const;
+    void handleShellyTest(AsyncWebServerRequest *request) const;
+    void handleShellyAssignments(AsyncWebServerRequest *request) const;
+    void handleShellySchedule(AsyncWebServerRequest *request) const;
     void updateOTAStatus(const String &version);
     void updateOTAProgress(uint8_t phase, int progress);
     void sendAutotuneResult();
