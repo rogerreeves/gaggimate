@@ -7,7 +7,7 @@
 
 // COMPONENT dials
 
-#include "lv_draw_mask.h"
+#include "lv_draw/lv_draw_mask.h"
 
 typedef struct {
     lv_draw_mask_angle_param_t mask;

@@ -2428,7 +2428,6 @@ void DefaultUI::adjustDials(lv_obj_t *dials) {
 }
 
 inline void DefaultUI::adjustTempTarget(lv_obj_t *dials) { updateDialTempTarget(dials); }
-}
 
 void DefaultUI::applyTheme() {
     const Settings &settings = controller->getSettings();
