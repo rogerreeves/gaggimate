@@ -7,7 +7,7 @@
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
 #else
-#include "lvgl/lvgl.h"
+#include "lvgl.h"
 #endif
 
 #ifndef UI_FONT_SFPRODISPLAYBOLD_18
@@ -1476,4 +1476,3 @@ lv_font_t ui_font_sfprodisplaybold_18 = {
 
 
 #endif /*#if UI_FONT_SFPRODISPLAYBOLD_18*/
-
