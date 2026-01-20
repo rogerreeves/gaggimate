@@ -153,11 +153,7 @@ void Controller::connect() {
     pluginManager->trigger("controller:startup");
 
     setupWifi();
-#if !GAGGIMATE_UI_DEMO
     setupBluetooth();
-#else
-    pluginManager->trigger("controller:bluetooth:init");
-#endif
     pluginManager->on("ota:update:start", [this](Event const &) { this->updating = true; });
     pluginManager->on("ota:update:end", [this](Event const &) { this->updating = false; });
 
@@ -315,17 +311,6 @@ void Controller::loop() {
     if (screenReady) {
         connect();
     }
-
-#if GAGGIMATE_UI_DEMO
-    if (screenReady && !loaded) {
-        systemInfo = SystemInfo{.hardware = "GaggiMate Demo", .version = "v1.7.2",
-                                .capabilities = {.dimming = true, .pressure = true, .ledControl = false, .tof = false}};
-        loaded = true;
-        if (settings.getStartupMode() == MODE_STANDBY)
-            activateStandby();
-        pluginManager->trigger("controller:ready");
-    }
-#endif
 
     if (clientController.isReadyForConnection()) {
         clientController.connectToServer();

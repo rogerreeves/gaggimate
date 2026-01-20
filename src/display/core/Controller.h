@@ -13,11 +13,6 @@
 #include <display/ui/default/DefaultUI.h>
 #endif
 
-// UI-only demo build toggle (set to 1 to allow UI without controller box).
-#ifndef GAGGIMATE_UI_DEMO
-#define GAGGIMATE_UI_DEMO 1
-#endif
-
 const IPAddress WIFI_AP_IP(4, 4, 4, 1); // the IP address the web server, Samsung requires the IP to be in public space
 const IPAddress WIFI_SUBNET_MASK(255, 255, 255, 0); // no need to change: https://avinetworks.com/glossary/subnet-mask/
 
