@@ -7,13 +7,18 @@
 
 // COMPONENT dials
 
-#include "lv_draw/lv_draw_mask.h"
-
+#if defined(LV_USE_DRAW_MASK) && LV_USE_DRAW_MASK
 typedef struct {
     lv_draw_mask_angle_param_t mask;
     int16_t mask_id;
 } dial_gap_mask_t;
+#else
+typedef struct {
+    int16_t dummy;
+} dial_gap_mask_t;
+#endif
 
+#if defined(LV_USE_DRAW_MASK) && LV_USE_DRAW_MASK
 static void dial_indicator_draw_event(lv_event_t *e) {
     lv_event_code_t code = lv_event_get_code(e);
     dial_gap_mask_t *mask = (dial_gap_mask_t *)lv_event_get_user_data(e);
@@ -36,6 +41,7 @@ static void dial_indicator_delete_event(lv_event_t *e) {
         lv_mem_free(mask);
     }
 }
+#endif
 
 static void dial_line_delete_event(lv_event_t *e) {
     lv_point_t *points = (lv_point_t *)lv_event_get_user_data(e);
@@ -54,8 +60,13 @@ lv_obj_t *ui_dials_create(lv_obj_t *comp_parent) {
     lv_obj_set_align(cui_dials, LV_ALIGN_CENTER);
     lv_obj_clear_flag(cui_dials, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
+#if defined(LV_USE_DRAW_MASK) && LV_USE_DRAW_MASK
     dial_gap_mask_t *temp_mask = lv_mem_alloc(sizeof(dial_gap_mask_t));
     dial_gap_mask_t *pressure_mask = lv_mem_alloc(sizeof(dial_gap_mask_t));
+#else
+    dial_gap_mask_t *temp_mask = NULL;
+    dial_gap_mask_t *pressure_mask = NULL;
+#endif
 
     lv_obj_t *cui_tempGauge;
     cui_tempGauge = lv_img_create(cui_dials);
@@ -65,11 +76,13 @@ lv_obj_t *ui_dials_create(lv_obj_t *comp_parent) {
     lv_obj_add_flag(cui_tempGauge, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(cui_tempGauge, LV_OBJ_FLAG_SCROLLABLE);
     lv_img_set_pivot(cui_tempGauge, 225, 145);
+#if defined(LV_USE_DRAW_MASK) && LV_USE_DRAW_MASK
     if (temp_mask) {
         lv_obj_add_event_cb(cui_tempGauge, dial_indicator_draw_event, LV_EVENT_DRAW_MAIN_BEGIN, temp_mask);
         lv_obj_add_event_cb(cui_tempGauge, dial_indicator_draw_event, LV_EVENT_DRAW_MAIN_END, temp_mask);
         lv_obj_add_event_cb(cui_tempGauge, dial_indicator_delete_event, LV_EVENT_DELETE, temp_mask);
     }
+#endif
 
     lv_obj_t *cui_tempTarget;
     cui_tempTarget = lv_line_create(cui_dials);
@@ -99,11 +112,13 @@ lv_obj_t *ui_dials_create(lv_obj_t *comp_parent) {
     lv_obj_add_flag(cui_pressureGauge, LV_OBJ_FLAG_ADV_HITTEST);
     lv_obj_clear_flag(cui_pressureGauge, LV_OBJ_FLAG_SCROLLABLE);
     lv_img_set_pivot(cui_pressureGauge, 225, 145);
+#if defined(LV_USE_DRAW_MASK) && LV_USE_DRAW_MASK
     if (pressure_mask) {
         lv_obj_add_event_cb(cui_pressureGauge, dial_indicator_draw_event, LV_EVENT_DRAW_MAIN_BEGIN, pressure_mask);
         lv_obj_add_event_cb(cui_pressureGauge, dial_indicator_draw_event, LV_EVENT_DRAW_MAIN_END, pressure_mask);
         lv_obj_add_event_cb(cui_pressureGauge, dial_indicator_delete_event, LV_EVENT_DELETE, pressure_mask);
     }
+#endif
 
     lv_obj_t *cui_pressureTarget;
     cui_pressureTarget = lv_line_create(cui_dials);
