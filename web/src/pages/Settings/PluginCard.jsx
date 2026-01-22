@@ -10,6 +10,12 @@ export function PluginCard({
   removeAutoWakeupSchedule,
   updateAutoWakeupTime,
   updateAutoWakeupDay,
+  onSetShellyGrinderEnabled,
+  shellySchedule,
+  shellySyncStatus,
+  shellySyncMessage,
+  onShellyScheduleChange,
+  onShellyScheduleSave,
 }) {
   return (
     <div className='space-y-4'>
@@ -119,6 +125,60 @@ export function PluginCard({
             </div>
           </div>
         )}
+        {formData.shellyEnabled && formData.shellyMainPowerEnabled && (
+          <div className='border-base-300 mt-4 space-y-2 border-t pt-4'>
+            <div className='flex items-center justify-between'>
+              <span className='text-lg font-medium'>Main Power Schedule</span>
+              <button type='button' className='btn btn-primary btn-sm' onClick={onShellyScheduleSave}>
+                Save Schedule
+              </button>
+            </div>
+            <div className='grid gap-3 md:grid-cols-3'>
+              <label className='flex items-center justify-between gap-2 text-sm'>
+                <span>Enable schedule</span>
+                <input
+                  type='checkbox'
+                  className='toggle toggle-primary'
+                  checked={!!shellySchedule?.enabled}
+                  onChange={e => onShellyScheduleChange('enabled', e.target.checked)}
+                />
+              </label>
+              <label className='form-control text-sm'>
+                <span className='mb-1'>On time</span>
+                <input
+                  type='time'
+                  className='input input-bordered input-sm'
+                  value={shellySchedule?.onTime || '06:30'}
+                  onChange={e => onShellyScheduleChange('onTime', e.target.value)}
+                />
+              </label>
+              <label className='form-control text-sm'>
+                <span className='mb-1'>Off time</span>
+                <input
+                  type='time'
+                  className='input input-bordered input-sm'
+                  value={shellySchedule?.offTime || '10:30'}
+                  onChange={e => onShellyScheduleChange('offTime', e.target.value)}
+                />
+              </label>
+            </div>
+            <div className='join'>
+              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => (
+                <button
+                  key={idx}
+                  type='button'
+                  className={`join-item btn btn-xs ${shellySchedule?.days?.[idx] ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => onShellyScheduleChange('day', idx)}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+            <div className='text-sm opacity-70'>
+              Sync: {shellySyncStatus} {shellySyncMessage ? `- ${shellySyncMessage}` : ''}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className='bg-base-200 rounded-lg p-4'>
@@ -208,91 +268,121 @@ export function PluginCard({
           />
           <span className='text-xl font-medium'>Smart Grind Plugin</span>
         </div>
-        {formData.smartGrindActive && !formData.shellyGrinderEnabled && (
+        {formData.smartGrindActive && (
           <div className='border-base-300 mt-4 space-y-4 border-t pt-4'>
-            <p className='text-sm opacity-70'>
-              This feature automatically runs the grinder when the cup is removed from the
-              scales. Optional Purge Run lets you briefly spin the grinder for bellows clearing.
-            </p>
-            <div className='form-control'>
-              <label htmlFor='smartGrindIp' className='mb-2 block text-sm font-medium'>
-                Tasmota IP
-              </label>
-              <input
-                id='smartGrindIp'
-                name='smartGrindIp'
-                type='text'
-                className='input input-bordered w-full'
-                placeholder='0'
-                value={formData.smartGrindIp}
-                onChange={onChange('smartGrindIp')}
-              />
-            </div>
-            <div className='form-control'>
-              <label htmlFor='smartGrindMode' className='mb-2 block text-sm font-medium'>
-                Mode
-              </label>
-              <select
-                id='smartGrindMode'
-                name='smartGrindMode'
-                className='select select-bordered w-full'
-                onChange={onChange('smartGrindMode')}
-              >
-                <option value='0' selected={formData.smartGrindMode?.toString() === '0'}>
-                  Turn off at target
-                </option>
-                <option value='1' selected={formData.smartGrindMode?.toString() === '1'}>
-                  Toggle off and on at target
-                </option>
-                <option value='2' selected={formData.smartGrindMode?.toString() === '2'}>
-                  Turn on at start, off at target
-                </option>
-              </select>
-            </div>
-            <div className='grid grid-cols-3 gap-4'>
-              <div className='form-control'>
-                <label htmlFor='smartGrindDelayBeforeStartS' className='mb-2 block text-sm font-medium'>
-                  Delay (s)
-                </label>
-                <input
-                  id='smartGrindDelayBeforeStartS'
-                  name='smartGrindDelayBeforeStartS'
-                  type='number'
-                  step='0.1'
-                  className='input input-bordered w-full'
-                  value={formData.smartGrindDelayBeforeStartS}
-                  onChange={onChange('smartGrindDelayBeforeStartS')}
-                />
-              </div>
-              <div className='form-control'>
-                <label htmlFor='smartGrindMainRunTimeS' className='mb-2 block text-sm font-medium'>
-                  Main run (s)
-                </label>
-                <input
-                  id='smartGrindMainRunTimeS'
-                  name='smartGrindMainRunTimeS'
-                  type='number'
-                  step='0.1'
-                  className='input input-bordered w-full'
-                  value={formData.smartGrindMainRunTimeS}
-                  onChange={onChange('smartGrindMainRunTimeS')}
-                />
-              </div>
-              <div className='form-control'>
-                <label htmlFor='smartGrindPumpTimeS' className='mb-2 block text-sm font-medium'>
-                  Parge Run (s)
-                </label>
-                <input
-                  id='smartGrindPumpTimeS'
-                  name='smartGrindPumpTimeS'
-                  type='number'
-                  step='0.1'
-                  className='input input-bordered w-full'
-                  value={formData.smartGrindPumpTimeS}
-                  onChange={onChange('smartGrindPumpTimeS')}
-                />
+            <div className='flex flex-wrap items-center gap-3 text-sm'>
+              <span className='font-medium'>Grinder Control</span>
+              <div className='join'>
+                <button
+                  type='button'
+                  className={`join-item btn btn-sm ${!formData.shellyGrinderEnabled ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => onSetShellyGrinderEnabled(false)}
+                >
+                  Tasmota Plug
+                </button>
+                <button
+                  type='button'
+                  className={`join-item btn btn-sm ${formData.shellyGrinderEnabled ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => onSetShellyGrinderEnabled(true)}
+                >
+                  Shelly Relay
+                </button>
               </div>
             </div>
+            {formData.shellyGrinderEnabled ? (
+              <>
+                <p className='text-sm opacity-70'>
+                  This feature automatically runs the grinder when the cup is removed from the
+                  scales. Optional Purge Run lets you briefly spin the grinder for bellows clearing.
+                </p>
+                <div className='grid grid-cols-3 gap-4'>
+                  <div className='form-control'>
+                    <label htmlFor='smartGrindDelayBeforeStartS' className='mb-2 block text-sm font-medium'>
+                      Delay (s)
+                    </label>
+                    <input
+                      id='smartGrindDelayBeforeStartS'
+                      name='smartGrindDelayBeforeStartS'
+                      type='number'
+                      step='0.1'
+                      className='input input-bordered w-full'
+                      value={formData.smartGrindDelayBeforeStartS}
+                      onChange={onChange('smartGrindDelayBeforeStartS')}
+                    />
+                  </div>
+                  <div className='form-control'>
+                    <label htmlFor='smartGrindMainRunTimeS' className='mb-2 block text-sm font-medium'>
+                      Main run (s)
+                    </label>
+                    <input
+                      id='smartGrindMainRunTimeS'
+                      name='smartGrindMainRunTimeS'
+                      type='number'
+                      step='0.1'
+                      className='input input-bordered w-full'
+                      value={formData.smartGrindMainRunTimeS}
+                      onChange={onChange('smartGrindMainRunTimeS')}
+                    />
+                  </div>
+                  <div className='form-control'>
+                    <label htmlFor='smartGrindPumpTimeS' className='mb-2 block text-sm font-medium'>
+                      Parge Run (s)
+                    </label>
+                    <input
+                      id='smartGrindPumpTimeS'
+                      name='smartGrindPumpTimeS'
+                      type='number'
+                      step='0.1'
+                      className='input input-bordered w-full'
+                      value={formData.smartGrindPumpTimeS}
+                      onChange={onChange('smartGrindPumpTimeS')}
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className='text-sm opacity-70'>
+                  This feature controls a Tasmota Plug to turn off your grinder after the target
+                  has been reached.
+                </p>
+                <div className='form-control'>
+                  <label htmlFor='smartGrindIp' className='mb-2 block text-sm font-medium'>
+                    Tasmota IP
+                  </label>
+                  <input
+                    id='smartGrindIp'
+                    name='smartGrindIp'
+                    type='text'
+                    className='input input-bordered w-full'
+                    placeholder='0'
+                    value={formData.smartGrindIp}
+                    onChange={onChange('smartGrindIp')}
+                  />
+                </div>
+                <div className='form-control'>
+                  <label htmlFor='smartGrindMode' className='mb-2 block text-sm font-medium'>
+                    Mode
+                  </label>
+                  <select
+                    id='smartGrindMode'
+                    name='smartGrindMode'
+                    className='select select-bordered w-full'
+                    onChange={onChange('smartGrindMode')}
+                  >
+                    <option value='0' selected={formData.smartGrindMode?.toString() === '0'}>
+                      Turn off at target
+                    </option>
+                    <option value='1' selected={formData.smartGrindMode?.toString() === '1'}>
+                      Toggle off and on at target
+                    </option>
+                    <option value='2' selected={formData.smartGrindMode?.toString() === '2'}>
+                      Turn on at start, off at target
+                    </option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -148,23 +148,25 @@ export function Settings() {
         value = !formData.boilerFillActive;
       }
       if (key === 'smartGrindActive') {
-        value = !formData.smartGrindActive;
-      }
-      if (key === 'smartGrindActive' && !formData.smartGrindActive) {
+        const next = !formData.smartGrindActive;
         setFormData({
           ...formData,
-          smartGrindActive: true,
-          shellyGrinderEnabled: false,
+          smartGrindActive: next,
+          shellyGrinderEnabled: next ? formData.shellyGrinderEnabled : false,
         });
         return;
       }
       if (key === 'shellyGrinderEnabled' && !formData.shellyGrinderEnabled) {
+        const next = !formData.shellyGrinderEnabled;
         setFormData({
           ...formData,
-          shellyGrinderEnabled: true,
-          smartGrindActive: false,
+          shellyGrinderEnabled: next,
+          smartGrindActive: next ? true : formData.smartGrindActive,
         });
         return;
+      }
+      if (key === 'shellyGrinderEnabled') {
+        value = !formData.shellyGrinderEnabled;
       }
       if (key === 'smartGrindToggle') {
         value = !formData.smartGrindToggle;
@@ -198,9 +200,6 @@ export function Settings() {
       }
       if (key === 'shellyEnabled') {
         value = !formData.shellyEnabled;
-      }
-      if (key === 'shellyGrinderEnabled') {
-        value = !formData.shellyGrinderEnabled;
       }
       if (key === 'shellyLedEnabled') {
         value = !formData.shellyLedEnabled;
@@ -461,6 +460,14 @@ export function Settings() {
   const onExport = useCallback(() => {
     downloadJson(formData, 'settings.json');
   }, [formData]);
+
+  const onSetShellyGrinderEnabled = useCallback(enabled => {
+    setFormData(prev => ({
+      ...prev,
+      smartGrindActive: true,
+      shellyGrinderEnabled: enabled,
+    }));
+  }, []);
 
   const onSaveToSd = useCallback(async () => {
     setSdBackupStatus('');
@@ -1450,6 +1457,12 @@ export function Settings() {
               removeAutoWakeupSchedule={removeAutoWakeupSchedule}
               updateAutoWakeupTime={updateAutoWakeupTime}
               updateAutoWakeupDay={updateAutoWakeupDay}
+              onSetShellyGrinderEnabled={onSetShellyGrinderEnabled}
+              shellySchedule={shellySchedule}
+              shellySyncStatus={shellySyncStatus}
+              shellySyncMessage={shellySyncMessage}
+              onShellyScheduleChange={handleShellyScheduleChange}
+              onShellyScheduleSave={handleShellyScheduleSave}
             />
             <div className='mt-6'>
               <ShellyCard
@@ -1462,9 +1475,6 @@ export function Settings() {
                 onLedModeChange={onChange('shellyLedMode')}
                 devices={shellyDevices}
                 assignments={shellyAssignments}
-                schedule={shellySchedule}
-                syncStatus={shellySyncStatus}
-                syncMessage={shellySyncMessage}
                 scanResults={shellyScanResults}
                 scanError={shellyScanError}
                 onScan={handleShellyScan}
@@ -1472,8 +1482,6 @@ export function Settings() {
                 onRemoveDevice={handleShellyRemoveDevice}
                 onTestDevice={handleShellyTest}
                 onAssignmentChange={handleShellyAssignmentChange}
-                onScheduleChange={handleShellyScheduleChange}
-                onScheduleSave={handleShellyScheduleSave}
               />
             </div>
           </Card>

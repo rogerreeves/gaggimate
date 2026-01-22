@@ -17,9 +17,6 @@ export function ShellyCard({
   onLedModeChange,
   devices,
   assignments,
-  schedule,
-  syncStatus,
-  syncMessage,
   scanResults,
   scanError,
   onScan,
@@ -27,8 +24,6 @@ export function ShellyCard({
   onRemoveDevice,
   onTestDevice,
   onAssignmentChange,
-  onScheduleChange,
-  onScheduleSave,
 }) {
   const [authInputs, setAuthInputs] = useState({});
 
@@ -238,60 +233,6 @@ export function ShellyCard({
             ))}
           </div>
 
-          {mainPowerEnabled && (
-            <div className='space-y-2'>
-              <div className='flex items-center justify-between'>
-                <span className='text-lg font-medium'>Main Power Schedule</span>
-                <button type='button' className='btn btn-primary btn-sm' onClick={onScheduleSave}>
-                  Save Schedule
-                </button>
-              </div>
-              <div className='grid gap-3 md:grid-cols-3'>
-                <label className='flex items-center justify-between gap-2 text-sm'>
-                  <span>Enable schedule</span>
-                  <input
-                    type='checkbox'
-                    className='toggle toggle-primary'
-                    checked={!!schedule.enabled}
-                    onChange={e => onScheduleChange('enabled', e.target.checked)}
-                  />
-                </label>
-                <label className='form-control text-sm'>
-                  <span className='mb-1'>On time</span>
-                  <input
-                    type='time'
-                    className='input input-bordered input-sm'
-                    value={schedule.onTime}
-                    onChange={e => onScheduleChange('onTime', e.target.value)}
-                  />
-                </label>
-                <label className='form-control text-sm'>
-                  <span className='mb-1'>Off time</span>
-                  <input
-                    type='time'
-                    className='input input-bordered input-sm'
-                    value={schedule.offTime}
-                    onChange={e => onScheduleChange('offTime', e.target.value)}
-                  />
-                </label>
-              </div>
-              <div className='join'>
-                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, idx) => (
-                  <button
-                    key={idx}
-                    type='button'
-                    className={`join-item btn btn-xs ${schedule.days[idx] ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => onScheduleChange('day', idx)}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-              <div className='text-sm opacity-70'>
-                Sync: {syncStatus} {syncMessage ? `- ${syncMessage}` : ''}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
