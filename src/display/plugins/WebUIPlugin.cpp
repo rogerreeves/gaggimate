@@ -495,8 +495,8 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setSteamFillTime(request->arg("steamFillTime").toInt() * 1000);
             bool smartGrindRequested = request->hasArg("smartGrindActive");
             bool shellyGrinderRequested = request->hasArg("shellyGrinderEnabled");
-            if (smartGrindRequested && shellyGrinderRequested) {
-                shellyGrinderRequested = false;
+            if (shellyGrinderRequested) {
+                smartGrindRequested = true;
             }
             if (request->hasArg("smartGrindIp"))
                 settings->setSmartGrindIp(request->arg("smartGrindIp"));
