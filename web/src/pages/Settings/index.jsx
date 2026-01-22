@@ -16,6 +16,10 @@ import { faFileImport } from '@fortawesome/free-solid-svg-icons/faFileImport';
 import { faTrashCan } from '@fortawesome/free-solid-svg-icons/faTrashCan';
 import { faSdCard } from '@fortawesome/free-solid-svg-icons/faSdCard';
 
+const SMART_GRIND_PROVIDER_NONE = 0;
+const SMART_GRIND_PROVIDER_TASMOTA = 1;
+const SMART_GRIND_PROVIDER_SHELLY = 2;
+
 const ledControl = computed(() => machine.value.capabilities.ledControl);
 const pressureAvailable = computed(() => machine.value.capabilities.pressure);
 
@@ -56,6 +60,12 @@ export function Settings() {
     if (fetchedSettings) {
       // Initialize standbyDisplayEnabled based on standby brightness value
       // but preserve it if it already exists in the fetched data
+      const fallbackProvider = fetchedSettings.smartGrindProvider ??
+        (fetchedSettings.shellyGrinderEnabled
+          ? SMART_GRIND_PROVIDER_SHELLY
+          : fetchedSettings.smartGrindActive
+            ? SMART_GRIND_PROVIDER_TASMOTA
+            : SMART_GRIND_PROVIDER_NONE);
       const settingsWithToggle = {
         ...fetchedSettings,
         standbyDisplayEnabled:
@@ -81,6 +91,8 @@ export function Settings() {
         shellyLedEnabled: fetchedSettings.shellyLedEnabled ?? false,
         shellyMainPowerEnabled: fetchedSettings.shellyMainPowerEnabled ?? false,
         shellyLedMode: fetchedSettings.shellyLedMode ?? 0,
+        smartGrindActive: fallbackProvider !== SMART_GRIND_PROVIDER_NONE,
+        smartGrindProvider: fallbackProvider,
         smartGrindDelayBeforeStartS: fetchedSettings.smartGrindDelayBeforeStartS ?? 1,
         smartGrindMainRunTimeS: fetchedSettings.smartGrindMainRunTimeS ?? 6,
         smartGrindPumpTimeS: fetchedSettings.smartGrindPumpTimeS ?? 0.5,
@@ -149,24 +161,33 @@ export function Settings() {
       }
       if (key === 'smartGrindActive') {
         const next = !formData.smartGrindActive;
+        const nextProvider =
+          next
+            ? formData.smartGrindProvider && formData.smartGrindProvider !== SMART_GRIND_PROVIDER_NONE
+              ? formData.smartGrindProvider
+              : SMART_GRIND_PROVIDER_TASMOTA
+            : SMART_GRIND_PROVIDER_NONE;
         setFormData({
           ...formData,
           smartGrindActive: next,
-          shellyGrinderEnabled: next ? formData.shellyGrinderEnabled : false,
-        });
-        return;
-      }
-      if (key === 'shellyGrinderEnabled' && !formData.shellyGrinderEnabled) {
-        const next = !formData.shellyGrinderEnabled;
-        setFormData({
-          ...formData,
-          shellyGrinderEnabled: next,
-          smartGrindActive: next ? true : formData.smartGrindActive,
+          smartGrindProvider: nextProvider,
+          shellyGrinderEnabled: nextProvider === SMART_GRIND_PROVIDER_SHELLY,
         });
         return;
       }
       if (key === 'shellyGrinderEnabled') {
-        value = !formData.shellyGrinderEnabled;
+        const next = !formData.shellyGrinderEnabled;
+        const nextProvider =
+          next ? SMART_GRIND_PROVIDER_SHELLY : formData.smartGrindProvider === SMART_GRIND_PROVIDER_SHELLY
+            ? SMART_GRIND_PROVIDER_NONE
+            : formData.smartGrindProvider;
+        setFormData({
+          ...formData,
+          shellyGrinderEnabled: next,
+          smartGrindActive: next ? true : nextProvider !== SMART_GRIND_PROVIDER_NONE ? formData.smartGrindActive : false,
+          smartGrindProvider: nextProvider,
+        });
+        return;
       }
       if (key === 'smartGrindToggle') {
         value = !formData.smartGrindToggle;
@@ -461,11 +482,12 @@ export function Settings() {
     downloadJson(formData, 'settings.json');
   }, [formData]);
 
-  const onSetShellyGrinderEnabled = useCallback(enabled => {
+  const onSetSmartGrindProvider = useCallback(provider => {
     setFormData(prev => ({
       ...prev,
-      smartGrindActive: true,
-      shellyGrinderEnabled: enabled,
+      smartGrindActive: provider !== SMART_GRIND_PROVIDER_NONE,
+      smartGrindProvider: provider,
+      shellyGrinderEnabled: provider === SMART_GRIND_PROVIDER_SHELLY,
     }));
   }, []);
 
@@ -1457,7 +1479,7 @@ export function Settings() {
               removeAutoWakeupSchedule={removeAutoWakeupSchedule}
               updateAutoWakeupTime={updateAutoWakeupTime}
               updateAutoWakeupDay={updateAutoWakeupDay}
-              onSetShellyGrinderEnabled={onSetShellyGrinderEnabled}
+              onSetSmartGrindProvider={onSetSmartGrindProvider}
               shellySchedule={shellySchedule}
               shellySyncStatus={shellySyncStatus}
               shellySyncMessage={shellySyncMessage}
@@ -1471,6 +1493,7 @@ export function Settings() {
                 ledEnabled={formData.shellyLedEnabled}
                 mainPowerEnabled={formData.shellyMainPowerEnabled}
                 ledMode={formData.shellyLedMode ?? 0}
+                smartGrindProvider={formData.smartGrindProvider ?? SMART_GRIND_PROVIDER_NONE}
                 onToggle={onChange}
                 onLedModeChange={onChange('shellyLedMode')}
                 devices={shellyDevices}

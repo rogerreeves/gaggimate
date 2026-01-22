@@ -97,6 +97,7 @@ class Settings {
     int getStartupFillTime() const { return startupFillTime; }
     int getSteamFillTime() const { return steamFillTime; }
     bool isSmartGrindActive() const { return smartGrindActive; }
+    int getSmartGrindProvider() const { return smartGrindProvider; }
     int getSmartGrindMode() const { return smartGrindMode; }
     String getSmartGrindIp() const { return smartGrindIp; }
     double getSmartGrindDelayBeforeStartS() const { return smartGrindDelayBeforeStartS; }
@@ -184,6 +185,7 @@ class Settings {
     void setStartupFillTime(int startup_fill_time);
     void setSteamFillTime(int steam_fill_time);
     void setSmartGrindActive(bool smart_grind_active);
+    void setSmartGrindProvider(int provider);
     void setSmartGrindIp(String smart_grind_ip);
     void setSmartGrindMode(int smart_grind_mode);
     void setSmartGrindDelayBeforeStartS(double seconds);
@@ -287,6 +289,7 @@ class Settings {
     int startupFillTime = 0;
     int steamFillTime = 0;
     bool smartGrindActive = false;
+    int smartGrindProvider = SMART_GRIND_PROVIDER_NONE;
     bool smartGrindToggle = false;
     int smartGrindMode = 0;
     String smartGrindIp = "";

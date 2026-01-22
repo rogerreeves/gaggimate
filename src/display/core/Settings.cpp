@@ -79,6 +79,15 @@ Settings::Settings() {
     shellyDevicesJson = preferences.getString("sh_dev", "[]");
     shellyAssignmentsJson = preferences.getString("sh_asg", "[]");
     shellyScheduleJson = preferences.getString("sh_sch", "{}");
+    if (preferences.isKey("sg_pr")) {
+        smartGrindProvider = preferences.getInt("sg_pr", SMART_GRIND_PROVIDER_NONE);
+    } else if (shellyGrinderEnabled) {
+        smartGrindProvider = SMART_GRIND_PROVIDER_SHELLY;
+    } else if (smartGrindActive) {
+        smartGrindProvider = SMART_GRIND_PROVIDER_TASMOTA;
+    } else {
+        smartGrindProvider = SMART_GRIND_PROVIDER_NONE;
+    }
 
     // Load schedule format: "time1|days1;time2|days2" where days is 7-bit string (e.g., "1111100" for weekdays only)
     String schedulesStr = preferences.getString("ab_schedules", "");
@@ -375,6 +384,11 @@ void Settings::setSmartGrindActive(bool smart_grind_active) {
     save();
 }
 
+void Settings::setSmartGrindProvider(int provider) {
+    smartGrindProvider = provider;
+    save();
+}
+
 void Settings::setSmartGrindIp(String smart_grind_ip) {
     this->smartGrindIp = std::move(smart_grind_ip);
     save();
@@ -632,6 +646,7 @@ void Settings::fillJson(JsonObject obj) const {
     obj["startupFillTime"] = startupFillTime / 1000;
     obj["steamFillTime"] = steamFillTime / 1000;
     obj["smartGrindActive"] = smartGrindActive;
+    obj["smartGrindProvider"] = smartGrindProvider;
     obj["smartGrindToggle"] = smartGrindToggle;
     obj["smartGrindIp"] = smartGrindIp;
     obj["smartGrindMode"] = smartGrindMode;
@@ -733,6 +748,8 @@ void Settings::applyJson(const JsonObject &obj) {
         steamFillTime = obj["steamFillTime"].as<int>() * 1000;
     if (obj.containsKey("smartGrindActive"))
         smartGrindActive = obj["smartGrindActive"].as<bool>();
+    if (obj.containsKey("smartGrindProvider"))
+        smartGrindProvider = obj["smartGrindProvider"].as<int>();
     if (obj.containsKey("smartGrindIp"))
         smartGrindIp = obj["smartGrindIp"].as<String>();
     if (obj.containsKey("smartGrindMode"))
@@ -921,6 +938,7 @@ void Settings::doSave() {
     preferences.putInt("bf_su", startupFillTime);
     preferences.putInt("bf_st", steamFillTime);
     preferences.putBool("sg_a", smartGrindActive);
+    preferences.putInt("sg_pr", smartGrindProvider);
     preferences.putString("sg_i", smartGrindIp);
     preferences.putBool("sg_t", smartGrindToggle);
     preferences.putInt("sg_m", smartGrindMode);

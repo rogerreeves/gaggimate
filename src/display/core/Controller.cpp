@@ -109,7 +109,7 @@ void Controller::setup() {
     if (settings.isBoilerFillActive()) {
         pluginManager->registerPlugin(new BoilerFillPlugin());
     }
-    if (settings.isSmartGrindActive()) {
+    if (settings.isSmartGrindActive() && settings.getSmartGrindProvider() == SMART_GRIND_PROVIDER_TASMOTA) {
         pluginManager->registerPlugin(new SmartGrindPlugin());
     }
     if (settings.isHomeAssistant()) {

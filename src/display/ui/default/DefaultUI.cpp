@@ -275,7 +275,7 @@ void DefaultUI::loop() {
         volumetricMode = volumetricAvailable && settings.isVolumetricTarget();
         grindActive = controller->isGrindActive();
         active = controller->isActive();
-        smartGrindActive = settings.isSmartGrindActive() || settings.isShellyGrinderEnabled();
+        smartGrindActive = settings.getSmartGrindProvider() != SMART_GRIND_PROVIDER_NONE;
         grindAvailable = smartGrindActive || settings.getAltRelayFunction() == ALT_RELAY_GRIND;
         doseMeasureEnabled = settings.isDoseMeasureEnabled();
         applyTheme();
@@ -594,7 +594,7 @@ void DefaultUI::setupState() {
     volumetricMode = volumetricAvailable && settings.isVolumetricTarget();
     grindActive = controller->isGrindActive();
     active = controller->isActive();
-    smartGrindActive = settings.isSmartGrindActive() || settings.isShellyGrinderEnabled();
+    smartGrindActive = settings.getSmartGrindProvider() != SMART_GRIND_PROVIDER_NONE;
     grindAvailable = smartGrindActive || settings.getAltRelayFunction() == ALT_RELAY_GRIND;
     doseMeasureEnabled = settings.isDoseMeasureEnabled();
     mode = controller->getMode();
@@ -1310,7 +1310,8 @@ void DefaultUI::onDoseMeasureAddMore() {
         return;
     }
     const Settings &settings = controller->getSettings();
-    const bool smartGrindEnabled = settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
+    const bool smartGrindEnabled = settings.getSmartGrindProvider() == SMART_GRIND_PROVIDER_SHELLY &&
+                                   settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
     if (!smartGrindEnabled) {
         return;
     }
@@ -1415,7 +1416,8 @@ void DefaultUI::updateDoseMeasureState() {
     _ui_flag_modify(ui_GrindScreen_targetSymbol, LV_OBJ_FLAG_HIDDEN,
                     showControls ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
 
-    const bool smartGrindEnabled = settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
+    const bool smartGrindEnabled = settings.getSmartGrindProvider() == SMART_GRIND_PROVIDER_SHELLY &&
+                                   settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
     if (!smartGrindEnabled || doseMeasurePhase != DoseMeasurePhase::BeansMeasure) {
         if (smartGrindState != SmartGrindState::IdleOnScale || smartGrindMainRunDone) {
             resetSmartGrindState("inactive");

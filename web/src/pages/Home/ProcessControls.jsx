@@ -186,7 +186,7 @@ const ProcessControls = props => {
     },
   );
 
-  const isSmartGrindEnabled = settings?.smartGrindActive || false;
+  const isSmartGrindEnabled = (settings?.smartGrindProvider ?? 0) !== 0;
   const altRelayFunction = settings?.altRelayFunction !== undefined ? settings.altRelayFunction : 1;
 
   // Show grind elements if SmartGrind is enabled OR if Alt Relay is set to grind

@@ -10,13 +10,15 @@ export function PluginCard({
   removeAutoWakeupSchedule,
   updateAutoWakeupTime,
   updateAutoWakeupDay,
-  onSetShellyGrinderEnabled,
+  onSetSmartGrindProvider,
   shellySchedule,
   shellySyncStatus,
   shellySyncMessage,
   onShellyScheduleChange,
   onShellyScheduleSave,
 }) {
+  const smartGrindProvider = formData.smartGrindProvider ?? 0;
+  const isShellyProvider = smartGrindProvider === 2;
   return (
     <div className='space-y-4'>
       <div className='bg-base-200 rounded-lg p-4'>
@@ -255,6 +257,7 @@ export function PluginCard({
       </div>
 
       <div className='bg-base-200 rounded-lg p-4'>
+        <input type='hidden' name='smartGrindProvider' value={smartGrindProvider} />
         <div className='flex items-center gap-3'>
           <input
             id='smartGrindActive'
@@ -275,21 +278,21 @@ export function PluginCard({
               <div className='join'>
                 <button
                   type='button'
-                  className={`join-item btn btn-sm ${!formData.shellyGrinderEnabled ? 'btn-primary' : 'btn-outline'}`}
-                  onClick={() => onSetShellyGrinderEnabled(false)}
+                  className={`join-item btn btn-sm ${!isShellyProvider ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => onSetSmartGrindProvider(1)}
                 >
                   Tasmota Plug
                 </button>
                 <button
                   type='button'
-                  className={`join-item btn btn-sm ${formData.shellyGrinderEnabled ? 'btn-primary' : 'btn-outline'}`}
-                  onClick={() => onSetShellyGrinderEnabled(true)}
+                  className={`join-item btn btn-sm ${isShellyProvider ? 'btn-primary' : 'btn-outline'}`}
+                  onClick={() => onSetSmartGrindProvider(2)}
                 >
                   Shelly Relay
                 </button>
               </div>
             </div>
-            {formData.shellyGrinderEnabled ? (
+            {isShellyProvider ? (
               <>
                 <p className='text-sm opacity-70'>
                   This feature automatically runs the grinder when the cup is removed from the

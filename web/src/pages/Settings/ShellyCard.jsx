@@ -13,6 +13,7 @@ export function ShellyCard({
   ledEnabled,
   mainPowerEnabled,
   ledMode,
+  smartGrindProvider,
   onToggle,
   onLedModeChange,
   devices,
@@ -41,6 +42,8 @@ export function ShellyCard({
     const match = assignments.find(a => a.deviceId === deviceId && a.channel === channel);
     return match ? match.function : 0;
   };
+
+  const grinderLocked = smartGrindProvider !== 2;
 
   const handleAssign = (deviceId, channel, value) => {
     onAssignmentChange(deviceId, channel, parseInt(value, 10));
@@ -87,6 +90,7 @@ export function ShellyCard({
                 className='toggle toggle-primary'
                 checked={!!grinderEnabled}
                 onChange={onToggle('shellyGrinderEnabled')}
+                disabled={grinderLocked}
               />
               <span>Grinder Support</span>
             </label>
@@ -115,6 +119,9 @@ export function ShellyCard({
               <span>Main Power Schedule</span>
             </label>
           </div>
+          {grinderLocked && (
+            <p className='text-xs opacity-70'>Select Shelly as grinder provider to enable grinder support.</p>
+          )}
 
           {ledEnabled && (
             <div className='form-control'>

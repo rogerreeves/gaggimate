@@ -77,7 +77,8 @@ void ShellyPlugin::updateConfig(bool enabled, bool grinderEnabled, bool ledEnabl
 }
 
 bool ShellyPlugin::runGrinderFor(float seconds, String *err) {
-    if (!enabled || !grinderEnabled) {
+    const Settings &settings = controller->getSettings();
+    if (!enabled || !grinderEnabled || settings.getSmartGrindProvider() != SMART_GRIND_PROVIDER_SHELLY) {
         if (err) {
             *err = "Shelly grinder not enabled";
         }
@@ -769,7 +770,8 @@ void ShellyPlugin::handleStandbyExit() {
 }
 
 void ShellyPlugin::handleGrindStart() {
-    if (!enabled || !grinderEnabled) {
+    const Settings &settings = controller->getSettings();
+    if (!enabled || !grinderEnabled || settings.getSmartGrindProvider() != SMART_GRIND_PROVIDER_SHELLY) {
         return;
     }
     String err;
@@ -777,7 +779,8 @@ void ShellyPlugin::handleGrindStart() {
 }
 
 void ShellyPlugin::handleGrindEnd() {
-    if (!enabled || !grinderEnabled) {
+    const Settings &settings = controller->getSettings();
+    if (!enabled || !grinderEnabled || settings.getSmartGrindProvider() != SMART_GRIND_PROVIDER_SHELLY) {
         return;
     }
     String err;
