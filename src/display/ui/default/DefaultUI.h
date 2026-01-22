@@ -137,6 +137,7 @@ class DefaultUI {
     SmartGrindState smartGrindState = SmartGrindState::IdleOnScale;
     bool smartGrindMainRunDone = false;
     bool smartGrindCupOffPrev = false;
+    bool smartGrindBeansUnderTarget = false;
     bool smartGrindSuppressAddMore = false;
     bool smartGrindAddMoreVisible = false;
     unsigned long smartGrindDelayStart = 0;

@@ -1289,6 +1289,7 @@ void DefaultUI::resetSmartGrindState(const char *reason) {
     smartGrindSuppressAddMore = false;
     smartGrindAddMoreVisible = false;
     smartGrindCupOffPrev = false;
+    smartGrindBeansUnderTarget = false;
     setSmartGrindState(SmartGrindState::IdleOnScale, reason);
 }
 
@@ -1586,6 +1587,13 @@ void DefaultUI::updateDoseMeasureState() {
                 setSmartGrindState(SmartGrindState::PostRunWaitCupReturn, "run_complete");
             }
         }
+        smartGrindAddMoreVisible =
+            (smartGrindState == SmartGrindState::PostRunWaitCupReturn && removedStable && smartGrindBeansUnderTarget &&
+             !Shelly.isGrinderRunning() && !smartGrindSuppressAddMore);
+        if (ui_GrindScreen_addMoreButton) {
+            _ui_flag_modify(ui_GrindScreen_addMoreButton, LV_OBJ_FLAG_HIDDEN,
+                            smartGrindAddMoreVisible ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+        }
     }
 
     if (doseMeasureBrewTransitionActive) {
@@ -1716,14 +1724,22 @@ void DefaultUI::updateDoseMeasureState() {
             }
         } else if (removedJustConfirmed && !doseMeasureBeansExactAchieved && !beansProceedAvailable) {
             enqueueDoseMeasureBeep(3, 120);
+            if (smartGrindEnabled && smartGrindState == SmartGrindState::IdleOnScale) {
+                smartGrindDelayStart = now;
+                smartGrindDelayMs = static_cast<unsigned long>(smartGrindDelayBeforeStartS * 1000.0);
+                smartGrindMainRunDone = true;
+                setSmartGrindState(SmartGrindState::WaitDelayBeforePump, "cup_removed_under_target");
+                ESP_LOGI("SmartGrind", "pump timer scheduled %.2fs", smartGrindDelayBeforeStartS);
+            }
         }
 
+        const bool underTarget = diff > BEANS_EXACT_TOL_G;
+        smartGrindBeansUnderTarget = underTarget;
         if (smartGrindEnabled) {
             const bool cupOff = removedStable;
             const bool cupOn = !cupOff;
             const bool cupRemovedEdge = cupOff && !smartGrindCupOffPrev;
             const bool cupPlacedEdge = !cupOff && smartGrindCupOffPrev;
-            const bool underTarget = diff > BEANS_EXACT_TOL_G;
             const bool overTarget = diff < -BEANS_EXACT_TOL_G;
 
             if (cupPlacedEdge) {
