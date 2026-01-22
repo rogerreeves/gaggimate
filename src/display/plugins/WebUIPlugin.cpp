@@ -522,21 +522,20 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setShellyMainPowerEnabled(false);
             if (request->hasArg("shellyLedMode"))
                 settings->setShellyLedMode(request->arg("shellyLedMode").toInt());
+            const bool smartGrindEnabled = smartGrindProvider != SMART_GRIND_PROVIDER_NONE;
             switch (smartGrindProvider) {
             case SMART_GRIND_PROVIDER_TASMOTA:
-                settings->setSmartGrindActive(true);
                 settings->setShellyGrinderEnabled(false);
                 break;
             case SMART_GRIND_PROVIDER_SHELLY:
-                settings->setSmartGrindActive(false);
                 settings->setShellyGrinderEnabled(true);
                 break;
             default:
                 smartGrindProvider = SMART_GRIND_PROVIDER_NONE;
-                settings->setSmartGrindActive(false);
                 settings->setShellyGrinderEnabled(false);
                 break;
             }
+            settings->setSmartGrindActive(smartGrindEnabled);
             settings->setSmartGrindProvider(smartGrindProvider);
             settings->setDoseMeasureEnabled(request->hasArg("doseMeasureEnabled"));
             if (request->hasArg("doseMeasureAvgBeanWeight"))
@@ -687,7 +686,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["boilerFillActive"] = settings.isBoilerFillActive();
     doc["startupFillTime"] = settings.getStartupFillTime() / 1000;
     doc["steamFillTime"] = settings.getSteamFillTime() / 1000;
-    doc["smartGrindActive"] = settings.isSmartGrindActive();
+    doc["smartGrindActive"] = settings.getSmartGrindProvider() != SMART_GRIND_PROVIDER_NONE;
     doc["smartGrindProvider"] = settings.getSmartGrindProvider();
     doc["smartGrindIp"] = settings.getSmartGrindIp();
     doc["smartGrindMode"] = settings.getSmartGrindMode();
