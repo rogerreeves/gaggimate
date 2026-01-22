@@ -528,6 +528,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setShellyGrinderEnabled(false);
                 break;
             case SMART_GRIND_PROVIDER_SHELLY:
+                settings->setShellyEnabled(true);
                 settings->setShellyGrinderEnabled(true);
                 break;
             default:

@@ -488,6 +488,7 @@ export function Settings() {
       smartGrindActive: provider !== SMART_GRIND_PROVIDER_NONE,
       smartGrindProvider: provider,
       shellyGrinderEnabled: provider === SMART_GRIND_PROVIDER_SHELLY,
+      shellyEnabled: provider === SMART_GRIND_PROVIDER_SHELLY ? true : prev.shellyEnabled,
     }));
   }, []);
 
