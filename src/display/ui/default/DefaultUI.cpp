@@ -1418,7 +1418,7 @@ void DefaultUI::updateDoseMeasureState() {
 
     const bool smartGrindEnabled = settings.getSmartGrindProvider() == SMART_GRIND_PROVIDER_SHELLY &&
                                    settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
-    if (!smartGrindEnabled || doseMeasurePhase != DoseMeasurePhase::BeansMeasure) {
+    if (!smartGrindEnabled) {
         if (smartGrindState != SmartGrindState::IdleOnScale || smartGrindMainRunDone) {
             resetSmartGrindState("inactive");
         }
@@ -1557,6 +1557,35 @@ void DefaultUI::updateDoseMeasureState() {
     if (presentStable && !doseMeasurePresentConfirmed) {
         ESP_LOGI("DoseMeasure", "present confirmed raw=%.2f", rawWeight);
         doseMeasurePresentConfirmed = true;
+    }
+
+    if (smartGrindEnabled && doseMeasurePhase != DoseMeasurePhase::BeansMeasure) {
+        if (smartGrindState == SmartGrindState::WaitDelayBeforeRun || smartGrindState == SmartGrindState::WaitDelayBeforePump) {
+            if (smartGrindDelayStart != 0 && (now - smartGrindDelayStart >= smartGrindDelayMs)) {
+                String err;
+                const double runSeconds =
+                    smartGrindState == SmartGrindState::WaitDelayBeforeRun ? smartGrindMainRunTimeS : smartGrindPumpTimeS;
+                if (Shelly.runGrinderFor(static_cast<float>(runSeconds), &err)) {
+                    ESP_LOGI("SmartGrind", "run start %.2fs", runSeconds);
+                    if (smartGrindState == SmartGrindState::WaitDelayBeforeRun) {
+                        smartGrindMainRunDone = true;
+                        setSmartGrindState(SmartGrindState::RunMain, "timer_complete");
+                    } else {
+                        setSmartGrindState(SmartGrindState::RunPumpBurst, "timer_complete");
+                    }
+                    smartGrindSuppressAddMore = true;
+                } else {
+                    ESP_LOGI("SmartGrind", "run start failed: %s", err.c_str());
+                    setSmartGrindState(SmartGrindState::PostRunWaitCupReturn, "run_failed");
+                }
+                smartGrindDelayStart = 0;
+                smartGrindDelayMs = 0;
+            }
+        } else if (smartGrindState == SmartGrindState::RunMain || smartGrindState == SmartGrindState::RunPumpBurst) {
+            if (!Shelly.isGrinderRunning()) {
+                setSmartGrindState(SmartGrindState::PostRunWaitCupReturn, "run_complete");
+            }
+        }
     }
 
     if (doseMeasureBrewTransitionActive) {
