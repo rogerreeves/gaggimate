@@ -66,8 +66,7 @@ export function ShellyCard({
 
   return (
     <div className='bg-base-200 rounded-lg p-4 space-y-4'>
-      <div className='flex items-center justify-between'>
-        <span className='text-xl font-medium'>Shelly Plugin (Gen2+)</span>
+      <div className='flex items-center gap-3'>
         <input
           id='shellyEnabled'
           name='shellyEnabled'
@@ -78,13 +77,13 @@ export function ShellyCard({
           onChange={onToggle('shellyEnabled')}
           aria-label='Enable Shelly plugin'
         />
+        <span className='text-xl font-medium'>Shelly Plugin (Gen2+)</span>
       </div>
 
       {enabled && (
         <div className='border-base-300 space-y-4 border-t pt-4'>
           <div className='grid gap-3 md:grid-cols-3'>
-            <label className='flex items-center justify-between gap-2 text-sm'>
-              <span>Grinder Support</span>
+            <label className='flex items-center gap-2 text-sm'>
               <input
                 id='shellyGrinderEnabled'
                 name='shellyGrinderEnabled'
@@ -94,9 +93,9 @@ export function ShellyCard({
                 checked={!!grinderEnabled}
                 onChange={onToggle('shellyGrinderEnabled')}
               />
+              <span>Grinder Support</span>
             </label>
-            <label className='flex items-center justify-between gap-2 text-sm'>
-              <span>Power LED</span>
+            <label className='flex items-center gap-2 text-sm'>
               <input
                 id='shellyLedEnabled'
                 name='shellyLedEnabled'
@@ -106,9 +105,9 @@ export function ShellyCard({
                 checked={!!ledEnabled}
                 onChange={onToggle('shellyLedEnabled')}
               />
+              <span>Power LED</span>
             </label>
-            <label className='flex items-center justify-between gap-2 text-sm'>
-              <span>Main Power Schedule</span>
+            <label className='flex items-center gap-2 text-sm'>
               <input
                 id='shellyMainPowerEnabled'
                 name='shellyMainPowerEnabled'
@@ -118,6 +117,7 @@ export function ShellyCard({
                 checked={!!mainPowerEnabled}
                 onChange={onToggle('shellyMainPowerEnabled')}
               />
+              <span>Main Power Schedule</span>
             </label>
           </div>
 

@@ -195,8 +195,7 @@ export function PluginCard({
       </div>
 
       <div className='bg-base-200 rounded-lg p-4'>
-        <div className='flex items-center justify-between'>
-          <span className='text-xl font-medium'>Smart Grind Plugin</span>
+        <div className='flex items-center gap-3'>
           <input
             id='smartGrindActive'
             name='smartGrindActive'
@@ -207,12 +206,13 @@ export function PluginCard({
             onChange={onChange('smartGrindActive')}
             aria-label='Enable Smart Grind'
           />
+          <span className='text-xl font-medium'>Smart Grind Plugin</span>
         </div>
         {formData.smartGrindActive && !formData.shellyGrinderEnabled && (
           <div className='border-base-300 mt-4 space-y-4 border-t pt-4'>
             <p className='text-sm opacity-70'>
-              This feature controls a Tasmota Plug to turn off your grinder after the target has
-              been reached.
+              This feature automatically runs the grinder when the cup is removed from the
+              scales. Optional Purge Run lets you briefly spin the grinder for bellows clearing.
             </p>
             <div className='form-control'>
               <label htmlFor='smartGrindIp' className='mb-2 block text-sm font-medium'>
@@ -280,7 +280,7 @@ export function PluginCard({
               </div>
               <div className='form-control'>
                 <label htmlFor='smartGrindPumpTimeS' className='mb-2 block text-sm font-medium'>
-                  Add more (s)
+                  Parge Run (s)
                 </label>
                 <input
                   id='smartGrindPumpTimeS'
