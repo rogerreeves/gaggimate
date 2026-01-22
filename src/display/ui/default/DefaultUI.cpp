@@ -11,6 +11,7 @@
 #include <display/drivers/WaveshareDriver.h>
 #include <display/drivers/common/LV_Helper.h>
 #include <display/plugins/BLEScalePlugin.h>
+#include <display/plugins/ShellyPlugin.h>
 #include <display/ui/default/lvgl/ui_theme_manager.h>
 #include <display/ui/default/lvgl/ui_themes.h>
 #include <display/ui/utils/effects.h>
@@ -38,6 +39,24 @@ constexpr unsigned long SWITCHING_TO_BREW_MS = 2000;
 constexpr unsigned long BEEP_SPACING_MS = 250;
 constexpr unsigned long GROUNDS_PRESENT_DEBOUNCE_MS = 200;
 constexpr unsigned long WEIGHT_LOG_INTERVAL_MS = 750;
+
+const char *smart_grind_state_name(SmartGrindState state) {
+    switch (state) {
+    case SmartGrindState::IdleOnScale:
+        return "idle_on_scale";
+    case SmartGrindState::WaitDelayBeforeRun:
+        return "wait_delay_before_run";
+    case SmartGrindState::RunMain:
+        return "run_main";
+    case SmartGrindState::PostRunWaitCupReturn:
+        return "post_run_wait_cup_return";
+    case SmartGrindState::WaitDelayBeforePump:
+        return "wait_delay_before_pump";
+    case SmartGrindState::RunPumpBurst:
+        return "run_pump_burst";
+    }
+    return "unknown";
+}
 } // namespace
 
 int16_t calculate_angle(int set_temp, int range, int offset) {
@@ -256,7 +275,7 @@ void DefaultUI::loop() {
         volumetricMode = volumetricAvailable && settings.isVolumetricTarget();
         grindActive = controller->isGrindActive();
         active = controller->isActive();
-        smartGrindActive = settings.isSmartGrindActive();
+        smartGrindActive = settings.isSmartGrindActive() || settings.isShellyGrinderEnabled();
         grindAvailable = smartGrindActive || settings.getAltRelayFunction() == ALT_RELAY_GRIND;
         doseMeasureEnabled = settings.isDoseMeasureEnabled();
         applyTheme();
@@ -386,6 +405,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
 
     if (doseMeasurePhase == DoseMeasurePhase::GroundsPrompt) {
         forceDoseMeasureBeep(1, 0);
+        cancelSmartGrindPending("proceed", true);
         if (doseMeasureShowStartBrewActions) {
             beginDoseMeasureBrewTransition(false);
         } else if (doseMeasureDosesRemaining > 1) {
@@ -399,6 +419,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
 
     if (doseMeasurePhase == DoseMeasurePhase::BeansMeasure && doseMeasureProceedAvailable) {
         forceDoseMeasureBeep(1, 0);
+        cancelSmartGrindPending("proceed", true);
         if (doseMeasureCupEnabled) {
             doseMeasurePhase = DoseMeasurePhase::GrindBeansWaitRemove;
             doseMeasureLabel = "Grind Beans";
@@ -424,6 +445,7 @@ void DefaultUI::onDoseMeasurePrimaryAction() {
 
     if (doseMeasurePhase == DoseMeasurePhase::GroundsMeasure && doseMeasureProceedAvailable) {
         forceDoseMeasureBeep(1, 0);
+        cancelSmartGrindPending("proceed", true);
         if (doseMeasureShowStartBrewActions) {
             beginDoseMeasureBrewTransition(false);
         } else if (doseMeasureDosesRemaining > 1) {
@@ -446,6 +468,7 @@ void DefaultUI::onDoseMeasureEndBeanAction() {
         return;
     }
     forceDoseMeasureBeep(1, 0);
+    cancelSmartGrindPending("proceed", true);
     if (doseMeasureDosesRemaining > 1) {
         doseMeasureDosesRemaining -= 1;
         enterDoseMeasurePlaceCup();
@@ -459,6 +482,7 @@ void DefaultUI::onDoseMeasureEndBrewAction() {
         return;
     }
     forceDoseMeasureBeep(1, 0);
+    cancelSmartGrindPending("proceed", true);
     if (doseMeasurePhase == DoseMeasurePhase::BeansMeasure && !doseMeasureCupEnabled) {
         beginDoseMeasureBrewTransition(true);
     } else {
@@ -512,6 +536,7 @@ void DefaultUI::resetDoseMeasureFlow(bool preserveRemaining) {
     doseMeasurePresentConfirmed = false;
     doseMeasureAutoTareStart = 0;
     doseMeasureForceAddUntil = 0;
+    resetSmartGrindState("dose_reset");
     if (!preserveRemaining) {
         doseMeasureDosesRemaining = 0;
         doseMeasureDoseCountDirty = false;
@@ -569,7 +594,7 @@ void DefaultUI::setupState() {
     volumetricMode = volumetricAvailable && settings.isVolumetricTarget();
     grindActive = controller->isGrindActive();
     active = controller->isActive();
-    smartGrindActive = settings.isSmartGrindActive();
+    smartGrindActive = settings.isSmartGrindActive() || settings.isShellyGrinderEnabled();
     grindAvailable = smartGrindActive || settings.getAltRelayFunction() == ALT_RELAY_GRIND;
     doseMeasureEnabled = settings.isDoseMeasureEnabled();
     mode = controller->getMode();
@@ -1248,6 +1273,61 @@ void DefaultUI::enterDoseMeasurePlaceCup() {
     rerender = true;
 }
 
+void DefaultUI::setSmartGrindState(SmartGrindState state, const char *reason) {
+    if (smartGrindState == state) {
+        return;
+    }
+    ESP_LOGI("SmartGrind", "state %s -> %s (%s)", smart_grind_state_name(smartGrindState),
+             smart_grind_state_name(state), reason ? reason : "no_reason");
+    smartGrindState = state;
+}
+
+void DefaultUI::resetSmartGrindState(const char *reason) {
+    smartGrindMainRunDone = false;
+    smartGrindDelayStart = 0;
+    smartGrindDelayMs = 0;
+    smartGrindSuppressAddMore = false;
+    smartGrindAddMoreVisible = false;
+    smartGrindCupOffPrev = false;
+    setSmartGrindState(SmartGrindState::IdleOnScale, reason);
+}
+
+void DefaultUI::cancelSmartGrindPending(const char *reason, bool cupOnScale) {
+    if (smartGrindState != SmartGrindState::WaitDelayBeforeRun &&
+        smartGrindState != SmartGrindState::WaitDelayBeforePump) {
+        return;
+    }
+    ESP_LOGI("SmartGrind", "timer cancelled (%s)", reason ? reason : "no_reason");
+    smartGrindDelayStart = 0;
+    smartGrindDelayMs = 0;
+    smartGrindSuppressAddMore = true;
+    smartGrindAddMoreVisible = false;
+    setSmartGrindState(cupOnScale ? SmartGrindState::IdleOnScale : SmartGrindState::PostRunWaitCupReturn, reason);
+}
+
+void DefaultUI::onDoseMeasureAddMore() {
+    if (!doseMeasureEnabled || !bluetoothScales) {
+        return;
+    }
+    const Settings &settings = controller->getSettings();
+    const bool smartGrindEnabled = settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
+    if (!smartGrindEnabled) {
+        return;
+    }
+    if (!Shelly.isGrinderRunning()) {
+        String err;
+        if (!Shelly.runGrinderFor(static_cast<float>(smartGrindPumpTimeS), &err)) {
+            ESP_LOGI("SmartGrind", "add_more failed: %s", err.c_str());
+            return;
+        }
+        ESP_LOGI("SmartGrind", "add_more run %.2fs", smartGrindPumpTimeS);
+        smartGrindMainRunDone = true;
+        smartGrindSuppressAddMore = true;
+        smartGrindAddMoreVisible = false;
+        setSmartGrindState(SmartGrindState::RunPumpBurst, "add_more");
+    }
+}
+
 void DefaultUI::updateDoseMeasureState() {
     if (!doseMeasureEnabled) {
         doseMeasurePhase = DoseMeasurePhase::Idle;
@@ -1260,6 +1340,7 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureShowStartBrewActions = false;
         doseMeasureBeansExactAchieved = false;
         doseMeasureGroundsExactAchieved = false;
+        resetSmartGrindState("dose_measure_disabled");
         return;
     }
 
@@ -1272,6 +1353,7 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureBeepQueue = 0;
         doseMeasureBeepNextAt = 0;
         doseMeasureBeepSpacingMs = 0;
+        resetSmartGrindState("scales_disconnected");
         return;
     }
 
@@ -1304,6 +1386,7 @@ void DefaultUI::updateDoseMeasureState() {
         doseMeasureBeepSpacingMs = 0;
         doseMeasureLastWeightLog = 0;
         doseMeasureLastPhase = DoseMeasurePhase::Idle;
+        resetSmartGrindState("screen_change");
         return;
     }
 
@@ -1315,6 +1398,9 @@ void DefaultUI::updateDoseMeasureState() {
     doseMeasureBeepEnabled = settings.isDoseMeasureBeepEnabled();
     doseMeasureProceedBeanCount = settings.getDoseMeasureProceedBeanCount();
     doseMeasureBeanCountLimit = settings.getDoseMeasureBeanCountLimit();
+    smartGrindDelayBeforeStartS = settings.getSmartGrindDelayBeforeStartS();
+    smartGrindMainRunTimeS = settings.getSmartGrindMainRunTimeS();
+    smartGrindPumpTimeS = settings.getSmartGrindPumpTimeS();
     const int defaultDoseCount = settings.getDoseMeasureDefaultDoseCount();
     if (doseMeasurePhase != DoseMeasurePhase::BeansMeasure && doseMeasurePhase != DoseMeasurePhase::GroundsMeasure) {
         doseMeasureProceedAvailable = false;
@@ -1328,6 +1414,17 @@ void DefaultUI::updateDoseMeasureState() {
                     showControls ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
     _ui_flag_modify(ui_GrindScreen_targetSymbol, LV_OBJ_FLAG_HIDDEN,
                     showControls ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+
+    const bool smartGrindEnabled = settings.isShellyEnabled() && settings.isShellyGrinderEnabled();
+    if (!smartGrindEnabled || doseMeasurePhase != DoseMeasurePhase::BeansMeasure) {
+        if (smartGrindState != SmartGrindState::IdleOnScale || smartGrindMainRunDone) {
+            resetSmartGrindState("inactive");
+        }
+        smartGrindAddMoreVisible = false;
+        if (ui_GrindScreen_addMoreButton) {
+            _ui_flag_modify(ui_GrindScreen_addMoreButton, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_ADD);
+        }
+    }
 
     if (doseMeasurePhase == DoseMeasurePhase::Idle) {
         if (!doseMeasureDoseCountDirty) {
@@ -1588,6 +1685,91 @@ void DefaultUI::updateDoseMeasureState() {
             }
         } else if (removedJustConfirmed && !doseMeasureBeansExactAchieved && !beansProceedAvailable) {
             enqueueDoseMeasureBeep(3, 120);
+        }
+
+        if (smartGrindEnabled) {
+            const bool cupOff = removedStable;
+            const bool cupOn = !cupOff;
+            const bool cupRemovedEdge = cupOff && !smartGrindCupOffPrev;
+            const bool cupPlacedEdge = !cupOff && smartGrindCupOffPrev;
+            const bool underTarget = diff > BEANS_EXACT_TOL_G;
+            const bool overTarget = diff < -BEANS_EXACT_TOL_G;
+
+            if (cupPlacedEdge) {
+                smartGrindSuppressAddMore = true;
+            }
+            if (cupRemovedEdge) {
+                smartGrindSuppressAddMore = false;
+            }
+
+            if (smartGrindState == SmartGrindState::RunMain || smartGrindState == SmartGrindState::RunPumpBurst) {
+                if (!Shelly.isGrinderRunning()) {
+                    setSmartGrindState(SmartGrindState::PostRunWaitCupReturn, "run_complete");
+                }
+            }
+
+            if (overTarget) {
+                cancelSmartGrindPending("over_target", cupOn);
+                smartGrindAddMoreVisible = false;
+            } else {
+                switch (smartGrindState) {
+                case SmartGrindState::IdleOnScale:
+                    if (cupRemovedEdge && underTarget) {
+                        smartGrindDelayStart = now;
+                        smartGrindDelayMs = static_cast<unsigned long>(smartGrindDelayBeforeStartS * 1000.0);
+                        setSmartGrindState(smartGrindMainRunDone ? SmartGrindState::WaitDelayBeforePump
+                                                                 : SmartGrindState::WaitDelayBeforeRun,
+                                           "cup_removed");
+                        ESP_LOGI("SmartGrind", "timer scheduled %.2fs", smartGrindDelayBeforeStartS);
+                    }
+                    break;
+                case SmartGrindState::WaitDelayBeforeRun:
+                case SmartGrindState::WaitDelayBeforePump: {
+                    if (cupOn || !underTarget) {
+                        cancelSmartGrindPending(cupOn ? "cup_returned" : "target_met", cupOn);
+                        break;
+                    }
+                    if (smartGrindDelayStart != 0 && (now - smartGrindDelayStart >= smartGrindDelayMs)) {
+                        String err;
+                        const double runSeconds =
+                            smartGrindState == SmartGrindState::WaitDelayBeforeRun ? smartGrindMainRunTimeS
+                                                                                   : smartGrindPumpTimeS;
+                        if (Shelly.runGrinderFor(static_cast<float>(runSeconds), &err)) {
+                            ESP_LOGI("SmartGrind", "run start %.2fs", runSeconds);
+                            if (smartGrindState == SmartGrindState::WaitDelayBeforeRun) {
+                                smartGrindMainRunDone = true;
+                                setSmartGrindState(SmartGrindState::RunMain, "timer_complete");
+                            } else {
+                                setSmartGrindState(SmartGrindState::RunPumpBurst, "timer_complete");
+                            }
+                            smartGrindSuppressAddMore = true;
+                        } else {
+                            ESP_LOGI("SmartGrind", "run start failed: %s", err.c_str());
+                            setSmartGrindState(SmartGrindState::PostRunWaitCupReturn, "run_failed");
+                        }
+                        smartGrindDelayStart = 0;
+                        smartGrindDelayMs = 0;
+                    }
+                    break;
+                }
+                case SmartGrindState::PostRunWaitCupReturn:
+                    if (cupOn) {
+                        setSmartGrindState(SmartGrindState::IdleOnScale, "cup_returned");
+                    }
+                    break;
+                case SmartGrindState::RunMain:
+                case SmartGrindState::RunPumpBurst:
+                    break;
+                }
+            }
+
+            smartGrindAddMoreVisible = (smartGrindState == SmartGrindState::PostRunWaitCupReturn && cupOff && underTarget &&
+                                        !Shelly.isGrinderRunning() && !smartGrindSuppressAddMore);
+            if (ui_GrindScreen_addMoreButton) {
+                _ui_flag_modify(ui_GrindScreen_addMoreButton, LV_OBJ_FLAG_HIDDEN,
+                                smartGrindAddMoreVisible ? _UI_MODIFY_FLAG_REMOVE : _UI_MODIFY_FLAG_ADD);
+            }
+            smartGrindCupOffPrev = cupOff;
         }
         return;
     }

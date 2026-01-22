@@ -249,6 +249,50 @@ export function PluginCard({
                 </option>
               </select>
             </div>
+            <div className='grid grid-cols-3 gap-4'>
+              <div className='form-control'>
+                <label htmlFor='smartGrindDelayBeforeStartS' className='mb-2 block text-sm font-medium'>
+                  Delay (s)
+                </label>
+                <input
+                  id='smartGrindDelayBeforeStartS'
+                  name='smartGrindDelayBeforeStartS'
+                  type='number'
+                  step='0.1'
+                  className='input input-bordered w-full'
+                  value={formData.smartGrindDelayBeforeStartS}
+                  onChange={onChange('smartGrindDelayBeforeStartS')}
+                />
+              </div>
+              <div className='form-control'>
+                <label htmlFor='smartGrindMainRunTimeS' className='mb-2 block text-sm font-medium'>
+                  Main run (s)
+                </label>
+                <input
+                  id='smartGrindMainRunTimeS'
+                  name='smartGrindMainRunTimeS'
+                  type='number'
+                  step='0.1'
+                  className='input input-bordered w-full'
+                  value={formData.smartGrindMainRunTimeS}
+                  onChange={onChange('smartGrindMainRunTimeS')}
+                />
+              </div>
+              <div className='form-control'>
+                <label htmlFor='smartGrindPumpTimeS' className='mb-2 block text-sm font-medium'>
+                  Add more (s)
+                </label>
+                <input
+                  id='smartGrindPumpTimeS'
+                  name='smartGrindPumpTimeS'
+                  type='number'
+                  step='0.1'
+                  className='input input-bordered w-full'
+                  value={formData.smartGrindPumpTimeS}
+                  onChange={onChange('smartGrindPumpTimeS')}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

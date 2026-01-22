@@ -84,6 +84,8 @@ class ShellyPlugin : public Plugin {
     void updateConfig(bool enabled, bool grinderEnabled, bool ledEnabled, bool mainPowerEnabled, ShellyLedMode ledMode);
 
     bool setRelayState(ShellyFunction function, bool on, String *err);
+    bool runGrinderFor(float seconds, String *err);
+    bool isGrinderRunning() const { return grinderRunActive; }
 
   private:
     Controller *controller = nullptr;
@@ -105,6 +107,8 @@ class ShellyPlugin : public Plugin {
     String scheduleSyncMessage = "";
 
     unsigned long lastSyncAttempt = 0;
+    bool grinderRunActive = false;
+    unsigned long grinderRunUntil = 0;
 
     void loadConfig();
     void saveConfig();

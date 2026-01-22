@@ -81,6 +81,9 @@ export function Settings() {
         shellyLedEnabled: fetchedSettings.shellyLedEnabled ?? false,
         shellyMainPowerEnabled: fetchedSettings.shellyMainPowerEnabled ?? false,
         shellyLedMode: fetchedSettings.shellyLedMode ?? 0,
+        smartGrindDelayBeforeStartS: fetchedSettings.smartGrindDelayBeforeStartS ?? 1,
+        smartGrindMainRunTimeS: fetchedSettings.smartGrindMainRunTimeS ?? 6,
+        smartGrindPumpTimeS: fetchedSettings.smartGrindPumpTimeS ?? 0.5,
       };
 
       // Extract Kf from PID string and separate them

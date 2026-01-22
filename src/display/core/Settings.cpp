@@ -48,6 +48,9 @@ Settings::Settings() {
     smartGrindIp = preferences.getString("sg_i", "");
     smartGrindToggle = preferences.getBool("sg_t", false);
     smartGrindMode = preferences.getInt("sg_m", smartGrindToggle ? 1 : 0);
+    smartGrindDelayBeforeStartS = preferences.getDouble("sg_db", 1.0);
+    smartGrindMainRunTimeS = preferences.getDouble("sg_mt", 6.0);
+    smartGrindPumpTimeS = preferences.getDouble("sg_pt", 0.5);
     homeAssistant = preferences.getBool("ha_a", false);
     homeAssistantIP = preferences.getString("ha_i", "");
     homeAssistantPort = preferences.getInt("ha_p", 1883);
@@ -382,6 +385,21 @@ void Settings::setSmartGrindMode(int smart_grind_mode) {
     save();
 }
 
+void Settings::setSmartGrindDelayBeforeStartS(double seconds) {
+    smartGrindDelayBeforeStartS = std::max(0.0, seconds);
+    save();
+}
+
+void Settings::setSmartGrindMainRunTimeS(double seconds) {
+    smartGrindMainRunTimeS = std::max(0.0, seconds);
+    save();
+}
+
+void Settings::setSmartGrindPumpTimeS(double seconds) {
+    smartGrindPumpTimeS = std::max(0.0, seconds);
+    save();
+}
+
 void Settings::setHomeAssistant(const bool homeAssistant) {
     this->homeAssistant = homeAssistant;
     save();
@@ -617,6 +635,9 @@ void Settings::fillJson(JsonObject obj) const {
     obj["smartGrindToggle"] = smartGrindToggle;
     obj["smartGrindIp"] = smartGrindIp;
     obj["smartGrindMode"] = smartGrindMode;
+    obj["smartGrindDelayBeforeStartS"] = smartGrindDelayBeforeStartS;
+    obj["smartGrindMainRunTimeS"] = smartGrindMainRunTimeS;
+    obj["smartGrindPumpTimeS"] = smartGrindPumpTimeS;
     obj["doseMeasureEnabled"] = doseMeasureEnabled;
     obj["doseMeasureAvgBeanWeight"] = doseAvgBeanWeight;
     obj["doseMeasureTarget"] = doseTarget;
@@ -718,6 +739,12 @@ void Settings::applyJson(const JsonObject &obj) {
         smartGrindMode = obj["smartGrindMode"].as<int>();
     if (obj.containsKey("smartGrindToggle"))
         smartGrindToggle = obj["smartGrindToggle"].as<bool>();
+    if (obj.containsKey("smartGrindDelayBeforeStartS"))
+        smartGrindDelayBeforeStartS = obj["smartGrindDelayBeforeStartS"].as<double>();
+    if (obj.containsKey("smartGrindMainRunTimeS"))
+        smartGrindMainRunTimeS = obj["smartGrindMainRunTimeS"].as<double>();
+    if (obj.containsKey("smartGrindPumpTimeS"))
+        smartGrindPumpTimeS = obj["smartGrindPumpTimeS"].as<double>();
     if (obj.containsKey("doseMeasureEnabled"))
         doseMeasureEnabled = obj["doseMeasureEnabled"].as<bool>();
     if (obj.containsKey("doseMeasureAvgBeanWeight"))
@@ -897,6 +924,9 @@ void Settings::doSave() {
     preferences.putString("sg_i", smartGrindIp);
     preferences.putBool("sg_t", smartGrindToggle);
     preferences.putInt("sg_m", smartGrindMode);
+    preferences.putDouble("sg_db", smartGrindDelayBeforeStartS);
+    preferences.putDouble("sg_mt", smartGrindMainRunTimeS);
+    preferences.putDouble("sg_pt", smartGrindPumpTimeS);
     preferences.putBool("ha_a", homeAssistant);
     preferences.putString("ha_i", homeAssistantIP);
     preferences.putInt("ha_p", homeAssistantPort);

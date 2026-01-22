@@ -54,6 +54,7 @@ void onGrindDoseCountLower(lv_event_t *e);
 void onGrindReset(lv_event_t *e);
 void onGrindEndBean(lv_event_t *e);
 void onGrindEndBrew(lv_event_t *e);
+void onGrindAddMore(lv_event_t *e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

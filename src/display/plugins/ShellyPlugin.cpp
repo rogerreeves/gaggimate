@@ -37,6 +37,13 @@ void ShellyPlugin::loop() {
     }
 
     const unsigned long now = millis();
+    if (grinderRunActive && now >= grinderRunUntil) {
+        String err;
+        setRelayState(ShellyFunction::Grinder, false, &err);
+        grinderRunActive = false;
+        grinderRunUntil = 0;
+        ESP_LOGI("Shelly", "grinder run complete");
+    }
     if (now - lastSyncAttempt >= kShellySyncIntervalMs) {
         lastSyncAttempt = now;
         updateScheduleSync();
@@ -60,7 +67,42 @@ void ShellyPlugin::updateConfig(bool enabled, bool grinderEnabled, bool ledEnabl
             deleteScheduleJob(device, schedule.offJobId, &err);
         }
     }
+    if (!grinderEnabled && grinderRunActive) {
+        String err;
+        setRelayState(ShellyFunction::Grinder, false, &err);
+        grinderRunActive = false;
+        grinderRunUntil = 0;
+    }
     saveConfig();
+}
+
+bool ShellyPlugin::runGrinderFor(float seconds, String *err) {
+    if (!enabled || !grinderEnabled) {
+        if (err) {
+            *err = "Shelly grinder not enabled";
+        }
+        return false;
+    }
+    if (grinderRunActive) {
+        if (err) {
+            *err = "Grinder already running";
+        }
+        return false;
+    }
+    const float clampedSeconds = std::max(0.0f, seconds);
+    if (clampedSeconds <= 0.0f) {
+        if (err) {
+            *err = "Invalid duration";
+        }
+        return false;
+    }
+    if (!setRelayState(ShellyFunction::Grinder, true, err)) {
+        return false;
+    }
+    grinderRunActive = true;
+    grinderRunUntil = millis() + static_cast<unsigned long>(clampedSeconds * 1000.0f);
+    ESP_LOGI("Shelly", "grinder run start (%.2fs)", clampedSeconds);
+    return true;
 }
 
 bool ShellyPlugin::addDevice(const String &host, const String &username, const String &password, String *err) {

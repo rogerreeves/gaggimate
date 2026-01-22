@@ -498,6 +498,12 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setSmartGrindIp(request->arg("smartGrindIp"));
             if (request->hasArg("smartGrindMode"))
                 settings->setSmartGrindMode(request->arg("smartGrindMode").toInt());
+            if (request->hasArg("smartGrindDelayBeforeStartS"))
+                settings->setSmartGrindDelayBeforeStartS(request->arg("smartGrindDelayBeforeStartS").toDouble());
+            if (request->hasArg("smartGrindMainRunTimeS"))
+                settings->setSmartGrindMainRunTimeS(request->arg("smartGrindMainRunTimeS").toDouble());
+            if (request->hasArg("smartGrindPumpTimeS"))
+                settings->setSmartGrindPumpTimeS(request->arg("smartGrindPumpTimeS").toDouble());
             if (request->hasArg("shellyEnabled"))
                 settings->setShellyEnabled(true);
             else
@@ -671,6 +677,9 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
     doc["smartGrindActive"] = settings.isSmartGrindActive();
     doc["smartGrindIp"] = settings.getSmartGrindIp();
     doc["smartGrindMode"] = settings.getSmartGrindMode();
+    doc["smartGrindDelayBeforeStartS"] = settings.getSmartGrindDelayBeforeStartS();
+    doc["smartGrindMainRunTimeS"] = settings.getSmartGrindMainRunTimeS();
+    doc["smartGrindPumpTimeS"] = settings.getSmartGrindPumpTimeS();
     doc["shellyEnabled"] = settings.isShellyEnabled();
     doc["shellyGrinderEnabled"] = settings.isShellyGrinderEnabled();
     doc["shellyLedEnabled"] = settings.isShellyLedEnabled();

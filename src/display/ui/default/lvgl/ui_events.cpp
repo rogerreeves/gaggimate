@@ -145,6 +145,12 @@ void onGrindEndBrew(lv_event_t *e) {
   }
 }
 
+void onGrindAddMore(lv_event_t *e) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
+    controller.getUI()->onDoseMeasureAddMore();
+  }
+}
+
 void onMenuClick(lv_event_t *e) {
     controller.deactivate();
     controller.setMode(MODE_BREW);
@@ -225,6 +231,9 @@ void onGrindScreenLoad(lv_event_t *e) {
     lv_obj_set_ext_click_area(ui_GrindScreen_startButton, 25);
     if (ui_GrindScreen_refreshButton) {
         lv_obj_set_ext_click_area(ui_GrindScreen_refreshButton, 25);
+    }
+    if (ui_GrindScreen_addMoreButton) {
+        lv_obj_set_ext_click_area(ui_GrindScreen_addMoreButton, 25);
     }
     if (ui_GrindScreen_doseCountUp) {
         lv_obj_set_ext_click_area(ui_GrindScreen_doseCountUp, 40);

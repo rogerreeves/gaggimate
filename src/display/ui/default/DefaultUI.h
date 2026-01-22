@@ -31,6 +31,15 @@ enum class DoseMeasurePhase {
     GroundsPrompt
 };
 
+enum class SmartGrindState {
+    IdleOnScale,
+    WaitDelayBeforeRun,
+    RunMain,
+    PostRunWaitCupReturn,
+    WaitDelayBeforePump,
+    RunPumpBurst
+};
+
 class DefaultUI {
   public:
     DefaultUI(Controller *controller, Driver *driver, PluginManager *pluginManager);
@@ -47,6 +56,7 @@ class DefaultUI {
     void onDoseMeasurePrimaryAction();
     void onDoseMeasureEndBeanAction();
     void onDoseMeasureEndBrewAction();
+    void onDoseMeasureAddMore();
     void adjustDoseMeasureTarget(double delta);
     void adjustDoseMeasureDoseCount(int delta);
     void resetDoseMeasureFlow(bool preserveRemaining = false);
@@ -85,6 +95,9 @@ class DefaultUI {
     void enterDoseMeasurePlaceCup();
     void enqueueDoseMeasureBeep(int count, unsigned long spacingMs = 0);
     void forceDoseMeasureBeep(int count, unsigned long spacingMs);
+    void resetSmartGrindState(const char *reason);
+    void cancelSmartGrindPending(const char *reason, bool cupOnScale);
+    void setSmartGrindState(SmartGrindState state, const char *reason);
 
     void adjustDials(lv_obj_t *dials);
     void adjustTempTarget(lv_obj_t *dials);
@@ -121,6 +134,16 @@ class DefaultUI {
     int active = false;
     int smartGrindActive = false;
     int grindAvailable = false;
+    SmartGrindState smartGrindState = SmartGrindState::IdleOnScale;
+    bool smartGrindMainRunDone = false;
+    bool smartGrindCupOffPrev = false;
+    bool smartGrindSuppressAddMore = false;
+    bool smartGrindAddMoreVisible = false;
+    unsigned long smartGrindDelayStart = 0;
+    unsigned long smartGrindDelayMs = 0;
+    double smartGrindDelayBeforeStartS = 1.0;
+    double smartGrindMainRunTimeS = 6.0;
+    double smartGrindPumpTimeS = 0.5;
     int doseMeasureEnabled = false;
     DoseMeasurePhase doseMeasurePhase = DoseMeasurePhase::Idle;
     String doseMeasureLabel = "";
