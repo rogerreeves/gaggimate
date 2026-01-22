@@ -150,6 +150,22 @@ export function Settings() {
       if (key === 'smartGrindActive') {
         value = !formData.smartGrindActive;
       }
+      if (key === 'smartGrindActive' && !formData.smartGrindActive) {
+        setFormData({
+          ...formData,
+          smartGrindActive: true,
+          shellyGrinderEnabled: false,
+        });
+        return;
+      }
+      if (key === 'shellyGrinderEnabled' && !formData.shellyGrinderEnabled) {
+        setFormData({
+          ...formData,
+          shellyGrinderEnabled: true,
+          smartGrindActive: false,
+        });
+        return;
+      }
       if (key === 'smartGrindToggle') {
         value = !formData.smartGrindToggle;
       }

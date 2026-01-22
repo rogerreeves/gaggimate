@@ -493,7 +493,11 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setStartupFillTime(request->arg("startupFillTime").toInt() * 1000);
             if (request->hasArg("steamFillTime"))
                 settings->setSteamFillTime(request->arg("steamFillTime").toInt() * 1000);
-            settings->setSmartGrindActive(request->hasArg("smartGrindActive"));
+            bool smartGrindRequested = request->hasArg("smartGrindActive");
+            bool shellyGrinderRequested = request->hasArg("shellyGrinderEnabled");
+            if (smartGrindRequested && shellyGrinderRequested) {
+                shellyGrinderRequested = false;
+            }
             if (request->hasArg("smartGrindIp"))
                 settings->setSmartGrindIp(request->arg("smartGrindIp"));
             if (request->hasArg("smartGrindMode"))
@@ -508,10 +512,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setShellyEnabled(true);
             else
                 settings->setShellyEnabled(false);
-            if (request->hasArg("shellyGrinderEnabled"))
-                settings->setShellyGrinderEnabled(true);
-            else
-                settings->setShellyGrinderEnabled(false);
+            settings->setShellyGrinderEnabled(shellyGrinderRequested);
             if (request->hasArg("shellyLedEnabled"))
                 settings->setShellyLedEnabled(true);
             else
@@ -522,9 +523,7 @@ void WebUIPlugin::handleSettings(AsyncWebServerRequest *request) const {
                 settings->setShellyMainPowerEnabled(false);
             if (request->hasArg("shellyLedMode"))
                 settings->setShellyLedMode(request->arg("shellyLedMode").toInt());
-            if (settings->isShellyGrinderEnabled()) {
-                settings->setSmartGrindActive(false);
-            }
+            settings->setSmartGrindActive(smartGrindRequested);
             settings->setDoseMeasureEnabled(request->hasArg("doseMeasureEnabled"));
             if (request->hasArg("doseMeasureAvgBeanWeight"))
                 settings->setDoseMeasureAvgBeanWeight(request->arg("doseMeasureAvgBeanWeight").toDouble());

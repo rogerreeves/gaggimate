@@ -208,7 +208,7 @@ export function PluginCard({
             aria-label='Enable Smart Grind'
           />
         </div>
-        {formData.smartGrindActive && (
+        {formData.smartGrindActive && !formData.shellyGrinderEnabled && (
           <div className='border-base-300 mt-4 space-y-4 border-t pt-4'>
             <p className='text-sm opacity-70'>
               This feature controls a Tasmota Plug to turn off your grinder after the target has
