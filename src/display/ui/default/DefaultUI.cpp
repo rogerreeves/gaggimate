@@ -1724,7 +1724,7 @@ void DefaultUI::updateDoseMeasureState() {
             }
         } else if (removedJustConfirmed && !doseMeasureBeansExactAchieved && !beansProceedAvailable) {
             enqueueDoseMeasureBeep(3, 120);
-            if (smartGrindEnabled && smartGrindState == SmartGrindState::IdleOnScale) {
+            if (smartGrindEnabled) {
                 smartGrindDelayStart = now;
                 smartGrindDelayMs = static_cast<unsigned long>(smartGrindDelayBeforeStartS * 1000.0);
                 smartGrindMainRunDone = true;
