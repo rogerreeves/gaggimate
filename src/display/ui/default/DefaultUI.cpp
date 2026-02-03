@@ -894,7 +894,7 @@ void DefaultUI::setupReactive() {
                               if (updateActive) {
                                   lv_label_set_text_fmt(ui_InitScreen_mainLabel, "Updating...");
                               } else if (error) {
-                                  if (errorCode == ERROR_CODE_RUNAWAY) {
+                                  if (errorCode == CONTROLLER_ERROR_RUNAWAY) {
                                       lv_label_set_text_fmt(ui_InitScreen_mainLabel, "Temperature error, please restart");
                                   }
                               } else if (autotuning) {

@@ -9,9 +9,7 @@
 #include <display/models/profile.h>
 #endif
 
-#ifndef ERROR_CODE_RUNAWAY
-#define ERROR_CODE_RUNAWAY 4
-#endif
+static constexpr int CONTROLLER_ERROR_RUNAWAY = 4;
 
 struct BrewProcessSnapshot {
     bool valid = false;
