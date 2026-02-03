@@ -2,19 +2,15 @@
 #define DEFAULTUI_H
 
 #include <display/core/PluginManager.h>
+#include <display/core/ProfileManager.h>
 #include <display/core/constants.h>
 #include <display/drivers/Driver.h>
-#include <display/controller_api.h>
-#if defined(GAGGIMATE_NATIVE)
-#include "../../../simulator/include/display/models/profile.h"
-#else
 #include <display/models/profile.h>
-#endif
 
 #include "./lvgl/ui.h"
 
 class Controller;
-class ProfileManager;
+class BrewProcess;
 
 constexpr int RERENDER_INTERVAL_IDLE = 2500;
 constexpr int RERENDER_INTERVAL_ACTIVE = 100;
@@ -80,8 +76,6 @@ class DefaultUI {
     void setupPanel();
     void setupState();
     void setupReactive();
-    void handleModeChange(int newMode);
-    void syncFromSnapshot(const ControllerSnapshot &snapshot);
 
     void handleScreenChange();
     void maybeActivateScreensaver();
@@ -89,8 +83,8 @@ class DefaultUI {
 
     void updateStandbyScreen();
     void updateStatusScreen();
-    void buildStatusPhaseArcs(const Profile &profile);
-    void updateStatusPhaseArcs(const Profile &profile, int phaseIndex, float currentPhaseFraction);
+    void buildStatusPhaseArcs(const BrewProcess *brewProcess);
+    void updateStatusPhaseArcs(const BrewProcess *brewProcess, float currentPhaseFraction);
     void resetStatusPhaseArcs();
     void updateSimpleProcessLabel();
     void updateSimpleProcessActions();
@@ -135,7 +129,6 @@ class DefaultUI {
     int updateActive = false;
     int apActive = false;
     int error = false;
-    int errorCode = 0;
     int autotuning = false;
     int volumetricAvailable = false;
     int bluetoothScales = false;
@@ -150,7 +143,6 @@ class DefaultUI {
     double doseMeasureTarget = 18.5;
     double doseMeasureAvgBeanWeight = 0.1;
     double doseMeasureCupEmptyWeight = 0.0;
-    int doseMeasureDefaultDoseCount = 1;
     int doseMeasureCupEnabled = false;
     int doseMeasureBeepEnabled = false;
     double doseMeasureLastWeight = 0.0;
@@ -192,18 +184,6 @@ class DefaultUI {
 
     // Seasonal flags
     int christmasMode = false;
-    bool wifiConnected = false;
-    bool bluetoothConnected = false;
-    bool hasSavedScale = false;
-    bool brewScaleWarningShown = false;
-    String standbyTime = "";
-    bool standbyTimeValid = false;
-    bool screensaverEnabled = true;
-    float screensaverTimeout = 2.0f;
-    int mainBrightness = 100;
-    int standbyBrightness = 20;
-    int standbyBrightnessTimeout = 0;
-    String standbyLandingScreen = "menu";
 
     bool rerender = false;
     unsigned long lastRender = 0;
@@ -258,7 +238,6 @@ class DefaultUI {
     Profile currentProfileChoice{};
     std::vector<String> favoritedProfiles;
     int currentThemeMode = -1; // Force applyTheme on first loop
-    int themeMode = -1;
 
     // Screen change
     lv_obj_t **targetScreen = &ui_InitScreen;

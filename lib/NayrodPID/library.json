@@ -1,7 +1,0 @@
-{
-  "name": "NayrodPID",
-  "version": "0.0.0",
-  "build": {
-    "srcFilter": "+<*>"
-  }
-}

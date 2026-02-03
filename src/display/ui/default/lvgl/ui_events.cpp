@@ -3,12 +3,8 @@
 // LVGL version: 8.3.11
 // Project name: GaggiMate
 
-#if defined(GAGGIMATE_NATIVE)
-#include "../../../../simulator/include/display/main.h"
-#else
 #include "../../../main.h"
-#endif
-#include "../../../controller_api.h"
+#include "../../../plugins/BLEScalePlugin.h"
 #include "ui.h"
 #include <Arduino.h>
 
@@ -39,8 +35,7 @@ void onSteamTempLower(lv_event_t *e) { controller.lowerTemp(); }
 void onSteamTempRaise(lv_event_t *e) { controller.raiseTemp(); }
 
 void onSimpleProcessTargetTempOpen(lv_event_t *e) {
-    const ControllerSnapshot snapshot = controller_api_get();
-    if (snapshot.mode == MODE_WATER) {
+    if (controller.getMode() == MODE_WATER) {
         controller.getUI()->openTargetTemp(TargetTempKind::Water);
     } else {
         controller.getUI()->openTargetTemp(TargetTempKind::Steam);
@@ -80,14 +75,13 @@ void onSteamScreen(lv_event_t *e) {
 }
 
 void onWakeup(lv_event_t *e) {
-    const ControllerSnapshot snapshot = controller_api_get();
-    const String landing = snapshot.standbyLandingScreen;
+    const String landing = controller.getSettings().getStandbyLandingScreen();
     if (landing == "menu") {
         controller.deactivate();
         controller.setMode(MODE_BREW);
         controller.getUI()->changeScreen(&ui_MenuScreen, &ui_MenuScreen_screen_init);
     } else if (landing == "grind") {
-        if (snapshot.doseMeasureEnabled) {
+        if (controller.getSettings().isDoseMeasureEnabled()) {
             controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_singleDose_screen_init);
         } else {
             controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
@@ -116,16 +110,15 @@ void onLoadStarted(lv_event_t *e) { controller.onScreenReady(); }
 void onStandby(lv_event_t *e) { controller.activateStandby(); }
 
 void onGrindToggle(lv_event_t *e) {
-  const ControllerSnapshot snapshot = controller_api_get();
-  if (snapshot.doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->onDoseMeasurePrimaryAction();
     return;
   }
-  snapshot.grindActive ? controller.deactivateGrind() : controller.activateGrind();
+  controller.isGrindActive() ? controller.deactivateGrind() : controller.activateGrind();
 }
 
 void onGrindTimeLower(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->adjustDoseMeasureTarget(-0.5f);
     return;
   }
@@ -133,7 +126,7 @@ void onGrindTimeLower(lv_event_t *e) {
 }
 
 void onGrindTimeRaise(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->adjustDoseMeasureTarget(0.5f);
     return;
   }
@@ -141,31 +134,31 @@ void onGrindTimeRaise(lv_event_t *e) {
 }
 
 void onGrindDoseCountRaise(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->adjustDoseMeasureDoseCount(1);
   }
 }
 
 void onGrindDoseCountLower(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->adjustDoseMeasureDoseCount(-1);
   }
 }
 
 void onGrindReset(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->resetDoseMeasureFlow();
   }
 }
 
 void onGrindEndBean(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->onDoseMeasureEndBeanAction();
   }
 }
 
 void onGrindEndBrew(lv_event_t *e) {
-  if (controller_api_get().doseMeasureEnabled) {
+  if (controller.getSettings().isDoseMeasureEnabled()) {
     controller.getUI()->onDoseMeasureEndBrewAction();
   }
 }
@@ -187,7 +180,7 @@ void onMenuClick(lv_event_t *e) {
 }
 
 void onGrindScreen(lv_event_t *e) {
-    if (controller_api_get().doseMeasureEnabled) {
+    if (controller.getSettings().isDoseMeasureEnabled()) {
         controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_singleDose_screen_init);
     } else {
         controller.getUI()->changeScreen(&ui_GrindScreen, &ui_GrindScreen_screen_init);
@@ -216,9 +209,8 @@ void onProfileSelect(lv_event_t *e) { controller.getUI()->onProfileSwitch(); }
 void onFlush(lv_event_t *e) { controller.onFlush(); }
 
 void onSimpleProcessToggle(lv_event_t *e) {
-    const ControllerSnapshot snapshot = controller_api_get();
-    if (snapshot.mode != MODE_STEAM) {
-        snapshot.active ? controller.deactivate() : controller.activate();
+    if (controller.getMode() != MODE_STEAM) {
+        controller.isActive() ? controller.deactivate() : controller.activate();
     }
 }
 
@@ -313,5 +305,6 @@ void onVolumetricHold(lv_event_t *e) {
     // Set flag to prevent click from firing when button is released
     volumetricHoldTriggered = true;
 
-    controller_api_tare_scales();
+    controller.getClientController()->tare();
+    BLEScales.tare();
 }
