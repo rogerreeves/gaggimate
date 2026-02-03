@@ -1,4 +1,5 @@
 #include "PluginManager.h"
+#include <esp_log.h>
 
 void PluginManager::registerPlugin(Plugin *plugin) { plugins.push_back(plugin); }
 
